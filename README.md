@@ -1,6 +1,8 @@
 # CTRMap
 A world editor for the Nintendo 3DS Generation 6 Pokémon games.
 
+![CTRMapPreview](https://user-images.githubusercontent.com/20842714/63652270-91e3f600-c75e-11e9-9131-74c4f1a65c2e.png)
+
 ## Current features
 - Edit tilemap move permissions
 - Edit and create collision mesh data
