@@ -3,7 +3,7 @@ package ctrmap;
 import static ctrmap.CtrmapMainframe.mCamEditForm;
 import static ctrmap.CtrmapMainframe.mCollEditPanel;
 import static ctrmap.CtrmapMainframe.mTileMapPanel;
-import ctrmap.formats.EditorTileset;
+import ctrmap.formats.tilemap.EditorTileset;
 import ctrmap.formats.garc.GARC;
 import ctrmap.formats.text.LocationNames;
 import ctrmap.humaninterface.LoadingDialog;
@@ -340,6 +340,7 @@ public class Workspace {
 				OutputStream os = new FileOutputStream(wsFile);
 				byte[] b = getArchive(arc).getDecompressedEntry(fileNum);
 				if (b == null) {
+					os.close();
 					return null;
 				}
 				os.write(b);

@@ -1,4 +1,4 @@
-package ctrmap.formats;
+package ctrmap.formats.tilemap;
 
 import java.awt.Color;
 

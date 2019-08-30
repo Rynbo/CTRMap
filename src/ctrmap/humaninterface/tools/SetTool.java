@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import static ctrmap.CtrmapMainframe.*;
 import ctrmap.Utils;
-import ctrmap.formats.Tilemap;
+import ctrmap.formats.tilemap.Tilemap;
 import ctrmap.humaninterface.Selector;
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;

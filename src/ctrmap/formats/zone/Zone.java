@@ -1,7 +1,7 @@
 package ctrmap.formats.zone;
 
 import ctrmap.Utils;
-import ctrmap.formats.ZO;
+import ctrmap.formats.containers.ZO;
 import java.util.Arrays;
 import javax.swing.JOptionPane;
 

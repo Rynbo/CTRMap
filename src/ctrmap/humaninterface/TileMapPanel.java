@@ -1,6 +1,6 @@
 package ctrmap.humaninterface;
 
-import ctrmap.CtrmapMainframe;
+import com.jogamp.opengl.GL2;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.GridBagLayout;
@@ -11,16 +11,19 @@ import javax.swing.JPanel;
 
 import static ctrmap.CtrmapMainframe.*;
 import ctrmap.Utils;
-import ctrmap.formats.Tilemap;
-import ctrmap.formats.GR;
+import ctrmap.formats.tilemap.Tilemap;
+import ctrmap.formats.containers.GR;
 import ctrmap.formats.cameradata.CameraData;
+import ctrmap.formats.h3d.BCHFile;
+import ctrmap.formats.h3d.model.H3DModel;
+import ctrmap.formats.h3d.texturing.H3DTexture;
 import ctrmap.formats.mapmatrix.MapMatrix;
 import ctrmap.formats.propdata.GRPropData;
-import ctrmap.formats.zone.ZoneEntities;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
+import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,13 +33,15 @@ import javax.swing.SwingWorker;
 public class TileMapPanel extends JPanel {
 
 	private static final long serialVersionUID = 7357107275764622829L;
-
+	private boolean rendered = false;
 	public static final String PROP_IMGSTATE = "imageUpdated";
 	private static final String ESC = "keyEscape";
 
 	public ViewportMode mode = ViewportMode.SINGLE;
 
 	public Tilemap[][] tilemaps;
+	public BCHFile[][] models;
+	public BCHFile[][] tallgrass;
 	public MapMatrix mm;
 	public BufferedImage tilemapImage;// = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
 	public BufferedImage tilemapScaledImage = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
@@ -73,6 +78,8 @@ public class TileMapPanel extends JPanel {
 		height = 40;
 		remove(placeholder);
 		tilemaps = new Tilemap[1][1];
+		models = new BCHFile[1][1];
+		tallgrass = new BCHFile[1][1];
 		tilemaps[0][0] = new Tilemap(file);
 		tilemapImage = tilemaps[0][0].getImage();
 		tilemapScaledImage = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().createCompatibleImage(400, 400);
@@ -80,10 +87,11 @@ public class TileMapPanel extends JPanel {
 		frame.revalidate();
 		loaded = true;
 		isVerified = false;
-		loadProps();
+		loadProps(null);
+		m3DDebugPanel.loadH3D(new BCHFile(file.getFile(1)));
 	}
 
-	public void loadProps() {
+	public void loadProps(List<H3DTexture> propTextures) {
 		if (mode == ViewportMode.MULTI) {
 			GRPropData comb = new GRPropData();
 			for (int i = 0; i < mm.height; i++) {
@@ -93,9 +101,9 @@ public class TileMapPanel extends JPanel {
 					}
 				}
 			}
-			mPropEditForm.loadDataFile(comb);
+			mPropEditForm.loadDataFile(comb, propTextures);
 		} else if (mode == ViewportMode.SINGLE) {
-			mPropEditForm.loadDataFile(new GRPropData(mainGR));
+			mPropEditForm.loadDataFile(new GRPropData(mainGR), null);
 		}
 	}
 
@@ -152,7 +160,7 @@ public class TileMapPanel extends JPanel {
 												}
 												tilemaps[j][i].modified = false; //prevent save dialog popping up until changed again
 												mm.regions[j][i].storeFile(0, tilemaps[j][i].assembleTilemap());
-												progress.setBarPercent((int) ((i * j + j) / (float) (mm.width * mm.height) * 100));
+												progress.setBarPercent((int) (((i * mm.width + j) / (float) (mm.width * mm.height)) * 100));
 											}
 										}
 										return null;
@@ -188,7 +196,7 @@ public class TileMapPanel extends JPanel {
 		return true; //no matrix, no fuss
 	}
 
-	public void loadMatrix(MapMatrix matrix) {
+	public void loadMatrix(MapMatrix matrix, List<H3DTexture> worldTextures, List<H3DTexture> propTextures) {
 		LoadingDialog progress = LoadingDialog.makeDialog("Loading matrix");
 		SwingWorker worker = new SwingWorker() {
 			@Override
@@ -203,12 +211,41 @@ public class TileMapPanel extends JPanel {
 				width = mm.width * 40;
 				height = mm.height * 40;
 				tilemaps = new Tilemap[mm.width][mm.height];
+				models = new BCHFile[mm.width][mm.height];
+				tallgrass = new BCHFile[mm.width][mm.height];
 				for (int i = 0; i < mm.height; i++) {
 					for (int j = 0; j < mm.width; j++) {
 						if (mm.ids[j][i] != -1) {
 							tilemaps[j][i] = new Tilemap(mm.regions[j][i]);
+							byte[] tg = mm.regions[j][i].getFile(5);
+							if (tg[0] == 'B' && tg[1] == 'C' && tg[2] == 'H') {
+								BCHFile tgbch = new BCHFile(tg);
+								if (!tgbch.models.isEmpty()) {
+									H3DModel tgmdl = tgbch.models.get(0);
+									tgmdl.setMaterialTextures(worldTextures);
+									//GR overworld map BCH files have just 1 model, the tall grass is entirely separate BCH
+									tgmdl.worldLocX = j * 720f;
+									tgmdl.worldLocZ = i * 720f;
+									tallgrass[j][i] = tgbch;
+								}
+							}
+							BCHFile bch = new BCHFile(mm.regions[j][i].getFile(1));
+							if (!bch.models.isEmpty()) {
+								H3DModel model = bch.models.get(0);
+								if (worldTextures != null) {
+									worldTextures.addAll(bch.textures);
+									model.setMaterialTextures(worldTextures);
+								}
+								if (propTextures != null) {
+									model.setMaterialTextures(propTextures);
+								}
+								//GR overworld map BCH files have just 1 model, the tall grass is entirely separate BCH
+								model.worldLocX = j * 720f;
+								model.worldLocZ = i * 720f;
+								models[j][i] = bch;
+							}
 						}
-						progress.setBarPercent((int) ((i * j + j) / (float) (mm.width * mm.height) * 100));
+						progress.setBarPercent((int) (((i * mm.width + j) / (float) (mm.width * mm.height)) * 100));
 					}
 				}
 				remove(placeholder);
@@ -220,7 +257,7 @@ public class TileMapPanel extends JPanel {
 				}
 				progress.setDescription("Preparing viewport");
 				loaded = true;
-				loadProps();
+				loadProps(propTextures);
 				scaleImage(1);
 				return null;
 			}
@@ -269,9 +306,22 @@ public class TileMapPanel extends JPanel {
 			for (int i = 0; i < mm.height; i++) {
 				for (int j = 0; j < mm.width; j++) {
 					if (tilemaps[j][i] != null) {
-						//we stretch the regions a few pixels to cover gaps when zooming
+						//we stretch the regions a few pixels to cover gaps when zooming due to float imprecision
 						g.drawImage(tilemaps[j][i].getImage(), (int) (Math.round(400d * tilemapScale * j)), (int) (Math.round(400d * tilemapScale * i)), regionSize + 1, regionSize, null);
 					}
+				}
+			}
+		}
+	}
+
+	public void renderH3D(GL2 gl) {
+		for (int i = 0; i < mm.height; i++) {
+			for (int j = 0; j < mm.width; j++) {
+				if (models[j][i] != null) {
+					models[j][i].render(gl);
+				}
+				if (tallgrass[j][i] != null){
+					tallgrass[j][i].render(gl);
 				}
 			}
 		}
@@ -365,7 +415,7 @@ public class TileMapPanel extends JPanel {
 						if (tilemaps[i][j] != null) {
 							tilemaps[i][j].updateImage();
 						}
-						progress.setBarPercent((int) ((i * j + j) / (float) (tilemaps.length * tilemaps[i].length) * 100));
+						progress.setBarPercent((int) (((i * tilemaps[i].length + j) / (float) (tilemaps.length * tilemaps[i].length)) * 100));
 					}
 				}
 				mTileMapPanel.scaleImage(mTileMapPanel.tilemapScale);

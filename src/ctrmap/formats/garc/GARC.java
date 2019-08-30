@@ -106,7 +106,7 @@ public class GARC {
 			if (!dir.isDirectory()){
 				return;
 			}
-			ArrayList<File> files = new ArrayList();
+			ArrayList<File> files = new ArrayList<>();
 			files.addAll(Arrays.asList(dir.listFiles()));
 			for (int i = 0; i < files.size(); i++){
 				if (!CtrmapMainframe.mWorkspace.persist_paths.contains(files.get(i).getAbsolutePath())){

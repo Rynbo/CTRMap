@@ -1,13 +1,21 @@
 package ctrmap.humaninterface;
 
+import com.jogamp.opengl.GL2;
 import ctrmap.Utils;
 import ctrmap.formats.propdata.GRProp;
 import ctrmap.formats.propdata.GRPropData;
 import static ctrmap.CtrmapMainframe.*;
+import ctrmap.Workspace;
+import ctrmap.formats.containers.BM;
+import ctrmap.formats.h3d.BCHFile;
+import ctrmap.formats.h3d.model.H3DModel;
+import ctrmap.formats.h3d.texturing.H3DTexture;
 import ctrmap.formats.propdata.ADPropRegistry;
 import java.awt.Point;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JFormattedTextField;
 import javax.swing.JOptionPane;
 import javax.swing.event.DocumentEvent;
@@ -20,6 +28,7 @@ public class PropEditForm extends javax.swing.JPanel {
 	 * Creates new form PropEditForm
 	 */
 	public GRPropData props;
+	public ArrayList<H3DModel> models = new ArrayList<>();
 	public GRProp prop;
 	public ADPropRegistry reg;
 	public ADPropRegistry.ADPropRegistryEntry regentry;
@@ -35,7 +44,7 @@ public class PropEditForm extends javax.swing.JPanel {
 			public void insertUpdate(DocumentEvent e) {
 				if (prop != null && prop.x != Utils.getFloatFromDocument(x)) {
 					prop.x = Utils.getFloatFromDocument(x);
-					props.modified = true;
+					updateH3D(props.props.indexOf(prop));
 				}
 				frame.repaint();
 			}
@@ -44,7 +53,7 @@ public class PropEditForm extends javax.swing.JPanel {
 			public void removeUpdate(DocumentEvent e) {
 				if (prop != null && prop.x != Utils.getFloatFromDocument(x)) {
 					prop.x = Utils.getFloatFromDocument(x);
-					props.modified = true;
+					updateH3D(props.props.indexOf(prop));
 				}
 				frame.repaint();
 			}
@@ -58,7 +67,7 @@ public class PropEditForm extends javax.swing.JPanel {
 			public void insertUpdate(DocumentEvent e) {
 				if (prop != null && prop.y != Utils.getFloatFromDocument(y)) {
 					prop.y = Utils.getFloatFromDocument(y);
-					props.modified = true;
+					updateH3D(props.props.indexOf(prop));
 				}
 				frame.repaint();
 			}
@@ -67,7 +76,7 @@ public class PropEditForm extends javax.swing.JPanel {
 			public void removeUpdate(DocumentEvent e) {
 				if (prop != null && prop.y != Utils.getFloatFromDocument(y)) {
 					prop.y = Utils.getFloatFromDocument(y);
-					props.modified = true;
+					updateH3D(props.props.indexOf(prop));
 				}
 				frame.repaint();
 			}
@@ -81,7 +90,7 @@ public class PropEditForm extends javax.swing.JPanel {
 			public void insertUpdate(DocumentEvent e) {
 				if (prop != null && prop.z != Utils.getFloatFromDocument(z)) {
 					prop.z = Utils.getFloatFromDocument(z);
-					props.modified = true;
+					updateH3D(props.props.indexOf(prop));
 				}
 				frame.repaint();
 			}
@@ -90,7 +99,7 @@ public class PropEditForm extends javax.swing.JPanel {
 			public void removeUpdate(DocumentEvent e) {
 				if (prop != null && prop.z != Utils.getFloatFromDocument(z)) {
 					prop.z = Utils.getFloatFromDocument(z);
-					props.modified = true;
+					updateH3D(props.props.indexOf(prop));
 				}
 				frame.repaint();
 			}
@@ -107,7 +116,8 @@ public class PropEditForm extends javax.swing.JPanel {
 		}
 	}
 
-	public void loadDataFile(GRPropData f) {
+	public void loadDataFile(GRPropData f, List<H3DTexture> propTextures) {
+		models.clear();
 		if (mWorkspace.valid && zoneDebugPnl.zone != null) {
 			if (zoneDebugPnl.zone.header.areadata != null) {
 				reg = new ADPropRegistry(zoneDebugPnl.zone.header.areadata);
@@ -118,6 +128,14 @@ public class PropEditForm extends javax.swing.JPanel {
 		props = f;
 		for (int i = 0; i < props.props.size(); i++) {
 			props.props.get(i).updateName(reg); //even if reg is null, the method handles it and (inaccurately) assigns the name by UID
+			BCHFile bch = new BCHFile(new BM(mWorkspace.getWorkspaceFile(Workspace.ArchiveType.BUILDING_MODELS, reg.entries.get(props.props.get(i).uid).model)).getFile(0));
+			H3DModel model = bch.models.get(0);
+			if (propTextures != null){
+				propTextures.addAll(bch.textures);
+				model.setMaterialTextures(propTextures);
+			}
+			models.add(model);
+			updateH3D(i);
 		}
 		entryBox.removeAllItems();
 		for (int i = 0; i < props.props.size(); i++) {
@@ -129,6 +147,22 @@ public class PropEditForm extends javax.swing.JPanel {
 		}
 	}
 
+	public void updateH3D(int index){
+		if (index >= models.size()) return;
+		H3DModel m = models.get(index);
+		GRProp p = props.props.get(index);
+		if (m == null || p == null) return;
+		m.worldLocX = p.x - 360f;
+		m.worldLocY = p.y;
+		m.worldLocZ = p.z - 360f;
+		m.scaleX = p.scaleX;
+		m.scaleY = p.scaleY;
+		m.scaleZ = p.scaleZ;
+		m.rotationX = p.rotateX;
+		m.rotationY = p.rotateY;
+		m.rotationZ = p.rotateZ;
+	}
+	
 	public void setProp(int index) {
 		entryBox.setSelectedIndex(index);
 	}
@@ -154,6 +188,8 @@ public class PropEditForm extends javax.swing.JPanel {
 			prop = prop2;
 			props.props.set(idx, prop);
 			props.modified = true;
+			updateH3D(idx);
+			frame.repaint();
 		}
 	}
 
@@ -204,6 +240,12 @@ public class PropEditForm extends javax.swing.JPanel {
 		return true;
 	}
 
+	public void renderH3D(GL2 gl){
+		for (int i = 0; i < models.size(); i++){
+			models.get(i).render(gl);
+		}
+	}
+	
 	public boolean equalsData(GRProp p1, GRProp p2) {
 		if (p1.uid != p2.uid) {
 			return false;

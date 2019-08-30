@@ -333,6 +333,7 @@ public class TileDBWriter extends javax.swing.JFrame {
 				int magic = dis.readInt();
 				if (magic != 0x4D455453){
 					JOptionPane.showMessageDialog(null, "Tileset magic mismatch", "Parse error", JOptionPane.ERROR_MESSAGE);
+					dis.close();
 					return;
 				}
 				int length = dis.readInt();
@@ -349,6 +350,7 @@ public class TileDBWriter extends javax.swing.JFrame {
 					System.out.println("added " + i);
 				}
 			}
+			dis.close();
 		} catch (IOException ex) {
 			Logger.getLogger(TileDBWriter.class.getName()).log(Level.SEVERE, null, ex);
 		}
@@ -547,6 +549,7 @@ public class TileDBWriter extends javax.swing.JFrame {
 			for (int i = 0; i < tiles.size(); i++) {
 				tiles.get(i).write(dos);
 			}
+			dos.close();
 		} catch (IOException ex) {
 			Logger.getLogger(TileDBWriter.class.getName()).log(Level.SEVERE, null, ex);
 		}

@@ -27,20 +27,23 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import ctrmap.formats.AD;
-import ctrmap.formats.GR;
-import ctrmap.formats.MM;
+import ctrmap.formats.containers.AD;
+import ctrmap.formats.containers.GR;
+import ctrmap.formats.containers.MM;
 import ctrmap.formats.WavefrontOBJ;
-import ctrmap.formats.ZO;
+import ctrmap.formats.containers.ZO;
 import ctrmap.formats.cameradata.CameraDataFile;
+import ctrmap.formats.h3d.BCHFile;
 import ctrmap.formats.mapmatrix.MapMatrix;
 import ctrmap.formats.zone.Zone;
 import ctrmap.humaninterface.AboutDialog;
+import ctrmap.humaninterface.CM3DInputManager;
 import ctrmap.humaninterface.CameraDebugPanel;
 import ctrmap.humaninterface.CameraEditForm;
 import ctrmap.humaninterface.CollEditPanel;
 import ctrmap.humaninterface.CollInputManager;
 import ctrmap.humaninterface.GLPanel;
+import ctrmap.humaninterface.H3DRenderingPanel;
 import ctrmap.humaninterface.NPCEditForm;
 import ctrmap.humaninterface.PropEditForm;
 import ctrmap.humaninterface.TileEditForm;
@@ -53,7 +56,9 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
@@ -94,6 +99,7 @@ public class CtrmapMainframe {
 	public static JLabel currentTool;
 	public static TilemapPanelInputManager mTilemapInputManager = new TilemapPanelInputManager();
 	public static CollInputManager mCollInputManager = new CollInputManager();
+	public static CM3DInputManager mCM3DInputManager = new CM3DInputManager();
 
 	public static JScrollPane mTilemapScrollPane;
 	public static TileMapPanel mTileMapPanel;
@@ -104,6 +110,7 @@ public class CtrmapMainframe {
 	public static NPCEditForm mNPCEditForm;
 
 	public static GLPanel mGLPanel;
+	public static H3DRenderingPanel m3DDebugPanel;
 	public static CollEditPanel mCollEditPanel;
 
 	public static ZoneDebugPanel zoneDebugPnl;
@@ -202,6 +209,7 @@ public class CtrmapMainframe {
 		mPropEditForm = new PropEditForm();
 		mNPCEditForm = new NPCEditForm();
 		mGLPanel = new GLPanel();
+		m3DDebugPanel = new H3DRenderingPanel();
 		mCollEditPanel = new CollEditPanel();
 		jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		mTilemapScrollPane.setViewportView(mTileMapPanel);
@@ -223,6 +231,7 @@ public class CtrmapMainframe {
 
 		tabs.add("Tilemap Editor", tileEditMasterPnl);
 		tabs.add("Collision Editor", collEditMasterPnl);
+		tabs.add("3D Editor", m3DDebugPanel);
 		//tabs.add("Camera Editor (debug)", camDebugPnl);
 		tabs.add("Zone Editor (debug)", zoneDebugPnl);
 
@@ -260,9 +269,20 @@ public class CtrmapMainframe {
 				jfc.setMultiSelectionEnabled(false);
 				jfc.showOpenDialog(frame);
 				if (jfc.getSelectedFile() != null) {
-					prefs.put("LAST_DIR", jfc.getSelectedFile().getParent());
-					CameraDataFile cdf = new CameraDataFile(new AD(jfc.getSelectedFile()));
-					mCamEditForm.loadDataFile(cdf);
+
+					InputStream in = null;
+					try {
+						prefs.put("LAST_DIR", jfc.getSelectedFile().getParent());
+						/*CameraDataFile cdf = new CameraDataFile(new AD(jfc.getSelectedFile()));
+						mCamEditForm.loadDataFile(cdf);*/
+						in = new FileInputStream(jfc.getSelectedFile());
+						byte[] b = new byte[in.available()];
+						in.read(b);
+						in.close();
+						m3DDebugPanel.loadH3D(new BCHFile(b));
+					} catch (IOException ex) {
+						Logger.getLogger(CtrmapMainframe.class.getName()).log(Level.SEVERE, null, ex);
+					}
 				}
 			}
 		});
@@ -335,7 +355,7 @@ public class CtrmapMainframe {
 				jfc.showOpenDialog(frame);
 				if (jfc.getSelectedFile() != null) {
 					prefs.put("LAST_DIR", jfc.getSelectedFile().getParent());
-					mTileMapPanel.loadMatrix(new MapMatrix(new MM(jfc.getSelectedFile())));
+					mTileMapPanel.loadMatrix(new MapMatrix(new MM(jfc.getSelectedFile())), null, null);
 					mTileMapPanel.scaleImage(1);
 				}
 			}
@@ -383,8 +403,7 @@ public class CtrmapMainframe {
 					} catch (URISyntaxException | IOException ex) {
 						Logger.getLogger(CtrmapMainframe.class.getName()).log(Level.SEVERE, null, ex);
 					}
-				}
-				else {
+				} else {
 					Utils.showErrorMessage("Browser open error", "Your system either does not support the Java Desktop API or you do not have a suitable browser installed.");
 				}
 			}
@@ -445,7 +464,7 @@ public class CtrmapMainframe {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				if (mCamEditForm.store(true) && mTileMapPanel.saveTileMap(true) && mPropEditForm.store(true) && mNPCEditForm.saveRegistry(true) && zoneDebugPnl.store(true)){
+				if (mCamEditForm.store(true) && mTileMapPanel.saveTileMap(true) && mPropEditForm.store(true) && mNPCEditForm.saveRegistry(true) && zoneDebugPnl.store(true)) {
 					mWorkspace.cleanUnchanged();
 					mWorkspace.saveWorkspace();
 					System.exit(0);

@@ -4,7 +4,7 @@ import ctrmap.CtrmapMainframe;
 import ctrmap.LittleEndianDataInputStream;
 import ctrmap.LittleEndianDataOutputStream;
 import ctrmap.Workspace;
-import ctrmap.formats.BM;
+import ctrmap.formats.containers.BM;
 import ctrmap.formats.h3d.H3DModelNameGet;
 import java.io.File;
 import java.io.IOException;

@@ -2,9 +2,9 @@ package ctrmap.humaninterface;
 
 import static ctrmap.CtrmapMainframe.*;
 import ctrmap.Utils;
-import ctrmap.formats.EditorTileset;
-import ctrmap.formats.TileTemplate;
-import ctrmap.formats.Tilemap;
+import ctrmap.formats.tilemap.EditorTileset;
+import ctrmap.formats.tilemap.TileTemplate;
+import ctrmap.formats.tilemap.Tilemap;
 import ctrmap.humaninterface.tools.AbstractTool;
 import ctrmap.humaninterface.tools.EditTool;
 import ctrmap.humaninterface.tools.FillTool;

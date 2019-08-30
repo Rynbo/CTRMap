@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package ctrmap.formats;
+package ctrmap.formats.containers;
 
 import java.io.File;
 

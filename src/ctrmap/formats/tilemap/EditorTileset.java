@@ -1,4 +1,4 @@
-package ctrmap.formats;
+package ctrmap.formats.tilemap;
 
 import java.io.DataInputStream;
 import java.io.File;

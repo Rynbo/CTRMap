@@ -9,7 +9,7 @@ import static ctrmap.CtrmapMainframe.*;
 import ctrmap.LittleEndianDataInputStream;
 import ctrmap.LittleEndianDataOutputStream;
 import ctrmap.Utils;
-import ctrmap.formats.GR;
+import ctrmap.formats.containers.GR;
 import ctrmap.formats.Triangle;
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;

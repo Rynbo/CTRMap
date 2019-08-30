@@ -12,10 +12,8 @@ import static ctrmap.CtrmapMainframe.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-public class CollInputManager implements MouseWheelListener, MouseMotionListener, MouseInputListener, KeyListener{
+public class CM3DInputManager implements MouseWheelListener, MouseMotionListener, MouseInputListener, KeyListener{
 	private int originMouseX;
 	private int originMouseY;
 	private float originScaleX;
@@ -46,11 +44,11 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 	public void setOrigins(MouseEvent e) {
 		originMouseX = e.getX();
 		originMouseY = e.getY();
-		originScaleX = mGLPanel.scaleX;
-		originScaleY = mGLPanel.scaleY;
-		originRotateX = mGLPanel.rotateX;
-		originRotateY = mGLPanel.rotateY;
-		originRotateZ = mGLPanel.rotateZ;
+		originScaleX = m3DDebugPanel.scaleX;
+		originScaleY = m3DDebugPanel.scaleY;
+		originRotateX = m3DDebugPanel.rotateX;
+		originRotateY = m3DDebugPanel.rotateY;
+		originRotateZ = m3DDebugPanel.rotateZ;
 	}
 
 	@Override
@@ -61,24 +59,21 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		if (SwingUtilities.isRightMouseButton(e)) {
-			mGLPanel.scaleX = originScaleX + (e.getX() - originMouseX);
-			mGLPanel.scaleY = originScaleY - (e.getY() - originMouseY);
 			m3DDebugPanel.scaleX = originScaleX + (e.getX() - originMouseX);
 			m3DDebugPanel.scaleY = originScaleY - (e.getY() - originMouseY);
 		}
 		else if (SwingUtilities.isLeftMouseButton(e)) {
-			mGLPanel.rotateY = originRotateY + (e.getX() - originMouseX)/2f;
-			m3DDebugPanel.rotateY = originRotateY + (e.getX() - originMouseX)/2f;
-			float rotateX = mGLPanel.rotateY;
+			m3DDebugPanel.rotateY = (originRotateY + (e.getX() - originMouseX)/2f) % 360f;
+			float rotateX = m3DDebugPanel.rotateY;
 			float rotateX180multi = (float)Math.floor(rotateX/180f);
 			float rotateXmed = (rotateX - rotateX180multi*180f)/180f;
 			float backwardsMultiplier1 = (((int)Math.round(rotateX/180f) & 1) == 0) ? 1 : -1;
 			float backwardsMultiplier2 = (((int)Math.round((rotateX + 90f)/180f) & 1) == 0) ? -1 : 1;
 			if (rotateXmed > 0.5f) rotateXmed = 1f - rotateXmed;
-			mGLPanel.rotateZ = originRotateZ + backwardsMultiplier2*rotateXmed*(e.getY() - originMouseY)/2f;
-			mGLPanel.rotateX = originRotateX + backwardsMultiplier1*(0.5f - rotateXmed)*(e.getY() - originMouseY)/2f;
-			m3DDebugPanel.rotateZ = originRotateZ + backwardsMultiplier2*rotateXmed*(e.getY() - originMouseY)/2f;
-			m3DDebugPanel.rotateX = originRotateX + backwardsMultiplier1*(0.5f - rotateXmed)*(e.getY() - originMouseY)/2f;
+			//m3DDebugPanel.rotateZ = Math.min(180f, originRotateZ + backwardsMultiplier2*rotateXmed*(e.getY() - originMouseY)/2f);
+			//m3DDebugPanel.rotateX = Math.min(180f, originRotateX + backwardsMultiplier1*(0.5f - rotateXmed)*(e.getY() - originMouseY)/2f);
+			//m3DDebugPanel.rotateZ = (float)Math.min(180f, originRotateZ + Math.sin(Math.toRadians(rotateX)) * (e.getY() - originMouseY)/2f);
+			m3DDebugPanel.rotateX = ((float)Math.min(180f, originRotateX + (e.getY() - originMouseY)/2f)) % 360f;
 			setOrigins(e);
 		}
 	}
@@ -90,7 +85,6 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
-		mGLPanel.scale -= e.getWheelRotation()*20f;
 		m3DDebugPanel.scale -= e.getWheelRotation()*20f;
 	}
 
@@ -113,7 +107,7 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 								start = System.currentTimeMillis();
 								m3DDebugPanel.scaleX -= Math.sin(Math.toRadians(m3DDebugPanel.rotateY))*10f;
 								m3DDebugPanel.scale += Math.cos(Math.toRadians(m3DDebugPanel.rotateY))*10f;
-								m3DDebugPanel.scaleY += Math.cos(Math.toRadians(m3DDebugPanel.rotateZ))*10f;
+								m3DDebugPanel.scaleY += Math.sin(Math.toRadians(m3DDebugPanel.rotateX))*10f;
 								Thread.sleep(50 - Math.min(0, (System.currentTimeMillis() - start)));
 							} catch (InterruptedException ex) {}
 						}
@@ -128,8 +122,10 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 						while (keycodes.contains(KeyEvent.VK_S)){
 							try {
 								start = System.currentTimeMillis();
-								m3DDebugPanel.scale -= 10;
-								Thread.sleep(50 - (System.currentTimeMillis() - start));
+								m3DDebugPanel.scaleX += Math.sin(Math.toRadians(m3DDebugPanel.rotateY))*10f;
+								m3DDebugPanel.scale -= Math.cos(Math.toRadians(m3DDebugPanel.rotateY))*10f;
+								m3DDebugPanel.scaleY -= Math.sin(Math.toRadians(m3DDebugPanel.rotateX))*10f;
+								Thread.sleep(50 - Math.min(0, (System.currentTimeMillis() - start)));
 							} catch (InterruptedException ex) {}
 						}
 					}

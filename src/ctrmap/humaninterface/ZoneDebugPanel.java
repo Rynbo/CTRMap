@@ -2,7 +2,7 @@ package ctrmap.humaninterface;
 
 import static ctrmap.CtrmapMainframe.*;
 import ctrmap.Workspace;
-import ctrmap.formats.ZO;
+import ctrmap.formats.containers.ZO;
 import ctrmap.formats.cameradata.CameraDataFile;
 import ctrmap.formats.mapmatrix.MapMatrix;
 import ctrmap.formats.text.LocationNames;
@@ -28,6 +28,10 @@ public class ZoneDebugPanel extends javax.swing.JPanel {
 
 	public void loadZone(Zone z) {
 		loaded = false;
+		if (zone != null){
+			zone.header.freeArchives();
+			System.gc();
+		}
 		zone = z;
 		OLValue.setValue(z.header.OLvalue);
 		cam1.setValue(z.header.camera1);
@@ -281,7 +285,7 @@ public class ZoneDebugPanel extends javax.swing.JPanel {
 						progress.setBarPercent(50);
 						z.header.fetchArchives();
 						progress.setBarPercent(100);
-						mTileMapPanel.loadMatrix(new MapMatrix(z.header.mapmatrix));
+						mTileMapPanel.loadMatrix(new MapMatrix(z.header.mapmatrix), z.header.worldTextures, z.header.propTextures);
 						mCamEditForm.loadDataFile(new CameraDataFile(z.header.areadata));
 						mNPCEditForm.loadFromEntities(z.entities, z.header.npcreg);
 						return null;

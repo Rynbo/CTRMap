@@ -1,4 +1,5 @@
-package ctrmap.formats;
+package ctrmap.formats.tilemap;
+import ctrmap.formats.containers.GR;
 import ctrmap.CtrmapMainframe;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;

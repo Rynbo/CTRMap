@@ -10,7 +10,7 @@ import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.util.FPSAnimator;
 
 import static ctrmap.CtrmapMainframe.*;
-import ctrmap.formats.GR;
+import ctrmap.formats.containers.GR;
 import ctrmap.formats.gfcollision.GRCollisionFile;
 
 public class GLPanel extends GLJPanel implements GLEventListener{

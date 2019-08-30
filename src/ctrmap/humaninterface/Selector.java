@@ -1,7 +1,7 @@
 package ctrmap.humaninterface;
 
 import static ctrmap.CtrmapMainframe.*;
-import ctrmap.formats.Tilemap;
+import ctrmap.formats.tilemap.Tilemap;
 
 public class Selector {
 	public static int hilightTileX = -1;

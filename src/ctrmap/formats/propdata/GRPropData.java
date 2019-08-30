@@ -3,7 +3,7 @@ package ctrmap.formats.propdata;
 
 import ctrmap.LittleEndianDataInputStream;
 import ctrmap.LittleEndianDataOutputStream;
-import ctrmap.formats.GR;
+import ctrmap.formats.containers.GR;
 import ctrmap.formats.mapmatrix.MapMatrix;
 import ctrmap.Utils;
 import java.io.ByteArrayInputStream;
