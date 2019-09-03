@@ -16,8 +16,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,6 +38,7 @@ public class Workspace {
 	public File zonedata;
 	public File buildingmodels;
 	public File npcregistries;
+	public File movemodels;
 
 	public File persist_config;
 	public ArrayList<String> persist_paths = new ArrayList<>();
@@ -51,6 +50,7 @@ public class Workspace {
 	public GARC zo;
 	public GARC bm;
 	public GARC npcreg;
+	public GARC npcmm;
 
 	public GameType game;
 	public boolean valid = false;
@@ -98,7 +98,8 @@ public class Workspace {
 					"gametext",
 					"zonedata",
 					"buildingmodels",
-					"npcregistries"
+					"npcregistries",
+					"movemodels"
 				});
 				persist_config = new File(WORKSPACE_PATH + "/ctrmap_persist.txt");
 				persist_paths.clear();
@@ -142,6 +143,7 @@ public class Workspace {
 					zonedata = new File(basepath + getArchivePath(ArchiveType.ZONE_DATA, game));
 					buildingmodels = new File(basepath + getArchivePath(ArchiveType.BUILDING_MODELS, game));
 					npcregistries = new File(basepath + getArchivePath(ArchiveType.NPC_REGISTRIES, game));
+					movemodels = new File(basepath + getArchivePath(ArchiveType.MOVE_MODELS, game));
 					if (!areadata.exists()) {
 						errors.add("AreaData GARC not found");
 					}
@@ -162,6 +164,9 @@ public class Workspace {
 					}
 					if (!npcregistries.exists()) {
 						errors.add("NPCRegistries GARC not found");
+					}
+					if (!movemodels.exists()) {
+						errors.add("MoveModels GARC not found");
 					}
 				}
 			}
@@ -205,6 +210,8 @@ public class Workspace {
 					return "/a/0/2/4";
 				case NPC_REGISTRIES:
 					return "/a/1/4/9";
+				case MOVE_MODELS:
+					return "/a/0/2/1";
 			}
 		} else {
 			switch (archiveType) {
@@ -222,6 +229,8 @@ public class Workspace {
 					return "/a/0/2/3";
 				case NPC_REGISTRIES:
 					return "/a/1/3/7";
+				case MOVE_MODELS:
+					return "/a/0/2/1";
 			}
 		}
 		return null;
@@ -252,6 +261,7 @@ public class Workspace {
 		cleanDirectory(WORKSPACE_PATH + "/zonedata", deletePersistent);
 		cleanDirectory(WORKSPACE_PATH + "/buildingmodels", deletePersistent);
 		cleanDirectory(WORKSPACE_PATH + "/npcregistries", deletePersistent);
+		cleanDirectory(WORKSPACE_PATH + "/movemodels", deletePersistent);
 	}
 
 	public void cleanDirectory(String dir, boolean deletePersistent) {
@@ -285,6 +295,8 @@ public class Workspace {
 				return bm;
 			case NPC_REGISTRIES:
 				return npcreg;
+			case MOVE_MODELS:
+				return npcmm;
 		}
 		return null;
 	}
@@ -313,6 +325,9 @@ public class Workspace {
 			case NPC_REGISTRIES:
 				sb.append("npcregistries");
 				break;
+			case MOVE_MODELS:
+				sb.append("movemodels");
+				break;
 			default:
 				return null;
 		}
@@ -329,13 +344,14 @@ public class Workspace {
 			zo = new GARC(zonedata);
 			bm = new GARC(buildingmodels);
 			npcreg = new GARC(npcregistries);
+			npcmm = new GARC(movemodels);
 		}
 	}
 
 	public File getWorkspaceFile(ArchiveType arc, int fileNum) {
-		File wsFile = null;
+		File wsFile;
 		wsFile = new File(getExtractionDirectory(arc).getAbsolutePath() + "/" + fileNum);
-		if (wsFile != null && !wsFile.exists()) {
+		if (!wsFile.exists()) {
 			try {
 				OutputStream os = new FileOutputStream(wsFile);
 				byte[] b = getArchive(arc).getDecompressedEntry(fileNum);
@@ -386,6 +402,7 @@ public class Workspace {
 					zo = new GARC(zo.file);
 					bm = new GARC(bm.file);
 					npcreg = new GARC(npcreg.file);
+					npcmm = new GARC(npcmm.file);
 					return null;
 				}
 			};
@@ -406,7 +423,8 @@ public class Workspace {
 		GAMETEXT,
 		ZONE_DATA,
 		BUILDING_MODELS,
-		NPC_REGISTRIES
+		NPC_REGISTRIES,
+		MOVE_MODELS
 	}
 
 	public void saveWorkspace() {

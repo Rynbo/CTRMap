@@ -1,5 +1,6 @@
 package ctrmap.humaninterface;
 
+import com.jogamp.opengl.GL2;
 import ctrmap.formats.npcreg.NPCRegistry;
 import ctrmap.formats.zone.ZoneEntities;
 import java.awt.event.FocusAdapter;
@@ -7,9 +8,10 @@ import java.awt.event.FocusEvent;
 import javax.swing.JFormattedTextField;
 import javax.swing.text.NumberFormatter;
 import static ctrmap.CtrmapMainframe.*;
+import ctrmap.formats.h3d.model.H3DModel;
 import java.awt.Point;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JOptionPane;
 
 public class NPCEditForm extends javax.swing.JPanel {
@@ -23,6 +25,7 @@ public class NPCEditForm extends javax.swing.JPanel {
 	public NPCRegistry reg;
 	public NPCRegistry.NPCRegistryEntry regentry;
 	public int npcIndex;
+	public List<H3DModel> models = new ArrayList<>();
 
 	public NPCEditForm() {
 		initComponents();
@@ -31,6 +34,7 @@ public class NPCEditForm extends javax.swing.JPanel {
 	}
 
 	public void loadFromEntities(ZoneEntities e, NPCRegistry reg) {
+		models.clear();
 		this.reg = reg;
 		this.e = e;
 		loaded = false;
@@ -39,6 +43,9 @@ public class NPCEditForm extends javax.swing.JPanel {
 		entryBox.removeAllItems();
 		for (int i = 0; i < e.NPCCount; i++) {
 			entryBox.addItem(String.valueOf(e.npcs.get(i).uid));
+			if (reg != null){
+				models.add(reg.getModel(e.npcs.get(i).model));
+			}
 		}
 		loaded = true;
 		if (entryBox.getItemCount() > 0) {
@@ -103,9 +110,17 @@ public class NPCEditForm extends javax.swing.JPanel {
 				regentry = failsafe;
 			}
 		}
+		updateModel(index);
+		updateH3D(index);
 		loaded = true;
 	}
 
+	public void updateModel(int index){
+		if (reg != null){
+			models.set(index, reg.getModel(e.npcs.get(index).model));
+		}
+	}
+	
 	public void saveEntry() {
 		if (npc == null) {
 			return;
@@ -171,6 +186,42 @@ public class NPCEditForm extends javax.swing.JPanel {
 	public void setIntegerValueClass(JFormattedTextField[] fields) {
 		for (int i = 0; i < fields.length; i++) {
 			((NumberFormatter) fields[i].getFormatter()).setValueClass(Integer.class);
+		}
+	}
+	
+	public void updateH3D(int index){
+		H3DModel m = models.get(index);
+		if (m == null) return;
+		ZoneEntities.NPC n = e.npcs.get(index);
+		m.worldLocX = n.xTile * 18f; //720 (chunk size) / 40 (tile width per chunk)
+		m.worldLocZ = n.yTile * 18f;
+		m.worldLocY = n.z3DCoordinate;
+		m.rotationX = get3DOrientation(n.faceDirection);
+	}
+	
+	public float get3DOrientation(int faceDirection){
+		switch (faceDirection){
+			case 0:
+				return 180f;
+			case 1:
+				return 0f;
+			case 2:
+				return 270f;
+			case 3:
+				return 90f;
+			default:
+				return 0f;
+		}
+	}
+	
+	public void renderH3D(GL2 gl){
+		if (reg != null){
+			for (int i = 0; i < e.NPCCount; i++){
+				if (models.size() > i && models.get(i) != null){
+					updateH3D(i);
+					models.get(i).render(gl);
+				}
+			}
 		}
 	}
 
@@ -646,6 +697,9 @@ public class NPCEditForm extends javax.swing.JPanel {
 		newNPC.xTile = defaultPos.x;
 		newNPC.yTile = defaultPos.y;
 		e.npcs.add(newNPC);
+		if (reg != null){
+			models.add(reg.getModel(newNPC.model));
+		}
 		e.NPCCount++;
 		entryBox.addItem(String.valueOf(newNPC.uid));
 		setNPC(entryBox.getItemCount() - 1);
@@ -659,7 +713,10 @@ public class NPCEditForm extends javax.swing.JPanel {
     }//GEN-LAST:event_btnSaveActionPerformed
 
     private void btnRemoveEntryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveEntryActionPerformed
-        e.npcs.remove(npc);
+		if (reg != null){
+			models.remove(reg.getModel(npc.model));
+		}
+		e.npcs.remove(npc);
 		e.NPCCount--;
 		entryBox.removeItemAt(entryBox.getSelectedIndex());
 		if (entryBox.getSelectedIndex() >= entryBox.getItemCount()) {

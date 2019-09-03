@@ -4,6 +4,10 @@ import ctrmap.CtrmapMainframe;
 import ctrmap.LittleEndianDataInputStream;
 import ctrmap.LittleEndianDataOutputStream;
 import ctrmap.Utils;
+import ctrmap.Workspace;
+import ctrmap.formats.containers.MM;
+import ctrmap.formats.h3d.BCHFile;
+import ctrmap.formats.h3d.model.H3DModel;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -21,6 +25,7 @@ import javax.swing.JOptionPane;
 public class NPCRegistry {
 
 	public Map<Integer, NPCRegistryEntry> entries = new HashMap<>();
+	public Map<Integer, H3DModel> models = new HashMap<>();
 	public boolean modified = false;
 	private File f;
 
@@ -32,6 +37,11 @@ public class NPCRegistry {
 			while (dis.available() >= 0x18) {
 				NPCRegistryEntry e = new NPCRegistryEntry(dis);
 				entries.put(e.uid, e);
+				BCHFile bch = new BCHFile(new MM(CtrmapMainframe.mWorkspace.getWorkspaceFile(Workspace.ArchiveType.MOVE_MODELS, e.model)).getFile(0));
+				if (!bch.models.isEmpty()){
+					bch.models.get(0).setMaterialTextures(bch.textures);
+					models.put(e.uid, bch.models.get(0));
+				}
 			}
 			dis.close();
 		} catch (IOException ex) {
@@ -39,6 +49,10 @@ public class NPCRegistry {
 		}
 	}
 
+	public H3DModel getModel(int uid){
+		return models.get(uid);
+	}
+	
 	public boolean store(boolean dialog) {
 		if (!modified) return true;
 		if (dialog){
