@@ -1,14 +1,21 @@
 package ctrmap.formats.propdata;
 
+import ctrmap.CtrmapMainframe;
 import ctrmap.LittleEndianDataInputStream;
 import ctrmap.LittleEndianDataOutputStream;
 import ctrmap.Utils;
+import ctrmap.Workspace;
 import ctrmap.formats.containers.AD;
+import ctrmap.formats.containers.BM;
+import ctrmap.formats.h3d.BCHFile;
+import ctrmap.formats.h3d.model.H3DModel;
+import ctrmap.formats.h3d.texturing.H3DTexture;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,9 +27,10 @@ public class ADPropRegistry {
 
 	private AD f;
 	public Map<Integer, ADPropRegistryEntry> entries = new HashMap<>();
+	public Map<Integer, H3DModel> models = new HashMap<>();
 	public boolean modified = false;
 
-	public ADPropRegistry(AD ad) {
+	public ADPropRegistry(AD ad, List<H3DTexture> textures) {
 		try {
 			f = ad;
 			LittleEndianDataInputStream dis = new LittleEndianDataInputStream(new ByteArrayInputStream(ad.getFile(0)));
@@ -30,12 +38,25 @@ public class ADPropRegistry {
 			for (int i = 0; i < numEntries; i++) {
 				ADPropRegistryEntry entry = new ADPropRegistryEntry(dis);
 				entries.put(entry.reference, entry);
+				BCHFile bch = new BCHFile(new BM(CtrmapMainframe.mWorkspace.getWorkspaceFile(Workspace.ArchiveType.BUILDING_MODELS, entry.model)).getFile(0));
+				if (!bch.models.isEmpty()){
+					bch.models.get(0).setMaterialTextures(bch.textures);
+					bch.models.get(0).adjustBoneVerticesToMatrix();
+					if (textures != null){
+						bch.models.get(0).setMaterialTextures(textures);
+					}
+					models.put(entry.reference, bch.models.get(0));
+				}
 			}
 			dis.close();
 		} catch (IOException ex) {
 			System.err.println("IOException thrown when reading prop registry");
 			ex.printStackTrace();
 		}
+	}
+	
+	public H3DModel getModel(int uid){
+		return models.get(uid);
 	}
 	
 	public void write(){

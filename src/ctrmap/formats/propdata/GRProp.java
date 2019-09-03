@@ -17,8 +17,8 @@ public class GRProp {
 	public float scaleX;
 	public float scaleY;
 	public float scaleZ;
-	public float rotateX;
 	public float rotateY;
+	public float rotateX;
 	public float rotateZ;
 	public float x;
 	public float y;
@@ -34,8 +34,8 @@ public class GRProp {
 			scaleX = dis.readFloat();
 			scaleY = dis.readFloat();
 			scaleZ = dis.readFloat();
-			rotateX = dis.readFloat();
 			rotateY = dis.readFloat();
+			rotateX = dis.readFloat();
 			rotateZ = dis.readFloat();
 			x = dis.readFloat();
 			y = dis.readFloat();
@@ -51,8 +51,8 @@ public class GRProp {
 		scaleX = 1f;
 		scaleY = 1f;
 		scaleZ = 1f;
-		rotateX = 0f;
 		rotateY = 0f;
+		rotateX = 0f;
 		rotateZ = 0f;
 		x = 0f;
 		y = 0f;
@@ -81,8 +81,8 @@ public class GRProp {
 			dos.writeFloat(scaleX);
 			dos.writeFloat(scaleY);
 			dos.writeFloat(scaleZ);
-			dos.writeFloat(rotateX);
 			dos.writeFloat(rotateY);
+			dos.writeFloat(rotateX);
 			dos.writeFloat(rotateZ);
 			dos.writeFloat(x);
 			dos.writeFloat(y);

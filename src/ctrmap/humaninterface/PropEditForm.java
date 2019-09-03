@@ -9,6 +9,7 @@ import ctrmap.Workspace;
 import ctrmap.formats.containers.BM;
 import ctrmap.formats.h3d.BCHFile;
 import ctrmap.formats.h3d.model.H3DModel;
+import ctrmap.formats.h3d.model.H3DSkeleton;
 import ctrmap.formats.h3d.texturing.H3DTexture;
 import ctrmap.formats.propdata.ADPropRegistry;
 import java.awt.Point;
@@ -120,7 +121,7 @@ public class PropEditForm extends javax.swing.JPanel {
 		models.clear();
 		if (mWorkspace.valid && zoneDebugPnl.zone != null) {
 			if (zoneDebugPnl.zone.header.areadata != null) {
-				reg = new ADPropRegistry(zoneDebugPnl.zone.header.areadata);
+				reg = new ADPropRegistry(zoneDebugPnl.zone.header.areadata, propTextures);
 			}
 		}
 		prop = null;
@@ -128,13 +129,10 @@ public class PropEditForm extends javax.swing.JPanel {
 		props = f;
 		for (int i = 0; i < props.props.size(); i++) {
 			props.props.get(i).updateName(reg); //even if reg is null, the method handles it and (inaccurately) assigns the name by UID
-			BCHFile bch = new BCHFile(new BM(mWorkspace.getWorkspaceFile(Workspace.ArchiveType.BUILDING_MODELS, reg.entries.get(props.props.get(i).uid).model)).getFile(0));
-			H3DModel model = bch.models.get(0);
-			if (propTextures != null){
-				propTextures.addAll(bch.textures);
-				model.setMaterialTextures(propTextures);
+			if (reg != null){
+				H3DModel model = reg.getModel(props.props.get(i).uid);
+				models.add(model);
 			}
-			models.add(model);
 			updateH3D(i);
 		}
 		entryBox.removeAllItems();
@@ -147,14 +145,18 @@ public class PropEditForm extends javax.swing.JPanel {
 		}
 	}
 
-	public void updateH3D(int index){
-		if (index >= models.size()) return;
+	public void updateH3D(int index) {
+		if (index >= models.size()) {
+			return;
+		}
 		H3DModel m = models.get(index);
 		GRProp p = props.props.get(index);
-		if (m == null || p == null) return;
-		m.worldLocX = p.x - 360f;
+		if (m == null || p == null) {
+			return;
+		}
+		m.worldLocX = p.x;
 		m.worldLocY = p.y;
-		m.worldLocZ = p.z - 360f;
+		m.worldLocZ = p.z;
 		m.scaleX = p.scaleX;
 		m.scaleY = p.scaleY;
 		m.scaleZ = p.scaleZ;
@@ -162,7 +164,7 @@ public class PropEditForm extends javax.swing.JPanel {
 		m.rotationY = p.rotateY;
 		m.rotationZ = p.rotateZ;
 	}
-	
+
 	public void setProp(int index) {
 		entryBox.setSelectedIndex(index);
 	}
@@ -177,8 +179,8 @@ public class PropEditForm extends javax.swing.JPanel {
 		prop2.x = Utils.getFloatFromDocument(x);
 		prop2.y = Utils.getFloatFromDocument(y);
 		prop2.z = Utils.getFloatFromDocument(z);
-		prop2.rotateX = Utils.getFloatFromDocument(rx);
-		prop2.rotateY = Utils.getFloatFromDocument(ry);
+		prop2.rotateY = Utils.getFloatFromDocument(rx);
+		prop2.rotateX = Utils.getFloatFromDocument(ry);
 		prop2.rotateZ = Utils.getFloatFromDocument(rz);
 		prop2.scaleX = Utils.getFloatFromDocument(sx);
 		prop2.scaleY = Utils.getFloatFromDocument(sy);
@@ -240,12 +242,17 @@ public class PropEditForm extends javax.swing.JPanel {
 		return true;
 	}
 
-	public void renderH3D(GL2 gl){
-		for (int i = 0; i < models.size(); i++){
-			models.get(i).render(gl);
+	public void renderH3D(GL2 gl) {
+		if (reg != null){
+			for (int i = 0; i < models.size(); i++) {
+				if (models.size() > i && models.get(i) != null){
+					updateH3D(i);
+					models.get(i).render(gl);
+				}
+			}
 		}
 	}
-	
+
 	public boolean equalsData(GRProp p1, GRProp p2) {
 		if (p1.uid != p2.uid) {
 			return false;
@@ -259,10 +266,10 @@ public class PropEditForm extends javax.swing.JPanel {
 		if (p1.z != p2.z) {
 			return false;
 		}
-		if (p1.rotateX != p2.rotateX) {
+		if (p1.rotateY != p2.rotateY) {
 			return false;
 		}
-		if (p1.rotateY != p2.rotateY) {
+		if (p1.rotateX != p2.rotateX) {
 			return false;
 		}
 		if (p1.rotateZ != p2.rotateZ) {
@@ -278,19 +285,6 @@ public class PropEditForm extends javax.swing.JPanel {
 			return false;
 		}
 		return true;
-	}
-
-	public void commitAndSwitch(int switchNum) {
-		mdlName.requestFocus(); //first focus something else so that the listener is called
-		FocusAdapter adapter = new FocusAdapter() {
-			@Override
-			public void focusGained(FocusEvent e) {
-				entryBox.removeFocusListener(this);
-				setProp(switchNum);
-			}
-		};
-		entryBox.addFocusListener(adapter);
-		entryBox.requestFocus();
 	}
 
 	public void showProp(int index) {
@@ -310,8 +304,8 @@ public class PropEditForm extends javax.swing.JPanel {
 		x.setValue(prop.x);
 		y.setValue(prop.y);
 		z.setValue(prop.z);
-		rx.setValue(prop.rotateX);
-		ry.setValue(prop.rotateY);
+		rx.setValue(prop.rotateY);
+		ry.setValue(prop.rotateX);
 		rz.setValue(prop.rotateZ);
 		sx.setValue(prop.scaleX);
 		sy.setValue(prop.scaleY);
@@ -342,9 +336,16 @@ public class PropEditForm extends javax.swing.JPanel {
 				regentry = failsafe;
 			}
 		}
+		updateModel(index);
 		loaded = true;
 	}
 
+	public void updateModel(int index){
+		if (reg != null){
+			models.set(index, reg.getModel(props.props.get(index).uid));
+		}
+	}
+	
 	public void saveAndRefresh() {
 		if (loaded) {
 			saveProp();
@@ -645,6 +646,7 @@ public class PropEditForm extends javax.swing.JPanel {
     }//GEN-LAST:event_btnSaveActionPerformed
 
     private void btnRemEntryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemEntryActionPerformed
+		models.remove(entryBox.getSelectedIndex());
 		props.props.remove(entryBox.getSelectedIndex());
 		entryBox.removeItemAt(entryBox.getSelectedIndex());
 		if (entryBox.getSelectedIndex() >= entryBox.getItemCount()) {
@@ -663,6 +665,7 @@ public class PropEditForm extends javax.swing.JPanel {
 		newProp.z = defaultPos.y;
 		newProp.updateName(reg);
 		props.props.add(newProp);
+		models.add(reg.getModel(newProp.uid));
 		entryBox.addItem(String.valueOf(props.props.size() - 1));
 		setProp(entryBox.getItemCount() - 1);
 		props.modified = true;

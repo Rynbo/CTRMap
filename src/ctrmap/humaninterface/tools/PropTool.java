@@ -71,7 +71,7 @@ public class PropTool extends AbstractTool {
 					isDownOnProp = true;
 					xshift = 2*(xBase - e.getX()) / mTileMapPanel.tilemapScale; //xBase is in the center
 					yshift = (yBase - e.getY()) / mTileMapPanel.tilemapScale;
-					mPropEditForm.commitAndSwitch(i);
+					mPropEditForm.setProp(i);
 					break;
 				}
 			}
