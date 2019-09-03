@@ -16,6 +16,7 @@ import ctrmap.formats.containers.GR;
 import ctrmap.formats.cameradata.CameraData;
 import ctrmap.formats.h3d.BCHFile;
 import ctrmap.formats.h3d.model.H3DModel;
+import ctrmap.formats.h3d.model.H3DSkeleton;
 import ctrmap.formats.h3d.texturing.H3DTexture;
 import ctrmap.formats.mapmatrix.MapMatrix;
 import ctrmap.formats.propdata.GRPropData;
@@ -224,8 +225,8 @@ public class TileMapPanel extends JPanel {
 									H3DModel tgmdl = tgbch.models.get(0);
 									tgmdl.setMaterialTextures(worldTextures);
 									//GR overworld map BCH files have just 1 model, the tall grass is entirely separate BCH
-									tgmdl.worldLocX = j * 720f;
-									tgmdl.worldLocZ = i * 720f;
+									tgmdl.worldLocX = j * 720f + 360f;
+									tgmdl.worldLocZ = i * 720f + 360f;
 									tallgrass[j][i] = tgbch;
 								}
 							}
@@ -240,14 +241,19 @@ public class TileMapPanel extends JPanel {
 									model.setMaterialTextures(propTextures);
 								}
 								//GR overworld map BCH files have just 1 model, the tall grass is entirely separate BCH
-								model.worldLocX = j * 720f;
-								model.worldLocZ = i * 720f;
+								model.worldLocX = j * 720f + 360f;
+								model.worldLocZ = i * 720f + 360f;
+								model.adjustBoneVerticesToMatrix();
 								models[j][i] = bch;
 							}
 						}
 						progress.setBarPercent((int) (((i * mm.width + j) / (float) (mm.width * mm.height)) * 100));
 					}
 				}
+				m3DDebugPanel.translateX = -mm.width * 360f; //720/2 to center the camera
+				m3DDebugPanel.translateY = -mm.height * 360f;
+				m3DDebugPanel.translateZ = -mm.height * 720f; //at the end of the map vertically
+				m3DDebugPanel.rotateX = 45f;
 				remove(placeholder);
 				invalidate();
 				frame.revalidate();
@@ -320,7 +326,7 @@ public class TileMapPanel extends JPanel {
 				if (models[j][i] != null) {
 					models[j][i].render(gl);
 				}
-				if (tallgrass[j][i] != null){
+				if (tallgrass[j][i] != null) {
 					tallgrass[j][i].render(gl);
 				}
 			}

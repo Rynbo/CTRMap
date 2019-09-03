@@ -83,7 +83,6 @@ public class TileEditForm extends javax.swing.JPanel {
 				} else if (tool instanceof SetTool) {
 					((SetTool) tool).actTileData = new byte[]{((Integer) byte0.getValue()).byteValue(), ((Integer) byte1.getValue()).byteValue(),
 						((Integer) byte2.getValue()).byteValue(), ((Integer) byte3.getValue()).byteValue()};
-					System.out.println(Arrays.toString(((SetTool) tool).actTileData));
 				} else if (tool instanceof FillTool) {
 					FillTool t = (FillTool) tool;
 					t.actTileData = new byte[]{((Integer) byte0.getValue()).byteValue(), ((Integer) byte1.getValue()).byteValue(),
