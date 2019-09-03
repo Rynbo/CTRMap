@@ -63,8 +63,8 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 		if (SwingUtilities.isRightMouseButton(e)) {
 			mGLPanel.scaleX = originScaleX + (e.getX() - originMouseX);
 			mGLPanel.scaleY = originScaleY - (e.getY() - originMouseY);
-			m3DDebugPanel.scaleX = originScaleX + (e.getX() - originMouseX);
-			m3DDebugPanel.scaleY = originScaleY - (e.getY() - originMouseY);
+			m3DDebugPanel.translateX = originScaleX + (e.getX() - originMouseX);
+			m3DDebugPanel.translateY = originScaleY - (e.getY() - originMouseY);
 		}
 		else if (SwingUtilities.isLeftMouseButton(e)) {
 			mGLPanel.rotateY = originRotateY + (e.getX() - originMouseX)/2f;
@@ -91,7 +91,7 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		mGLPanel.scale -= e.getWheelRotation()*20f;
-		m3DDebugPanel.scale -= e.getWheelRotation()*20f;
+		m3DDebugPanel.translateZ -= e.getWheelRotation()*20f;
 	}
 
 	@Override
@@ -111,9 +111,9 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 						while (keycodes.contains(KeyEvent.VK_W)){
 							try {
 								start = System.currentTimeMillis();
-								m3DDebugPanel.scaleX -= Math.sin(Math.toRadians(m3DDebugPanel.rotateY))*10f;
-								m3DDebugPanel.scale += Math.cos(Math.toRadians(m3DDebugPanel.rotateY))*10f;
-								m3DDebugPanel.scaleY += Math.cos(Math.toRadians(m3DDebugPanel.rotateZ))*10f;
+								m3DDebugPanel.translateX -= Math.sin(Math.toRadians(m3DDebugPanel.rotateY))*10f;
+								m3DDebugPanel.translateZ += Math.cos(Math.toRadians(m3DDebugPanel.rotateY))*10f;
+								m3DDebugPanel.translateY += Math.cos(Math.toRadians(m3DDebugPanel.rotateZ))*10f;
 								Thread.sleep(50 - Math.min(0, (System.currentTimeMillis() - start)));
 							} catch (InterruptedException ex) {}
 						}
@@ -128,7 +128,7 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 						while (keycodes.contains(KeyEvent.VK_S)){
 							try {
 								start = System.currentTimeMillis();
-								m3DDebugPanel.scale -= 10;
+								m3DDebugPanel.translateZ -= 10;
 								Thread.sleep(50 - (System.currentTimeMillis() - start));
 							} catch (InterruptedException ex) {}
 						}

@@ -17,9 +17,9 @@ public class H3DRenderingPanel extends GLJPanel implements GLEventListener {
 
 	private static final long serialVersionUID = -6824913620967100278L;
 	public BCHFile bch;
-	public float scale = -960f;
-	public float scaleX = 0f;
-	public float scaleY = 0f;
+	public float translateZ = 0f;
+	public float translateX = 0f;
+	public float translateY = 0f;
 
 	public float rotateY = 0f;
 	public float rotateX = 0f;
@@ -28,7 +28,7 @@ public class H3DRenderingPanel extends GLJPanel implements GLEventListener {
 	public H3DRenderingPanel() {
 		super(new GLCapabilities(GLProfile.get(GLProfile.GL2)));
 		super.addGLEventListener(this);
-		FPSAnimator animator = new FPSAnimator(this, 300, true);
+		FPSAnimator animator = new FPSAnimator(this, 75, true);
 		animator.start();
 		this.addMouseWheelListener(mCM3DInputManager);
 		this.addMouseMotionListener(mCM3DInputManager);
@@ -66,11 +66,12 @@ public class H3DRenderingPanel extends GLJPanel implements GLEventListener {
 			gl.glRotatef(rotateX, 1.0f, 0.0f, 0.0f);
 			gl.glRotatef(rotateZ, 0.0f, 0.0f, 1.0f);
 			gl.glRotatef(rotateY, 0.0f, 1.0f, 0.0f);
-			gl.glTranslatef(scaleX, scaleY, scale);
+			gl.glTranslatef(translateX, translateY, translateZ);
 			
 			mTileMapPanel.renderH3D(gl);
 			mPropEditForm.renderH3D(gl);
-
+			mNPCEditForm.renderH3D(gl);
+			
 			gl.glFlush();
 			gl.glFinish();
 		}
