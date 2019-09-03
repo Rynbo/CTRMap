@@ -1,9 +1,6 @@
 package ctrmap;
 
-import static ctrmap.CtrmapMainframe.adjustSplitPanes;
-import static ctrmap.CtrmapMainframe.frame;
-import static ctrmap.CtrmapMainframe.jsp;
-import static ctrmap.CtrmapMainframe.mNPCEditForm;
+import static ctrmap.CtrmapMainframe.*;
 import ctrmap.resources.ResourceAccess;
 import java.io.File;
 import java.util.Arrays;
@@ -63,12 +60,12 @@ public class Utils {
 			}
 		}
 	}
-	
-	public static ImageIcon getImageIconFromResource(String respath){
+
+	public static ImageIcon getImageIconFromResource(String respath) {
 		return new ImageIcon(ResourceAccess.getByteArray(respath));
 	}
-	
-	public static JRadioButton createGraphicalButton(String prefix){
+
+	public static JRadioButton createGraphicalButton(String prefix) {
 		JRadioButton ret = new JRadioButton(getImageIconFromResource(prefix + "_stale.png"));
 		ret.setRolloverIcon(getImageIconFromResource(prefix + "_rollover.png"));
 		ret.setPressedIcon(getImageIconFromResource(prefix + "_active.png"));
@@ -76,9 +73,15 @@ public class Utils {
 		ret.setRolloverEnabled(true);
 		return ret;
 	}
-	
-	public static void switchToolUI(JComponent rightComponent){
+
+	public static void switchToolUI(JComponent rightComponent) {
 		jsp.setRightComponent(rightComponent);
+		adjustSplitPanes();
+		frame.revalidate();
+	}
+	
+	public static void setGraphicUI(JComponent comp) {
+		jsp.setLeftComponent(comp);
 		adjustSplitPanes();
 		frame.revalidate();
 	}

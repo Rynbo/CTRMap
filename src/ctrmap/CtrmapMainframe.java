@@ -54,6 +54,7 @@ import ctrmap.humaninterface.ZoneDebugPanel;
 import ctrmap.humaninterface.tools.EditTool;
 import java.awt.Desktop;
 import java.awt.Dimension;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.FileInputStream;
@@ -63,7 +64,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
 import javax.swing.JScrollPane;
+import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileFilter;
 
 public class CtrmapMainframe {
@@ -231,7 +235,6 @@ public class CtrmapMainframe {
 
 		tabs.add("Tilemap Editor", tileEditMasterPnl);
 		tabs.add("Collision Editor", collEditMasterPnl);
-		tabs.add("3D Editor", m3DDebugPanel);
 		//tabs.add("Camera Editor (debug)", camDebugPnl);
 		tabs.add("Zone Editor (debug)", zoneDebugPnl);
 
@@ -279,7 +282,7 @@ public class CtrmapMainframe {
 						byte[] b = new byte[in.available()];
 						in.read(b);
 						in.close();
-						m3DDebugPanel.loadH3D(new BCHFile(b));
+						m3DDebugPanel.loadH3D(new BCHFile(new GR(jfc.getSelectedFile()).getFile(1)));
 					} catch (IOException ex) {
 						Logger.getLogger(CtrmapMainframe.class.getName()).log(Level.SEVERE, null, ex);
 					}
@@ -471,6 +474,21 @@ public class CtrmapMainframe {
 				}
 			}
 		});
+		frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F2"), "switch2D");
+		frame.getRootPane().getActionMap().put("switch2D", new AbstractAction("switch2D") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Utils.setGraphicUI(mTilemapScrollPane);
+			}
+		});
+		frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F3"), "switch3D");
+		frame.getRootPane().getActionMap().put("switch3D", new AbstractAction("switch3D") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Utils.setGraphicUI(m3DDebugPanel);
+			}
+		});
+		frame.getRootPane().setFocusable(true);
 		mTileEditForm.tool = new EditTool();
 		adjustSplitPanes();
 		mWorkspace.validate(frame);
