@@ -16,7 +16,11 @@ import ctrmap.formats.h3d.texturing.H3DTexture;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 
@@ -45,6 +49,8 @@ public class H3DModel {
 	public Vec3f maxVector = new Vec3f();
 
 	public List<H3DMaterial> materials = new ArrayList<>();
+
+	public H3DSkeleton skeleton;
 
 	public int verticesCount() {
 		int count = 0;
@@ -113,6 +119,10 @@ public class H3DModel {
 			int rightNode = in.readUnsignedShort();
 			modelHeader.objectNames[i] = StringUtils.readString(in.readInt(), buf);
 		}
+
+		//Skeleton
+		in.seek(modelHeader.skeletonOffset);
+		skeleton = new H3DSkeleton(in, buf, modelHeader.skeletonEntries, name);
 
 		in.seek(modelHeader.objectsNodeVisibilityOffset);
 		int nodeVisibility = in.readInt();
@@ -358,7 +368,7 @@ public class H3DModel {
 							if (vertex.weight.isEmpty()) {
 								vertex.weight.add(1f);
 							}
-							//vertex.position = transformVec3f(vertex.position, skeletonTransform.get(vertex.node.get(0)));
+							vertex.position = transformVec3f(vertex.position, skeleton.transform.get(vertex.node.get(0)));
 						}
 
 						OhanaMeshUtils.calculateBounds(this, vertex);
@@ -366,11 +376,27 @@ public class H3DModel {
 
 						in.seek(dataPosition);
 					}
-
 				}
 			} catch (EOFException e) {
-				System.exit(0);
-				//System.out.println(test + " / " + idxBufferTotalVertices);
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void adjustBoneVerticesToMatrix() {
+		for (int i = 0; i < meshes.size(); i++) {
+			for (int j = 0; j < meshes.get(i).vertices.size(); j++) {
+				H3DVertex v = meshes.get(i).vertices.get(j);
+				if (!v.node.isEmpty()) {
+					for (int node = 0; node < v.node.size(); node++) {
+						if (skeleton.transform.size() <= v.node.get(node)) {
+							continue;
+						}
+						v.position.x += skeleton.transform.get(v.node.get(node)).getMatrix()[12];
+						v.position.y += skeleton.transform.get(v.node.get(node)).getMatrix()[13];
+						v.position.z += skeleton.transform.get(v.node.get(node)).getMatrix()[14];
+					}
+				}
 			}
 		}
 	}
@@ -384,7 +410,7 @@ public class H3DModel {
 					mat.texture0 = textures.get(j);
 					complete[0] = true;
 				}
-				if (textures.get(j).textureName.equals(mat.name1) && !"projection_dummy".equals(mat.name1)){
+				if (textures.get(j).textureName.equals(mat.name1) && !"projection_dummy".equals(mat.name1)) {
 					mat.texture1 = textures.get(j);
 					complete[1] = true;
 				}
@@ -473,9 +499,21 @@ public class H3DModel {
 	public void render(GL2 gl) {
 		gl.glPushMatrix();
 		gl.glTranslatef(worldLocX, worldLocY, worldLocZ);
+		/*if (skeleton.bones.size() > 0){
+			H3DSkeleton.H3DBone root = skeleton.bones.get(0); 
+			gl.glTranslatef(root.translation.x, root.translation.y, root.translation.z);
+			gl.glRotatef(rotationZ, 0f, 0f, 1f);
+			gl.glRotatef(root.rotation.z, 0f, 0f, 1f);
+			gl.glRotatef(rotationY, 1f, 0f, 0f);
+			gl.glRotatef(root.rotation.y, 1f, 0f, 0f);
+			gl.glRotatef(rotationX, 0f, 1f, 0f);
+			gl.glRotatef(root.rotation.x, 0f, 1f, 0f);
+		}
+		else{*/
 		gl.glRotatef(rotationZ, 0f, 0f, 1f);
 		gl.glRotatef(rotationY, 1f, 0f, 0f);
 		gl.glRotatef(rotationX, 0f, 1f, 0f);
+		//}
 		gl.glScalef(scaleX, scaleY, scaleZ);
 		for (int i = 0; i < meshes.size(); i++) {
 			meshes.get(i).render(gl, (materials.size() > meshes.get(i).materialId) ? materials.get(meshes.get(i).materialId) : null);
@@ -510,33 +548,68 @@ public class H3DModel {
 		public ArrayList<H3DVertex> vertices = new ArrayList<>();
 		public Vec3f centerVector;
 
+		public float[] vbo;
+		public byte[] vcbo;
+		public double[][] tcbo;
+
+		public void makeBOs() { //maybe someday?
+			vbo = new float[vertices.size() * 3];
+			vcbo = new byte[vertices.size() * 4];
+			tcbo = new double[3][vertices.size() * 2];
+			for (int i = 0; i < vertices.size(); i++) {
+				H3DVertex v = vertices.get(i);
+				vbo[i * 3] = v.position.x;
+				vbo[i * 3 + 1] = v.position.y;
+				vbo[i * 3 + 2] = v.position.z;
+
+				vcbo[i * 4] = (byte) (v.diffuseColor >> 16 & 0xFF);
+				vcbo[i * 4 + 1] = (byte) (v.diffuseColor >> 8 & 0xFF);
+				vcbo[i * 4 + 2] = (byte) (v.diffuseColor & 0xFF);
+				vcbo[i * 4 + 3] = (byte) (v.diffuseColor >> 24 & 0xFF);
+
+				tcbo[0][i * 2] = v.texture0.x;
+				tcbo[0][i * 2 + 1] = v.texture0.y;
+				tcbo[1][i * 2] = v.texture1.x;
+				tcbo[1][i * 2 + 1] = v.texture1.y;
+				tcbo[2][i * 2] = v.texture2.x;
+				tcbo[2][i * 2 + 1] = v.texture2.y;
+			}
+		}
+
 		public void render(GL2 gl, H3DMaterial mat) {
 			/*
 			Stuff involving checking for "blc" in material name is a workaround for tall grass rendering, which uses weird vertex coloring and alpha testing
-			*/
-			if (!isVisible) {
-				return;
-			}
+			 */
 			int[] textureIDs = new int[1];
+			int texindex = 0;
 			gl.glGenTextures(1, textureIDs, 0);
 			gl.glBindTexture(GL2.GL_TEXTURE_2D, textureIDs[0]);
+			boolean mirrorx = false;
 			if (mat != null) {
 				if (!(mat.texture0 == null && mat.texture1 == null && mat.texture2 == null)) {
 					if (mat.texture0 != null) {
+						texindex = 0;
 						gl.glTexImage2D(GL2.GL_TEXTURE_2D, 0, GL2.GL_RGBA, mat.texture0.textureSize.width, mat.texture0.textureSize.height, 0, GL2.GL_RGBA, GL2.GL_UNSIGNED_BYTE, ByteBuffer.wrap(mat.texture0.textureData));
-					} else if (mat.texture1 != null){
+					} else if (mat.texture1 != null) {
+						texindex = 1;
 						gl.glTexImage2D(GL2.GL_TEXTURE_2D, 0, GL2.GL_RGBA, mat.texture1.textureSize.width, mat.texture1.textureSize.height, 0, GL2.GL_RGBA, GL2.GL_UNSIGNED_BYTE, ByteBuffer.wrap(mat.texture1.textureData));
-					}
-					else{
+					} else {
+						texindex = 2;
 						gl.glTexImage2D(GL2.GL_TEXTURE_2D, 0, GL2.GL_RGBA, mat.texture2.textureSize.width, mat.texture2.textureSize.height, 0, GL2.GL_RGBA, GL2.GL_UNSIGNED_BYTE, ByteBuffer.wrap(mat.texture2.textureData));
 					}
+					int twX = H3DMaterial.TextureMapper.getGlTextureWrap(mat.mappers[texindex].wrapU);
+					if (twX == GL2.GL_MIRRORED_REPEAT) {
+						mirrorx = true;
+					}
+					int twY = H3DMaterial.TextureMapper.getGlTextureWrap(mat.mappers[texindex].wrapV);
+					gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_WRAP_S, twX);
+					gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_WRAP_T, twY);
 					gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_NEAREST);
 					gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_NEAREST);
-					gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_WRAP_S, H3DMaterial.TextureMapper.getGlTextureWrap(mat.mappers[0].wrapU));
-					gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_WRAP_T, H3DMaterial.TextureMapper.getGlTextureWrap(mat.mappers[0].wrapV));
 					if (mat.params.blendop.mode == H3DMaterial.BlendOperation.BlendMode.blend) {
-						gl.glBlendFunc(H3DMaterial.BlendOperation.getGlBlendFunc(mat.params.blendop.alphaFunctionSource), GL2.GL_ONE_MINUS_SRC_ALPHA); //forces to 1-a to prevent drunk framebuffer. renders fine.
+						gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA); //forces to 1-a to prevent drunk framebuffer. renders fine.
 						gl.glBlendEquation(H3DMaterial.BlendOperation.getGlBlendEqt(mat.params.blendop.alphaBlendEquation));
+						gl.glDisable(GL2.GL_ALPHA_TEST);
 						gl.glEnable(GL2.GL_BLEND);
 					} else {
 						gl.glDisable(GL2.GL_BLEND);
@@ -547,12 +620,13 @@ public class H3DModel {
 							gl.glDisable(GL2.GL_ALPHA_TEST);
 						}
 					}
-					if (mat.name.contains("blc")){
+					if (mat.name.contains("blc")) {
 						gl.glAlphaFunc(GL.GL_NOTEQUAL, 0);
 						gl.glEnable(GL2.GL_ALPHA_TEST);
 					}
 				}
 			}
+
 			gl.glBegin(GL2.GL_TRIANGLES);
 			for (int i = 0; i < vertices.size(); i++) {
 				H3DVertex v = vertices.get(i);
@@ -562,11 +636,12 @@ public class H3DModel {
 					gl.glColor3f(1f, 1f, 1f);
 				}
 				if (mat != null) {
-					gl.glTexCoord2d(-(v.texture0.x + mat.coordinators[0].translateU) * mat.coordinators[0].scaleU, (v.texture0.y + mat.coordinators[0].translateV) * mat.coordinators[0].scaleV);
+					gl.glTexCoord2d(((mirrorx) ? 1 : 0) - v.texture0.x, v.texture0.y);
 				}
 				gl.glVertex3f(v.position.x, v.position.y, v.position.z);
 			}
 			gl.glEnd();
+
 			gl.glDeleteTextures(1, textureIDs, 0);
 		}
 	}

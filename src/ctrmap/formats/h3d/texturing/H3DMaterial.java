@@ -175,7 +175,7 @@ public class H3DMaterial {
 		}
 	}
 
-	private static List<MatMetaData> getMetaData(RandomAccessBAIS input, byte[] data) throws IOException {
+	public static List<MatMetaData> getMetaData(RandomAccessBAIS input, byte[] data) throws IOException {
 		List<MatMetaData> output = new ArrayList<>();
 
 		int metaDataOffset = input.readInt();

@@ -2,6 +2,7 @@ package ctrmap.formats.h3d;
 
 import com.jogamp.opengl.GL2;
 import ctrmap.formats.h3d.model.H3DModel;
+import ctrmap.formats.h3d.model.H3DSkeleton;
 import ctrmap.formats.h3d.texturing.H3DMaterial;
 import ctrmap.formats.h3d.texturing.H3DTexture;
 import java.io.ByteArrayInputStream;
@@ -9,6 +10,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,6 +34,7 @@ public class BCHFile {
 			header.magic = StringUtils.readString(in);
 			if (!header.magic.equals("BCH")) {
 				System.err.println("BCH magic mismatch! - " + src[0] + src[1] + src[2]);
+				return;
 			}
 			header.backwardCompatibility = in.readByte();
 			header.forwardCompatibility = in.readByte();
