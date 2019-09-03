@@ -74,7 +74,6 @@ public class CameraEditForm extends javax.swing.JPanel {
 		if (save) saveCamera(false);
 		cam = f.camData.get(entryNum);
 		neutralCheckbox.setSelected(cam.isNeutral != 0);
-		setNeutralEnabled();
 		transTime.setValue(Short.toUnsignedInt(cam.transitionPeriod) * 35);
 		motion.setSelectedIndex(getMotionIndex(cam.movementDirection));
 		if (cam.unknown01or03 == 03){
@@ -109,6 +108,7 @@ public class CameraEditForm extends javax.swing.JPanel {
 		plrDist1.setValue(cam.coords1.distanceFromTarget);
 		plrDist2.setValue(cam.coords2.distanceFromTarget);
 		layer.setValue(cam.layer);
+		setNeutralEnabled();
 		mTileMapPanel.firePropertyChange(TileMapPanel.PROP_IMGSTATE, false, true);
 	}
 
@@ -148,16 +148,22 @@ public class CameraEditForm extends javax.swing.JPanel {
 			cam2.isFirstEnabled = (!d1default.isSelected()) ? (short) -1 : 0;
 			cam2.isSecondEnabled = (!d2default.isSelected()) ? (short) -1 : 0;
 		} else {
-			cam2.isFirstEnabled = 0;
-			cam2.isSecondEnabled = 0;
+			if (cam.isFirstEnabled == -1 && cam.isSecondEnabled == -1){
+				cam2.isFirstEnabled = -1;
+				cam2.isSecondEnabled = -1;
+			}
+			else {
+				cam2.isFirstEnabled = 0;
+				cam2.isSecondEnabled = 0;
+			}
 		}
 		if ((Integer) transTime.getValue() > 65535) {
 			transTime.setValue(65535);
 		}
 		cam2.transitionPeriod = (short) Math.round((Integer) transTime.getValue() / 35f);
 		if (neutralCheckbox.isSelected()){
-			if (cam.isNeutral != 0) cam2.isNeutral = cam.isNeutral; else cam2.isNeutral = 0x1;
-			//OA uses 0x1 for this while XY uses 0x1. If there is a difference, I'll be sure to link it to the workspace but for now, 2 (XY) is the default.
+			if (cam.isNeutral != 0) cam2.isNeutral = cam.isNeutral; else cam2.isNeutral = 0x2;
+			//OA uses 0x1 for this while XY uses 0x2. If there is a difference, I'll be sure to link it to the workspace but for now, 2 (XY) is the default.
 		}
 		else{
 			cam2.isNeutral = 0x0;
