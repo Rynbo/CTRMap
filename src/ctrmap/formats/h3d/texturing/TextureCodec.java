@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -34,10 +35,6 @@ public class TextureCodec {
 							int y = (tileOrder[pixel] - x) / 8;
 							int outputOffset = ((tX * 8) + x + ((tY * 8 + y) * width)) * 4;
 
-							/*output[outputOffset] = data[dataOffset + 3];
-							output[outputOffset + 1] = data[dataOffset + 2];
-							output[outputOffset + 2] = data[dataOffset + 1];
-							output[outputOffset + 3] = data[dataOffset];*/
 							output[outputOffset] = data[dataOffset + 1];
 							output[outputOffset + 1] = data[dataOffset + 2];
 							output[outputOffset + 2] = data[dataOffset + 3];
@@ -73,17 +70,17 @@ public class TextureCodec {
 							int y = (tileOrder[pixel] - x) / 8;
 							int outputOffset = ((tX * 8) + x + (((tY * 8 + y)) * width)) * 4;
 
-							int pixelData = (data[dataOffset] | (data[dataOffset + 1] << 8));
+							int pixelData = (data[dataOffset] & 0xFF) | ((data[dataOffset + 1] & 0xFF) << 8);
 
-							byte r = (byte) (((pixelData >> 1) & 0x1f) << 3);
-							byte g = (byte) (((pixelData >> 6) & 0x1f) << 3);
-							byte b = (byte) (((pixelData >> 11) & 0x1f) << 3);
-							byte a = (byte) ((pixelData & 1) * 0xff);
+							int r = ((pixelData >> 1) & 0x1f) << 3;
+							int g = ((pixelData >> 6) & 0x1f) << 3;
+							int b = ((pixelData >> 11) & 0x1f) << 3;
+							int a = (pixelData & 1) * 0xff;
 
 							output[outputOffset] = (byte) (r | (r >> 5));
 							output[outputOffset + 1] = (byte) (g | (g >> 5));
 							output[outputOffset + 2] = (byte) (b | (b >> 5));
-							output[outputOffset + 3] = a;
+							output[outputOffset + 3] = (byte) a;
 
 							dataOffset += 2;
 						}
@@ -99,12 +96,12 @@ public class TextureCodec {
 							int y = (tileOrder[pixel] - x) / 8;
 							int outputOffset = ((tX * 8) + x + (((tY * 8 + y)) * width)) * 4;
 
-							int pixelData = (data[dataOffset] | (data[dataOffset + 1] << 8));
-
-							byte r = (byte) ((pixelData & 0x1f) << 3);
-							byte g = (byte) (((pixelData >> 5) & 0x3f) << 2);
-							byte b = (byte) (((pixelData >> 11) & 0x1f) << 3);
-
+							int pixelData = (data[dataOffset] & 0xFF) | ((data[dataOffset + 1] & 0xFF) << 8);
+							
+							int r = (pixelData & 0x1f) << 3;
+							int g = ((pixelData >> 5) & 0x3f) << 2;
+							int b = ((pixelData >> 11) & 0x1f) << 3;
+														
 							output[outputOffset] = (byte) (r | (r >> 5));
 							output[outputOffset + 1] = (byte) (g | (g >> 6));
 							output[outputOffset + 2] = (byte) (b | (b >> 5));
@@ -124,12 +121,12 @@ public class TextureCodec {
 							int y = (tileOrder[pixel] - x) / 8;
 							int outputOffset = ((tX * 8) + x + (((tY * 8 + y)) * width)) * 4;
 
-							int pixelData = (data[dataOffset] | (data[dataOffset + 1] << 8));
+							int pixelData = (data[dataOffset] & 0xFF) | ((data[dataOffset + 1] & 0xFF) << 8);
 
-							byte r = (byte) ((pixelData >> 4) & 0xf);
-							byte g = (byte) ((pixelData >> 8) & 0xf);
-							byte b = (byte) ((pixelData >> 12) & 0xf);
-							byte a = (byte) (pixelData & 0xf);
+							int r = (pixelData >> 4) & 0xf;
+							int g = (pixelData >> 8) & 0xf;
+							int b = (pixelData >> 12) & 0xf;
+							int a = pixelData & 0xf;
 
 							output[outputOffset] = (byte) (r | (r << 4));
 							output[outputOffset + 1] = (byte) (g | (g << 4));
@@ -261,6 +258,7 @@ public class TextureCodec {
 			case etc1:
 			case etc1a4:
 				byte[] decodedData = etc1Decode(data, width, height, format == PICACommandReader.TextureFormat.etc1a4);
+
 				int[] etc1Order = etc1Scramble(width, height);
 				int i = 0;
 				for (int tY = 0; tY < height / 4; tY++) {
@@ -271,7 +269,6 @@ public class TextureCodec {
 							for (int x = 0; x < 4; x++) {
 								dataOffset = ((TX * 4) + x + (((TY * 4) + y) * width)) * 4;
 								long outputOffset = ((tX * 4) + x + (((tY * 4 + y)) * width)) * 4;
-
 								System.arraycopy(decodedData, (int) dataOffset, output, (int) outputOffset, 4);
 							}
 						}
@@ -299,9 +296,9 @@ public class TextureCodec {
 		for (int r = 0; r < height; r++) {
 			for (int c = 0; c < width; c++) {
 				int index = r * width * 4 + c * 4;
-				int red = output[index] & 0xFF;
-				int green = output[index + 1] & 0xFF;
-				int blue = output[index + 2] & 0xFF;
+				int red = flip[index] & 0xFF;
+				int green = flip[index + 1] & 0xFF;
+				int blue = flip[index + 2] & 0xFF;
 				int rgb = (red << 16) | (green << 8) | blue;
 				img.setRGB(c, r, rgb);
 			}
@@ -310,7 +307,7 @@ public class TextureCodec {
 			ImageIO.write(img, "png", new File("out" + System.currentTimeMillis() + ".png"));
 		} catch (IOException ex) {
 			Logger.getLogger(TextureCodec.class.getName()).log(Level.SEVERE, null, ex);
-		*/
+		}*/
 		return flip;
 	}
 
@@ -335,7 +332,12 @@ public class TextureCodec {
 					}
 					offset += 8;
 				}
-
+				/*System.out.print("[");
+                     for (int h = 0; h < colorBlock.length; h++)
+                    {
+                        System.out.print((colorBlock[h] & 0xFF) + ", ");
+                    }
+                    System.out.print("]\n");*/
 				colorBlock = etc1DecodeBlock(colorBlock);
 
 				boolean toggle = false;
@@ -360,7 +362,8 @@ public class TextureCodec {
 	private static byte[] etc1DecodeBlock(byte[] data) {
 		long blockTop = Integer.toUnsignedLong(ByteBuffer.wrap(data, 0, 4).order(ByteOrder.LITTLE_ENDIAN).getInt());
 		long blockBottom = Integer.toUnsignedLong(ByteBuffer.wrap(data, 4, 4).order(ByteOrder.LITTLE_ENDIAN).getInt());
-
+		
+		
 		boolean flip = (blockTop & 0x1000000) > 0;
 		boolean difference = (blockTop & 0x2000000) > 0;
 
@@ -372,9 +375,9 @@ public class TextureCodec {
 			g1 = (blockTop & 0xf800) >> 8;
 			b1 = (blockTop & 0xf80000) >> 16;
 
-			r2 = (r1 >> 3) + ((blockTop & 7) << 5) >> 5;
-			g2 = (g1 >> 3) + ((blockTop & 0x700) >> 3) >> 5;
-			b2 = (b1 >> 3) + ((blockTop & 0x70000) >> 11) >> 5;
+			r2 = (byte)(r1 >> 3) + ((byte)((blockTop & 7) << 5) >> 5);
+			g2 = (byte)(g1 >> 3) + ((byte)((blockTop & 0x700) >> 3) >> 5);
+			b2 = (byte)(b1 >> 3) + ((byte)((blockTop & 0x70000) >> 11) >> 5);
 
 			r1 |= r1 >> 5;
 			g1 |= g1 >> 5;
@@ -400,7 +403,7 @@ public class TextureCodec {
 			g2 |= g2 >> 4;
 			b2 |= b2 >> 4;
 		}
-
+		
 		long table1 = (blockTop >> 29) & 7;
 		long table2 = (blockTop >> 26) & 7;
 
@@ -410,16 +413,16 @@ public class TextureCodec {
 				for (int x = 0; x <= 1; x++) {
 					Color color1 = etc1Pixel((int)r1, (int)g1, (int)b1, x, y, blockBottom, table1);
 					Color color2 = etc1Pixel((int)r2, (int)g2, (int)b2, x + 2, y, blockBottom, table2);
-
+					
 					int offset1 = (y * 4 + x) * 4;
 					output[offset1] = (byte) color1.getBlue();
 					output[offset1 + 1] = (byte) color1.getGreen();
 					output[offset1 + 2] = (byte) color1.getRed();
 
 					int offset2 = (y * 4 + x + 2) * 4;
-					output[offset2] = (byte) color1.getBlue();
-					output[offset2 + 1] = (byte) color1.getGreen();
-					output[offset2 + 2] = (byte) color1.getRed();
+					output[offset2] = (byte) color2.getBlue();
+					output[offset2 + 1] = (byte) color2.getGreen();
+					output[offset2 + 2] = (byte) color2.getRed();
 				}
 			}
 		} else {
@@ -434,9 +437,9 @@ public class TextureCodec {
 					output[offset1 + 2] = (byte) color1.getRed();
 
 					int offset2 = ((y + 2) * 4 + x) * 4;
-					output[offset2] = (byte) color1.getBlue();
-					output[offset2 + 1] = (byte) color1.getGreen();
-					output[offset2 + 2] = (byte) color1.getRed();
+					output[offset2] = (byte) color2.getBlue();
+					output[offset2 + 1] = (byte) color2.getGreen();
+					output[offset2 + 2] = (byte) color2.getRed();
 				}
 			}
 		}
