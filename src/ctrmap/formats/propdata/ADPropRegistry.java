@@ -41,7 +41,7 @@ public class ADPropRegistry {
 				BCHFile bch = new BCHFile(new BM(CtrmapMainframe.mWorkspace.getWorkspaceFile(Workspace.ArchiveType.BUILDING_MODELS, entry.model)).getFile(0));
 				if (!bch.models.isEmpty()){
 					bch.models.get(0).setMaterialTextures(bch.textures);
-					bch.models.get(0).adjustBoneVerticesToMatrix();
+					//bch.models.get(0).adjustBoneVerticesToMatrix();
 					if (textures != null){
 						bch.models.get(0).setMaterialTextures(textures);
 					}

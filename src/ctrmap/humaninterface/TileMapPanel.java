@@ -243,7 +243,6 @@ public class TileMapPanel extends JPanel {
 								//GR overworld map BCH files have just 1 model, the tall grass is entirely separate BCH
 								model.worldLocX = j * 720f + 360f;
 								model.worldLocZ = i * 720f + 360f;
-								model.adjustBoneVerticesToMatrix();
 								models[j][i] = bch;
 							}
 						}

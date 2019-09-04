@@ -17,6 +17,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -368,7 +369,9 @@ public class H3DModel {
 							if (vertex.weight.isEmpty()) {
 								vertex.weight.add(1f);
 							}
-							vertex.position = transformVec3f(vertex.position, skeleton.transform.get(vertex.node.get(0)));
+							vertex.position.x += skeleton.transform.get(vertex.node.get(0)).getMatrix()[12] * vertex.weight.get(0);
+							vertex.position.y += skeleton.transform.get(vertex.node.get(0)).getMatrix()[13] * vertex.weight.get(0);
+							vertex.position.z += skeleton.transform.get(vertex.node.get(0)).getMatrix()[14] * vertex.weight.get(0);
 						}
 
 						OhanaMeshUtils.calculateBounds(this, vertex);
@@ -383,21 +386,47 @@ public class H3DModel {
 		}
 	}
 
+	/**
+	 * Deprecated. Replaced by fixed rigid skinning instead.
+	 */
 	public void adjustBoneVerticesToMatrix() {
 		for (int i = 0; i < meshes.size(); i++) {
 			for (int j = 0; j < meshes.get(i).vertices.size(); j++) {
 				H3DVertex v = meshes.get(i).vertices.get(j);
 				if (!v.node.isEmpty()) {
+					Vec3f alter = new Vec3f();
+					float weightSum = 0;
+					int weightIndex = 0;
 					for (int node = 0; node < v.node.size(); node++) {
 						if (skeleton.transform.size() <= v.node.get(node)) {
-							continue;
+							break; //weird model
 						}
-						v.position.x += skeleton.transform.get(v.node.get(node)).getMatrix()[12];
-						v.position.y += skeleton.transform.get(v.node.get(node)).getMatrix()[13];
-						v.position.z += skeleton.transform.get(v.node.get(node)).getMatrix()[14];
+						float weight = 0;
+						if (weightIndex < v.weight.size()) {
+							weight = v.weight.get(weightIndex++);
+						}
+						weightSum += weight;
+						alter.x += v.position.x * weight;
+						alter.y += v.position.y * weight;
+						alter.z += v.position.z * weight;
+						alter.x += skeleton.transform.get(v.node.get(node)).getMatrix()[12] * weight;
+						alter.y += skeleton.transform.get(v.node.get(node)).getMatrix()[13] * weight;
+						alter.z += skeleton.transform.get(v.node.get(node)).getMatrix()[14] * weight;
 					}
+					if (weightSum < 1) {
+						alter.x += v.position.x * (1 - weightSum);
+						alter.y += v.position.y * (1 - weightSum);
+						alter.z += v.position.z * (1 - weightSum);
+					}
+					v.position = alter;
 				}
 			}
+		}
+	}
+
+	public void makeAllBOs() {
+		for (int i = 0; i < meshes.size(); i++) {
+			meshes.get(i).makeBOs();
 		}
 	}
 
@@ -620,17 +649,16 @@ public class H3DModel {
 							gl.glDisable(GL2.GL_ALPHA_TEST);
 						}
 					}
-					if (mat.name.contains("blc")) {
+					if (mat.name.contains("blc") || mat.name0.equals("enc_grass")) {
 						gl.glAlphaFunc(GL.GL_NOTEQUAL, 0);
 						gl.glEnable(GL2.GL_ALPHA_TEST);
 					}
 				}
 			}
-
 			gl.glBegin(GL2.GL_TRIANGLES);
 			for (int i = 0; i < vertices.size(); i++) {
 				H3DVertex v = vertices.get(i);
-				if (hasColor && !mat.name.contains("blc")) {
+				if (hasColor && !(mat.name.contains("blc") || mat.name0.equals("enc_grass"))) {
 					gl.glColor4ub((byte) (v.diffuseColor >> 16 & 0xFF), (byte) (v.diffuseColor >> 8 & 0xFF), (byte) (v.diffuseColor & 0xFF), (byte) (v.diffuseColor >> 24 & 0xFF));
 				} else {
 					gl.glColor3f(1f, 1f, 1f);
@@ -641,7 +669,6 @@ public class H3DModel {
 				gl.glVertex3f(v.position.x, v.position.y, v.position.z);
 			}
 			gl.glEnd();
-
 			gl.glDeleteTextures(1, textureIDs, 0);
 		}
 	}

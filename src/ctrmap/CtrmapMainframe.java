@@ -282,7 +282,7 @@ public class CtrmapMainframe {
 						byte[] b = new byte[in.available()];
 						in.read(b);
 						in.close();
-						m3DDebugPanel.loadH3D(new BCHFile(new GR(jfc.getSelectedFile()).getFile(1)));
+						m3DDebugPanel.loadH3D(new BCHFile(b));
 					} catch (IOException ex) {
 						Logger.getLogger(CtrmapMainframe.class.getName()).log(Level.SEVERE, null, ex);
 					}
