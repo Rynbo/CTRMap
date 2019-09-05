@@ -7,11 +7,24 @@ import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.awt.GLJPanel;
 import com.jogamp.opengl.glu.GLU;
+import com.jogamp.opengl.glu.gl2.GLUgl2;
+import com.jogamp.opengl.math.FloatUtil;
+import com.jogamp.opengl.math.Matrix4;
+import com.jogamp.opengl.math.VectorUtil;
 import com.jogamp.opengl.util.FPSAnimator;
+import com.sun.javafx.geom.Vec3f;
+import com.sun.javafx.geom.Vec4f;
 
 import static ctrmap.CtrmapMainframe.*;
-import ctrmap.formats.gfcollision.GRCollisionFile;
 import ctrmap.formats.h3d.BCHFile;
+import ctrmap.formats.h3d.model.H3DModel;
+import ctrmap.formats.h3d.model.H3DVertex;
+import ctrmap.formats.propdata.GRProp;
+import ctrmap.formats.zone.ZoneEntities;
+import ctrmap.humaninterface.tools.NPCTool;
+import ctrmap.humaninterface.tools.PropTool;
+import java.awt.event.MouseEvent;
+import java.util.Arrays;
 
 public class H3DRenderingPanel extends GLJPanel implements GLEventListener {
 
@@ -24,6 +37,10 @@ public class H3DRenderingPanel extends GLJPanel implements GLEventListener {
 	public float rotateY = 0f;
 	public float rotateX = 0f;
 	public float rotateZ = 0f;
+
+	public float[] mvMatrix = new float[16];
+	public float[] projMatrix = new float[16];
+	public int[] view = new int[4];
 
 	public H3DRenderingPanel() {
 		super(new GLCapabilities(GLProfile.get(GLProfile.GL2)));
@@ -53,6 +70,55 @@ public class H3DRenderingPanel extends GLJPanel implements GLEventListener {
 		gl.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL2.GL_NICEST);
 	}
 
+	public void cycleSelection(MouseEvent e) { //this method would largely benefit from abstractization of the edit forms as it has two unnecessary copy-pasted ifs. On the other hand, I actually like this way more than constant type casting like ((form.getObjectClass()) form.objects.get(i)). Too imprecise for reading, in a SPICA kind of way.
+		GLU glu = new GLUgl2();
+		int closestDist = Integer.MAX_VALUE;
+		int closestIdx = -1;
+		if (mTileEditForm.tool instanceof PropTool) {
+			for (int i = 0; i < mPropEditForm.models.size(); i++) {
+				if (mPropEditForm.models.get(i) == null) continue;
+				GRProp p = mPropEditForm.props.props.get(i);
+				for (int j = 0; j < mPropEditForm.models.get(i).meshes.size(); j++) {
+					for (int k = 0; k < mPropEditForm.models.get(i).meshes.get(j).vertices.size(); k++) {
+						H3DVertex check = mPropEditForm.models.get(i).meshes.get(j).vertices.get(k);
+						float[] winPos = new float[3];
+						//due to the way CM3D works with repositioning prop models in real time, we need to get the worldLoc from props
+						glu.gluProject(check.position.x + p.x, check.position.y + p.y, check.position.z + p.z, mvMatrix, 0, projMatrix, 0, view, 0, winPos, 0);
+						int dist = Math.abs((int) (winPos[0]) - e.getX()) + Math.abs((int) (getHeight() - winPos[1]) - e.getY());
+						if (dist < closestDist) {
+							closestDist = dist;
+							closestIdx = i;
+						}
+					}
+				}
+			}
+			if (closestIdx != -1 && closestDist < 10) {
+				mPropEditForm.setProp(closestIdx);
+			}
+		}
+		else if (mTileEditForm.tool instanceof NPCTool){
+			for (int i = 0; i < mNPCEditForm.models.size(); i++) {
+				if (mNPCEditForm.models.get(i) == null) continue;
+				ZoneEntities.NPC npc = mNPCEditForm.e.npcs.get(i);
+				for (int j = 0; j < mNPCEditForm.models.get(i).meshes.size(); j++) {
+					for (int k = 0; k < mNPCEditForm.models.get(i).meshes.get(j).vertices.size(); k++) {
+						H3DVertex check = mNPCEditForm.models.get(i).meshes.get(j).vertices.get(k);
+						float[] winPos = new float[3];
+						glu.gluProject(check.position.x + npc.xTile * 18f, check.position.y + npc.z3DCoordinate, check.position.z + npc.yTile * 18f, mvMatrix, 0, projMatrix, 0, view, 0, winPos, 0);
+						int dist = Math.abs((int) (winPos[0]) - e.getX()) + Math.abs((int) (getHeight() - winPos[1]) - e.getY());
+						if (dist < closestDist) {
+							closestDist = dist;
+							closestIdx = i;
+						}
+					}
+				}
+			}
+			if (closestIdx != -1 && closestDist < 10) {
+				mNPCEditForm.setNPC(closestIdx);
+			}
+		}
+	}
+
 	@Override
 	public void dispose(GLAutoDrawable drawable) {
 	}
@@ -67,11 +133,15 @@ public class H3DRenderingPanel extends GLJPanel implements GLEventListener {
 			gl.glRotatef(rotateZ, 0.0f, 0.0f, 1.0f);
 			gl.glRotatef(rotateY, 0.0f, 1.0f, 0.0f);
 			gl.glTranslatef(translateX, translateY, translateZ);
-			
+
+			gl.glGetFloatv(GL2.GL_MODELVIEW_MATRIX, mvMatrix, 0);
+			gl.glGetFloatv(GL2.GL_PROJECTION_MATRIX, projMatrix, 0);
+			gl.glGetIntegerv(GL2.GL_VIEWPORT, view, 0);
+
 			mTileMapPanel.renderH3D(gl);
 			mPropEditForm.renderH3D(gl);
 			mNPCEditForm.renderH3D(gl);
-			
+
 			gl.glFlush();
 			gl.glFinish();
 		}

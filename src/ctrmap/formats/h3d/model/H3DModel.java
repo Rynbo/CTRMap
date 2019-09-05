@@ -16,12 +16,7 @@ import ctrmap.formats.h3d.texturing.H3DTexture;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.DoubleBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 
@@ -528,21 +523,9 @@ public class H3DModel {
 	public void render(GL2 gl) {
 		gl.glPushMatrix();
 		gl.glTranslatef(worldLocX, worldLocY, worldLocZ);
-		/*if (skeleton.bones.size() > 0){
-			H3DSkeleton.H3DBone root = skeleton.bones.get(0); 
-			gl.glTranslatef(root.translation.x, root.translation.y, root.translation.z);
-			gl.glRotatef(rotationZ, 0f, 0f, 1f);
-			gl.glRotatef(root.rotation.z, 0f, 0f, 1f);
-			gl.glRotatef(rotationY, 1f, 0f, 0f);
-			gl.glRotatef(root.rotation.y, 1f, 0f, 0f);
-			gl.glRotatef(rotationX, 0f, 1f, 0f);
-			gl.glRotatef(root.rotation.x, 0f, 1f, 0f);
-		}
-		else{*/
 		gl.glRotatef(rotationZ, 0f, 0f, 1f);
 		gl.glRotatef(rotationY, 1f, 0f, 0f);
 		gl.glRotatef(rotationX, 0f, 1f, 0f);
-		//}
 		gl.glScalef(scaleX, scaleY, scaleZ);
 		for (int i = 0; i < meshes.size(); i++) {
 			meshes.get(i).render(gl, (materials.size() > meshes.get(i).materialId) ? materials.get(meshes.get(i).materialId) : null);
@@ -550,6 +533,48 @@ public class H3DModel {
 		gl.glPopMatrix();
 	}
 
+	public void renderBox(GL2 gl){ //calculated by calculateBounds
+		gl.glPushMatrix();
+		gl.glTranslatef(worldLocX, worldLocY, worldLocZ);
+		gl.glRotatef(rotationZ, 0f, 0f, 1f);
+		gl.glRotatef(rotationY, 1f, 0f, 0f);
+		gl.glRotatef(rotationX, 0f, 1f, 0f);
+		gl.glScalef(scaleX, scaleY, scaleZ);
+		gl.glBegin(GL2.GL_LINES);
+		
+		gl.glColor3f(1f, 0f, 0f);
+		
+		gl.glVertex3f(minVector.x, minVector.y, minVector.z);
+		gl.glVertex3f(minVector.x, maxVector.y, minVector.z);
+		gl.glVertex3f(minVector.x, maxVector.y, minVector.z);
+		gl.glVertex3f(maxVector.x, maxVector.y, minVector.z);
+		gl.glVertex3f(maxVector.x, maxVector.y, minVector.z);
+		gl.glVertex3f(maxVector.x, minVector.y, minVector.z);
+		gl.glVertex3f(maxVector.x, minVector.y, minVector.z);
+		gl.glVertex3f(minVector.x, minVector.y, minVector.z);
+		
+		gl.glVertex3f(minVector.x, minVector.y, maxVector.z);
+		gl.glVertex3f(minVector.x, maxVector.y, maxVector.z);
+		gl.glVertex3f(minVector.x, maxVector.y, maxVector.z);
+		gl.glVertex3f(maxVector.x, maxVector.y, maxVector.z);
+		gl.glVertex3f(maxVector.x, maxVector.y, maxVector.z);
+		gl.glVertex3f(maxVector.x, minVector.y, maxVector.z);
+		gl.glVertex3f(maxVector.x, minVector.y, maxVector.z);
+		gl.glVertex3f(minVector.x, minVector.y, maxVector.z);
+		
+		gl.glVertex3f(minVector.x, minVector.y, minVector.z);
+		gl.glVertex3f(minVector.x, minVector.y, maxVector.z);
+		gl.glVertex3f(minVector.x, maxVector.y, minVector.z);
+		gl.glVertex3f(minVector.x, maxVector.y, maxVector.z);
+		gl.glVertex3f(maxVector.x, maxVector.y, minVector.z);
+		gl.glVertex3f(maxVector.x, maxVector.y, maxVector.z);
+		gl.glVertex3f(maxVector.x, minVector.y, minVector.z);
+		gl.glVertex3f(maxVector.x, minVector.y, maxVector.z);
+		
+		gl.glEnd();
+		gl.glPopMatrix();
+	}
+	
 	public static class H3DMesh {
 
 		public String name;

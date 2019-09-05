@@ -12,6 +12,7 @@ import ctrmap.formats.h3d.model.H3DModel;
 import ctrmap.formats.h3d.model.H3DSkeleton;
 import ctrmap.formats.h3d.texturing.H3DTexture;
 import ctrmap.formats.propdata.ADPropRegistry;
+import ctrmap.humaninterface.tools.PropTool;
 import java.awt.Point;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -248,6 +249,9 @@ public class PropEditForm extends javax.swing.JPanel {
 				if (models.size() > i && models.get(i) != null){
 					updateH3D(i);
 					models.get(i).render(gl);
+					if (i == propIndex && mTileEditForm.tool instanceof PropTool){
+						models.get(i).renderBox(gl);
+					}
 				}
 			}
 		}

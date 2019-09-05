@@ -9,6 +9,7 @@ import javax.swing.JFormattedTextField;
 import javax.swing.text.NumberFormatter;
 import static ctrmap.CtrmapMainframe.*;
 import ctrmap.formats.h3d.model.H3DModel;
+import ctrmap.humaninterface.tools.NPCTool;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
@@ -220,6 +221,9 @@ public class NPCEditForm extends javax.swing.JPanel {
 				if (models.size() > i && models.get(i) != null){
 					updateH3D(i);
 					models.get(i).render(gl);
+					if (i == npcIndex && mTileEditForm.tool instanceof NPCTool){
+						models.get(i).renderBox(gl);
+					}
 				}
 			}
 		}

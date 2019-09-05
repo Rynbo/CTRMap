@@ -59,8 +59,10 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 	}
 
 	@Override
-	public void mouseReleased(MouseEvent arg0) {
-
+	public void mouseReleased(MouseEvent e) {
+		if (e.getX() == originMouseX && e.getY() == originMouseY){ //only if mouse was clicked, not dragged
+			m3DDebugPanel.cycleSelection(e);
+		}
 	}
 
 	@Override
