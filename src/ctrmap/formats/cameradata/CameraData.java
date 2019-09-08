@@ -7,6 +7,9 @@ import ctrmap.LittleEndianDataOutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Camera data entry loader
+ */
 public class CameraData {
 
 	public byte[] unknownBytes = new byte[16];

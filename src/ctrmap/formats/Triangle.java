@@ -2,10 +2,14 @@ package ctrmap.formats;
 
 import com.jogamp.opengl.GL2;
 import ctrmap.LittleEndianDataOutputStream;
+import java.awt.Polygon;
 import java.awt.geom.Line2D;
 import java.io.IOException;
 import java.util.Random;
 
+/**
+ * Class used for storing vertex data in OOP triangles, mainly used for accessibility in the Collision editor (as it edits them at quite a low level).
+ */
 public class Triangle {
     public float[] x = new float[3];
     public float[] y = new float[3];
@@ -52,6 +56,9 @@ public class Triangle {
     public Line2D getLine(int num){
         return new Line2D.Float(x[num], z[num], x[(num == 2) ? 0 : num + 1], z[(num == 2) ? 0 : num + 1]);
     }
+	public Polygon getAWTPoly(){
+		return new Polygon(new int[]{(int)x[0], (int)x[1], (int)x[2]}, new int[]{(int)z[0], (int)z[1], (int)z[2]}, 3);
+	}
     public void render(GL2 gl) {
         float averageheight = (Math.max(y[0], Math.max(y[1], y[2])) + Math.min(y[0], Math.min(y[1], y[2])))/2f;
         Random heightRandom = new Random((long)averageheight);

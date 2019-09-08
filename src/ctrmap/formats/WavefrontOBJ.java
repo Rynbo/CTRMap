@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+/**
+ * INCOMPLETE implementation of the Wavefront OBJ format able to do just as much as needed for collision mesh generation.
+ */
 public class WavefrontOBJ {
 	private ArrayList<OBJMesh> meshes = new ArrayList<>();
 	public WavefrontOBJ(File f){
@@ -60,6 +63,11 @@ public class WavefrontOBJ {
 			ex.printStackTrace();
 		}
 	}
+	
+	/**
+	 * Get collision data than can be stored into a GRCollisionFile.
+	 * @return Array of raw collision mesh data.
+	 */
 	public GRCollisionMesh[] getGfCollision(){
 		GRCollisionMesh[] ret = new GRCollisionMesh[16];
 		for (int i = 0; i < 16; i++){

@@ -3,8 +3,10 @@ package ctrmap.humaninterface;
 import ctrmap.CtrmapMainframe;
 import java.awt.Dialog;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 
+/**
+ * Modal dialog with a progress bar suitable for SwingWorkers.
+ */
 public class LoadingDialog extends javax.swing.JPanel {
 
 	/**

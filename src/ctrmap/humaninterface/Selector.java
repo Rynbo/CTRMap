@@ -3,6 +3,9 @@ package ctrmap.humaninterface;
 import static ctrmap.CtrmapMainframe.*;
 import ctrmap.formats.tilemap.Tilemap;
 
+/**
+ * CM2D cursor.
+ */
 public class Selector {
 	public static int hilightTileX = -1;
 	public static int hilightTileY = -1;

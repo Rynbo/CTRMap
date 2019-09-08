@@ -8,10 +8,14 @@ import ctrmap.formats.mapmatrix.MapMatrix;
 import ctrmap.formats.text.LocationNames;
 import ctrmap.formats.zone.Zone;
 import ctrmap.formats.zone.ZoneEntities;
+import java.util.Arrays;
 import javax.swing.JFormattedTextField;
 import javax.swing.SwingWorker;
 import javax.swing.text.NumberFormatter;
 
+/**
+ * Top-level loader for all in the Pokemon world, should really stop being debug.
+ */
 public class ZoneDebugPanel extends javax.swing.JPanel {
 
 	/**
@@ -61,7 +65,8 @@ public class ZoneDebugPanel extends javax.swing.JPanel {
 				totalZones -= (mWorkspace.game == Workspace.GameType.XY) ? 1 : 2;
 				zones = new Zone[totalZones]; //last file is not a ZO
 				for (int i = 0; i < totalZones; i++) {
-					zones[i] = new Zone(new ZO(mWorkspace.getWorkspaceFile(Workspace.ArchiveType.ZONE_DATA, i)));
+					ZO zo = new ZO(mWorkspace.getWorkspaceFile(Workspace.ArchiveType.ZONE_DATA, i));
+					zones[i] = new Zone(zo);
 					for (int j = 0; j < zones[i].entities.NPCCount; j++) {
 						if (zones[i].entities.npcs.get(j).movePerm1 == 0) {
 							continue;

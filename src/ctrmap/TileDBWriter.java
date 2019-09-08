@@ -21,6 +21,9 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultFormatterFactory;
 
+/**
+ * GUI tool to write METS tilesets for use with the CTRMap 2D tile editor.
+ */
 public class TileDBWriter extends javax.swing.JFrame {
 
 	/**

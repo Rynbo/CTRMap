@@ -23,6 +23,9 @@ import java.util.prefs.Preferences;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 
+/**
+ * The core of CTRMap filesystem access which seamlessly takes care of everything the editor wants from the game.
+ */
 public class Workspace {
 
 	Preferences prefs;
@@ -351,7 +354,7 @@ public class Workspace {
 	public File getWorkspaceFile(ArchiveType arc, int fileNum) {
 		File wsFile;
 		wsFile = new File(getExtractionDirectory(arc).getAbsolutePath() + "/" + fileNum);
-		if (!wsFile.exists()) {
+		if (!wsFile.exists() && getArchive(arc).entries.size() > fileNum) {
 			try {
 				OutputStream os = new FileOutputStream(wsFile);
 				byte[] b = getArchive(arc).getDecompressedEntry(fileNum);

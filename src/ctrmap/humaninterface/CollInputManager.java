@@ -12,6 +12,9 @@ import static ctrmap.CtrmapMainframe.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+/**
+ * Moves the camera in Collision Editor with user input.
+ */
 public class CollInputManager implements MouseWheelListener, MouseMotionListener, MouseInputListener, KeyListener{
 	private int originMouseX;
 	private int originMouseY;

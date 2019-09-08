@@ -91,4 +91,9 @@ public class CameraTool extends AbstractTool {
 	public boolean getSelectorEnabled() {
 		return true;
 	}
+
+	@Override
+	public void updateComponents() {
+		mCamEditForm.showCamera(mCamEditForm.camIndex, false);
+	}
 }

@@ -8,36 +8,22 @@ import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.awt.GLJPanel;
 import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.util.FPSAnimator;
-
-import static ctrmap.CtrmapMainframe.*;
-import ctrmap.formats.containers.GR;
+import ctrmap.formats.h3d.model.H3DModel;
 
 /**
- * Collision editor OpenGL surface. Very old.
+ * Used for showing single H3D models in a window
  */
-public class GLPanel extends GLJPanel implements GLEventListener {
+public class CustomH3DPreview extends GLJPanel implements GLEventListener {
 
-	private static final long serialVersionUID = -6824913620967100278L;
-	public float scale = -960f;
-	public float scaleX = 0f;
-	public float scaleY = 0f;
+	private static final long serialVersionUID = -6824913720967100278L;
 
-	public float rotateY = 0f;
-	public float rotateX = 0f;
-	public float rotateZ = 0f;
+	private H3DModel model;
 
-	public GLPanel() {
+	public CustomH3DPreview() {
 		super(new GLCapabilities(GLProfile.get(GLProfile.GL2)));
 		super.addGLEventListener(this);
-		FPSAnimator animator = new FPSAnimator(this, 300, true);
+		FPSAnimator animator = new FPSAnimator(this, 75, true);
 		animator.start();
-		this.addMouseWheelListener(mCollInputManager);
-		this.addMouseMotionListener(mCollInputManager);
-		this.addMouseListener(mCollInputManager);
-	}
-
-	public void loadCollision(GR file) {
-		mCollEditPanel.loadCollision(file);
 	}
 
 	@Override
@@ -47,8 +33,14 @@ public class GLPanel extends GLJPanel implements GLEventListener {
 		gl.glClearColor(0f, 0f, 0f, 0f);
 		gl.glClearDepth(1.0f);
 		gl.glEnable(GL2.GL_DEPTH_TEST);
+		gl.glEnable(GL2.GL_TEXTURE_2D);
+		gl.glDisable(GL2.GL_CULL_FACE);
 		gl.glDepthFunc(GL2.GL_LEQUAL);
 		gl.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL2.GL_NICEST);
+	}
+
+	public void loadModel(H3DModel model) {
+		this.model = model;
 	}
 
 	@Override
@@ -59,18 +51,15 @@ public class GLPanel extends GLJPanel implements GLEventListener {
 	public void display(GLAutoDrawable drawable) {
 		GL2 gl = drawable.getGL().getGL2();
 		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
-		gl.glLoadIdentity(); // Reset The View
-		gl.glTranslatef(scaleX, scaleY, scale); // Move the triangle
-		gl.glRotatef(rotateY, 0.0f, 1.0f, 0.0f);
-		gl.glRotatef(rotateX, 1.0f, 0.0f, 0.0f);
-		gl.glRotatef(rotateZ, 0.0f, 0.0f, 1.0f);
-		gl.glBegin(GL2.GL_TRIANGLES);
+		gl.glLoadIdentity();
+		if (model != null) {
+			gl.glTranslatef(0f, -model.maxVector.y / 2f, -Math.max(model.maxVector.y, model.maxVector.x) * 2f + 5f);
+//			gl.glRotatef(90f, 0.0f, 1.0f, 0.0f);
 
-		if (mCollEditPanel.coll != null) {
-			mCollEditPanel.coll.render(gl);
+			for (int i = 0; i < model.meshes.size(); i++) { //direct rendering to bypass translation
+				model.meshes.get(i).render(gl, (model.materials.size() > model.meshes.get(i).materialId) ? model.materials.get(model.meshes.get(i).materialId) : null);
+			}
 		}
-
-		gl.glEnd();
 		gl.glFlush();
 	}
 
@@ -85,8 +74,9 @@ public class GLPanel extends GLJPanel implements GLEventListener {
 		gl.glMatrixMode(GL2.GL_PROJECTION);
 		gl.glLoadIdentity();
 
-		new GLU().gluPerspective(45.0f, h, 50f, 15000.0);
+		new GLU().gluPerspective(45.0f, h, 1f, 15000.0);
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		gl.glLoadIdentity();
 	}
+
 }

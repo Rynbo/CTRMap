@@ -9,13 +9,11 @@ import ctrmap.Workspace;
 import ctrmap.formats.containers.BM;
 import ctrmap.formats.h3d.BCHFile;
 import ctrmap.formats.h3d.model.H3DModel;
-import ctrmap.formats.h3d.model.H3DSkeleton;
 import ctrmap.formats.h3d.texturing.H3DTexture;
 import ctrmap.formats.propdata.ADPropRegistry;
 import ctrmap.humaninterface.tools.PropTool;
 import java.awt.Point;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JFormattedTextField;
@@ -24,7 +22,10 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.NumberFormatter;
 
-public class PropEditForm extends javax.swing.JPanel {
+/**
+ * GUI form for modifying GR-3 prop data.
+ */
+public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 
 	/**
 	 * Creates new form PropEditForm
@@ -36,6 +37,8 @@ public class PropEditForm extends javax.swing.JPanel {
 	public ADPropRegistry.ADPropRegistryEntry regentry;
 	public int propIndex;
 	public boolean loaded = false;
+
+	public List<H3DTexture> propTextures = new ArrayList<>();
 
 	public PropEditForm() {
 		initComponents();
@@ -119,7 +122,9 @@ public class PropEditForm extends javax.swing.JPanel {
 	}
 
 	public void loadDataFile(GRPropData f, List<H3DTexture> propTextures) {
+		this.propTextures = propTextures;
 		models.clear();
+		reg = null;
 		if (mWorkspace.valid && zoneDebugPnl.zone != null) {
 			if (zoneDebugPnl.zone.header.areadata != null) {
 				reg = new ADPropRegistry(zoneDebugPnl.zone.header.areadata, propTextures);
@@ -130,7 +135,7 @@ public class PropEditForm extends javax.swing.JPanel {
 		props = f;
 		for (int i = 0; i < props.props.size(); i++) {
 			props.props.get(i).updateName(reg); //even if reg is null, the method handles it and (inaccurately) assigns the name by UID
-			if (reg != null){
+			if (reg != null) {
 				H3DModel model = reg.getModel(props.props.get(i).uid);
 				models.add(model);
 			}
@@ -142,7 +147,7 @@ public class PropEditForm extends javax.swing.JPanel {
 		}
 		loaded = true;
 		if (entryBox.getItemCount() > 0) {
-			setProp(0);
+			showProp(0);
 		}
 	}
 
@@ -180,8 +185,8 @@ public class PropEditForm extends javax.swing.JPanel {
 		prop2.x = Utils.getFloatFromDocument(x);
 		prop2.y = Utils.getFloatFromDocument(y);
 		prop2.z = Utils.getFloatFromDocument(z);
-		prop2.rotateY = Utils.getFloatFromDocument(rx);
-		prop2.rotateX = Utils.getFloatFromDocument(ry);
+		prop2.rotateX = Utils.getFloatFromDocument(rx);
+		prop2.rotateY = Utils.getFloatFromDocument(ry);
 		prop2.rotateZ = Utils.getFloatFromDocument(rz);
 		prop2.scaleX = Utils.getFloatFromDocument(sx);
 		prop2.scaleY = Utils.getFloatFromDocument(sy);
@@ -243,13 +248,25 @@ public class PropEditForm extends javax.swing.JPanel {
 		return true;
 	}
 
-	public void renderH3D(GL2 gl) {
-		if (reg != null){
+	@Override
+	public void renderCM3D(GL2 gl) {
+		if (reg != null) {
 			for (int i = 0; i < models.size(); i++) {
-				if (models.size() > i && models.get(i) != null){
+				if (models.size() > i && models.get(i) != null) {
 					updateH3D(i);
 					models.get(i).render(gl);
-					if (i == propIndex && mTileEditForm.tool instanceof PropTool){
+				}
+			}
+		}
+	}
+
+	@Override
+	public void renderOverlayCM3D(GL2 gl) {
+		if (reg != null) {
+			for (int i = 0; i < models.size(); i++) {
+				if (models.size() > i && models.get(i) != null) {
+					if (i == propIndex && mTileEditForm.tool instanceof PropTool) {
+						updateH3D(i);
 						models.get(i).renderBox(gl);
 					}
 				}
@@ -308,53 +325,64 @@ public class PropEditForm extends javax.swing.JPanel {
 		x.setValue(prop.x);
 		y.setValue(prop.y);
 		z.setValue(prop.z);
-		rx.setValue(prop.rotateY);
-		ry.setValue(prop.rotateX);
+		rx.setValue(prop.rotateX);
+		ry.setValue(prop.rotateY);
 		rz.setValue(prop.rotateZ);
 		sx.setValue(prop.scaleX);
 		sy.setValue(prop.scaleY);
 		sz.setValue(prop.scaleZ);
-		if (reg != null) {
-			regentry = reg.entries.get(prop.uid);
-			if (regentry == null) {
-				int createEntry = JOptionPane.showConfirmDialog(frame,
-						"The model and animation data needed for this prop\n"
-						+ "was not found in this area's registry under the model UID.\n\n"
-						+ "CTRMap can create dummy registry data for you, but keep in mind that:\n\n"
-						+ "1. If the prop model's textures aren't in the scene, the game will hardlock.\n"
-						+ "2. If you are using a custom prop, you need to set the entry's animation data\n"
-						+ "   in PRE if you want the game to use it.\n"
-						+ "3. Similarly, even if you are using one of GF's props, you still need to set\n"
-						+ "   the animation data as CTRMap can not detect the correct settings without\n"
-						+ "   iterating through every area searching other maps for clues, which would take forever.\n\n"
-						+ "Do you want to create the registry entry?", "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-				if (createEntry == JOptionPane.NO_OPTION) {
-					loaded = true;
-					return;
-				}
-				ADPropRegistry.ADPropRegistryEntry failsafe = new ADPropRegistry.ADPropRegistryEntry();
-				failsafe.reference = prop.uid; //by GF's standard ref and model are always the same. They don't have to be but if the user fucks that up, it's their fault.
-				failsafe.model = prop.uid;
-				reg.entries.put(failsafe.reference, failsafe);
-				reg.modified = true;
-				regentry = failsafe;
-			}
-		}
 		updateModel(index);
 		loaded = true;
 	}
 
-	public void updateModel(int index){
-		if (reg != null){
+	public void updateModel(int index) {
+		if (reg != null) {
 			models.set(index, reg.getModel(props.props.get(index).uid));
 		}
+		if (models.get(index) == null) {
+			//failsafe
+			File f = mWorkspace.getWorkspaceFile(Workspace.ArchiveType.BUILDING_MODELS, props.props.get(index).uid);
+			if (f.exists()) {
+				BCHFile bch = new BCHFile(new BM(f).getFile(0));
+				bch.models.get(0).setMaterialTextures(bch.textures);
+				bch.models.get(0).setMaterialTextures(propTextures);
+				models.set(index, bch.models.get(0));
+			}
+		}
+		PropPreview.loadModel(models.get(index));
 	}
-	
+
 	public void saveAndRefresh() {
 		if (loaded) {
 			saveProp();
 			showProp(entryBox.getSelectedIndex());
+			if (reg != null) {
+				regentry = reg.entries.get(prop.uid);
+				if (regentry == null) {
+					int createEntry = JOptionPane.showConfirmDialog(frame,
+							"The model and animation data needed for this prop\n"
+							+ "was not found in this area's registry under the model UID.\n\n"
+							+ "CTRMap can create dummy registry data for you, but keep in mind that:\n\n"
+							+ "1. If the prop model's textures aren't in the scene, the game will hardlock.\n"
+							+ "2. If you are using a custom prop, you need to set the entry's animation data\n"
+							+ "   in PRE if you want the game to use it.\n"
+							+ "3. Similarly, even if you are using one of GF's props, you still need to set\n"
+							+ "   the animation data as CTRMap can not detect the correct settings without\n"
+							+ "   iterating through every area searching other maps for clues, which would take forever.\n\n"
+							+ "Do you want to create the registry entry?", "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+					if (createEntry == JOptionPane.NO_OPTION) {
+						return;
+					}
+					ADPropRegistry.ADPropRegistryEntry failsafe = new ADPropRegistry.ADPropRegistryEntry();
+					failsafe.reference = prop.uid; //by GF's standard ref and model are always the same. They don't have to be but if the user fucks that up, it's their fault.
+					failsafe.model = prop.uid;
+					reg.entries.put(failsafe.reference, failsafe);
+					reg.modified = true;
+					regentry = failsafe;
+				}
+			}
 		}
+		m3DDebugPanel.bindNavi(props.props.get(entryBox.getSelectedIndex()));
 	}
 
 	/**
@@ -398,6 +426,7 @@ public class PropEditForm extends javax.swing.JPanel {
         btnRemEntry = new javax.swing.JButton();
         btnNewEntry = new javax.swing.JButton();
         btnRegEdit = new javax.swing.JButton();
+        PropPreview = new ctrmap.humaninterface.CustomH3DPreview();
 
         entryBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -491,6 +520,17 @@ public class PropEditForm extends javax.swing.JPanel {
             }
         });
 
+        javax.swing.GroupLayout PropPreviewLayout = new javax.swing.GroupLayout(PropPreview);
+        PropPreview.setLayout(PropPreviewLayout);
+        PropPreviewLayout.setHorizontalGroup(
+            PropPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+        PropPreviewLayout.setVerticalGroup(
+            PropPreviewLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -558,7 +598,8 @@ public class PropEditForm extends javax.swing.JPanel {
                             .addComponent(btnSave, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(btnRemEntry, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(btnNewEntry, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnRegEdit, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(btnRegEdit, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(PropPreview, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
@@ -620,7 +661,9 @@ public class PropEditForm extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(rotZLabel)
                     .addComponent(rz, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(PropPreview, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(10, 10, 10)
                 .addComponent(btnNewEntry)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnRemEntry)
@@ -628,7 +671,7 @@ public class PropEditForm extends javax.swing.JPanel {
                 .addComponent(btnSave)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnRegEdit)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -681,6 +724,7 @@ public class PropEditForm extends javax.swing.JPanel {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private ctrmap.humaninterface.CustomH3DPreview PropPreview;
     private javax.swing.JButton btnNewEntry;
     private javax.swing.JButton btnRegEdit;
     private javax.swing.JButton btnRemEntry;

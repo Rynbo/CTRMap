@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Parser and accessor for AD-3 Camera data.
+ */
 public class CameraDataFile {
 	private AD file;
 	

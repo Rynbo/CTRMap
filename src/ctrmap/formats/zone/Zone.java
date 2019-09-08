@@ -6,7 +6,7 @@ import java.util.Arrays;
 import javax.swing.JOptionPane;
 
 /**
- * Basic temporary implementation of the Zone format for better matrix and areadata handling. Research courtesy of Kaphotics and various pk3DS contributors.
+ * Zone data container class, incomplete.
  */
 public class Zone {
 	public ZO file;

@@ -105,4 +105,8 @@ public class FillTool extends AbstractTool {
 	public boolean getSelectorEnabled() {
 		return true;
 	}
+
+	@Override
+	public void updateComponents() {
+	}
 }

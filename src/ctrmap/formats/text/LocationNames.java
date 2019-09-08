@@ -3,6 +3,9 @@ package ctrmap.formats.text;
 import static ctrmap.CtrmapMainframe.*;
 import ctrmap.Workspace;
 
+/**
+ * Accessor class for obtaining location names from GAMETEXT files.
+ */
 public class LocationNames {
 	public static TextFile textfile;
 	public static void loadFromGarc(Workspace.GameType game){

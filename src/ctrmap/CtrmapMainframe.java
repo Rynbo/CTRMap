@@ -27,17 +27,16 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import ctrmap.formats.containers.AD;
 import ctrmap.formats.containers.GR;
 import ctrmap.formats.containers.MM;
 import ctrmap.formats.WavefrontOBJ;
 import ctrmap.formats.containers.ZO;
-import ctrmap.formats.cameradata.CameraDataFile;
 import ctrmap.formats.h3d.BCHFile;
 import ctrmap.formats.mapmatrix.MapMatrix;
 import ctrmap.formats.zone.Zone;
 import ctrmap.humaninterface.AboutDialog;
 import ctrmap.humaninterface.CM3DInputManager;
+import ctrmap.humaninterface.CM3DRenderable;
 import ctrmap.humaninterface.CameraDebugPanel;
 import ctrmap.humaninterface.CameraEditForm;
 import ctrmap.humaninterface.CollEditPanel;
@@ -54,7 +53,6 @@ import ctrmap.humaninterface.ZoneDebugPanel;
 import ctrmap.humaninterface.tools.EditTool;
 import java.awt.Desktop;
 import java.awt.Dimension;
-import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.FileInputStream;
@@ -62,6 +60,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
@@ -70,6 +70,9 @@ import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileFilter;
 
+/**
+ * The launcher class for CTRMap which nests all of its GUI elements and provides access to them with static imports, similar to a C++ namespace.
+ */
 public class CtrmapMainframe {
 
 	public static JFrame frame;
@@ -128,6 +131,8 @@ public class CtrmapMainframe {
 	public static GR mainGR;
 
 	public static Workspace mWorkspace;
+	
+	public static List<CM3DRenderable> CM3DComponents = new ArrayList<>();
 
 	public static void main(String[] args) {
 		try {
@@ -256,7 +261,8 @@ public class CtrmapMainframe {
 					mainGR = new GR(jfc.getSelectedFile());
 					CtrmapMainframe.frame.setTitle("GfMap Editor - " + mainGR.getOriginFile().getName());
 					mTileMapPanel.loadTileMap(mainGR);
-					mGLPanel.loadCollision(mainGR);
+					mCollEditPanel.unload();
+					mCollEditPanel.loadCollision(mainGR);
 					mTileMapPanel.scaleImage(1);
 				}
 			}
@@ -293,9 +299,7 @@ public class CtrmapMainframe {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				mTileMapPanel.saveTileMap(false);
-				if (mGLPanel.coll != null) {
-					mGLPanel.coll.write();
-				}
+				mCollEditPanel.store();
 				mCamEditForm.store(false);
 				mPropEditForm.store(false);
 				mNPCEditForm.saveRegistry(false);
@@ -339,8 +343,8 @@ public class CtrmapMainframe {
 				if (jfc.getSelectedFile() != null) {
 					prefs.put("LAST_DIR", jfc.getSelectedFile().getParent());
 					WavefrontOBJ obj = new WavefrontOBJ(jfc.getSelectedFile());
-					if (mGLPanel.coll != null) {
-						mGLPanel.coll.meshes = obj.getGfCollision();
+					if (mCollEditPanel.coll != null) {
+						mCollEditPanel.coll.meshes = obj.getGfCollision();
 						mCollEditPanel.buildTree();
 					}
 				}
@@ -442,6 +446,10 @@ public class CtrmapMainframe {
 		menubar.add(toolsmenu);
 		menubar.add(optionsmenu);
 		menubar.add(helpmenu);
+		
+		CM3DComponents.add(mTileMapPanel);
+		CM3DComponents.add(mPropEditForm);
+		CM3DComponents.add(mNPCEditForm);
 
 		frame.setSize(1280, 720 + menubar.getHeight());
 		frame.setMinimumSize(frame.getSize());

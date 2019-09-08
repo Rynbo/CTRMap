@@ -56,4 +56,8 @@ public class EditTool extends AbstractTool {
 	public boolean getSelectorEnabled() {
 		return true;
 	}
+
+	@Override
+	public void updateComponents() {
+	}
 }

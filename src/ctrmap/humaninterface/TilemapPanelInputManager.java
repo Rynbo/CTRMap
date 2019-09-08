@@ -17,6 +17,9 @@ import ctrmap.humaninterface.tools.NPCTool;
 import ctrmap.humaninterface.tools.PropTool;
 import ctrmap.humaninterface.tools.SetTool;
 
+/**
+ * CM2D input listener.
+ */
 public class TilemapPanelInputManager implements MouseWheelListener, MouseMotionListener, MouseInputListener, ActionListener {
 
 	@Override

@@ -15,6 +15,9 @@ import ctrmap.CtrmapMainframe;
 import ctrmap.formats.cameradata.CameraData;
 import ctrmap.formats.cameradata.CameraDataFile;
 
+/**
+ * Deprecated Panel for viewing camera data.
+ */
 public class CameraDebugPanel extends JPanel{
 	private static final long serialVersionUID = 6939274613528701294L;
 	public JComboBox<Integer> camSelect = new JComboBox<>();

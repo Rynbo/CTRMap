@@ -17,6 +17,7 @@ public class NPCTool extends AbstractTool {
 	@Override
 	public void onToolInit() {
 		Utils.switchToolUI(mNPCEditForm);
+		mNPCEditForm.refresh();
 	}
 	
 	@Override
@@ -83,5 +84,11 @@ public class NPCTool extends AbstractTool {
 		mNPCEditForm.npc.yTile = Selector.hilightTileY;
 		mNPCEditForm.e.modified = true;
 		mNPCEditForm.refresh();
+	}
+
+	@Override
+	public void updateComponents() {
+		mNPCEditForm.e.modified = true;
+		mNPCEditForm.showEntry(mNPCEditForm.npcIndex);
 	}
 }

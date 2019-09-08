@@ -6,12 +6,13 @@ import ctrmap.LittleEndianDataOutputStream;
 import ctrmap.Workspace;
 import ctrmap.formats.containers.BM;
 import ctrmap.formats.h3d.H3DModelNameGet;
+import ctrmap.humaninterface.MapObject;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class GRProp {
+public class GRProp implements MapObject{
 
 	public int uid; //model ID in a/0/2/4 for XY, literal file number of course
 	public float scaleX;
@@ -34,8 +35,8 @@ public class GRProp {
 			scaleX = dis.readFloat();
 			scaleY = dis.readFloat();
 			scaleZ = dis.readFloat();
-			rotateY = dis.readFloat();
 			rotateX = dis.readFloat();
+			rotateY = dis.readFloat();
 			rotateZ = dis.readFloat();
 			x = dis.readFloat();
 			y = dis.readFloat();
@@ -51,8 +52,8 @@ public class GRProp {
 		scaleX = 1f;
 		scaleY = 1f;
 		scaleZ = 1f;
-		rotateY = 0f;
 		rotateX = 0f;
+		rotateY = 0f;
 		rotateZ = 0f;
 		x = 0f;
 		y = 0f;
@@ -81,8 +82,8 @@ public class GRProp {
 			dos.writeFloat(scaleX);
 			dos.writeFloat(scaleY);
 			dos.writeFloat(scaleZ);
-			dos.writeFloat(rotateY);
 			dos.writeFloat(rotateX);
+			dos.writeFloat(rotateY);
 			dos.writeFloat(rotateZ);
 			dos.writeFloat(x);
 			dos.writeFloat(y);
@@ -91,5 +92,35 @@ public class GRProp {
 		} catch (IOException ex) {
 			Logger.getLogger(GRProp.class.getName()).log(Level.SEVERE, null, ex);
 		}
+	}
+
+	@Override
+	public float getX() {
+		return x;
+	}
+
+	@Override
+	public float getY() {
+		return y;
+	}
+
+	@Override
+	public float getZ() {
+		return z;
+	}
+
+	@Override
+	public void setX(float val) {
+		x = val;
+	}
+
+	@Override
+	public void setY(float val) {
+		y = val;
+	}
+
+	@Override
+	public void setZ(float val) {
+		z = val;
 	}
 }

@@ -18,6 +18,7 @@ public class PropTool extends AbstractTool {
 	@Override
 	public void onToolInit() {
 		Utils.switchToolUI(mPropEditForm);
+		mPropEditForm.saveAndRefresh();
 	}
 
 	@Override
@@ -100,5 +101,11 @@ public class PropTool extends AbstractTool {
 	@Override
 	public boolean getSelectorEnabled() {
 		return false;
+	}
+
+	@Override
+	public void updateComponents() {
+		mPropEditForm.props.modified = true;
+		mPropEditForm.showProp(mPropEditForm.propIndex);
 	}
 }

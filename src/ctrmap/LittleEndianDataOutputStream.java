@@ -4,6 +4,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+/**
+* Simple DataOutputStream implementation with automatic reversion of Java BE to LE data.
+ */
 public class LittleEndianDataOutputStream {
 	private DataOutputStream dos;
 	public LittleEndianDataOutputStream(OutputStream out) {

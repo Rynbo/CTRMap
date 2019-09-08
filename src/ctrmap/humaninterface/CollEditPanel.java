@@ -3,237 +3,300 @@ package ctrmap.humaninterface;
 import static ctrmap.CtrmapMainframe.*;
 import ctrmap.Utils;
 import ctrmap.formats.Triangle;
+import ctrmap.formats.containers.GR;
 import ctrmap.formats.gfcollision.GRCollisionFile;
+import ctrmap.formats.h3d.H3DModelNameGet;
 import ctrmap.humaninterface.tools.FillTool;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JFormattedTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeSelectionEvent;
-import javax.swing.text.BadLocationException;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
+/**
+ * Simple vertex editor.
+ */
 public class CollEditPanel extends javax.swing.JPanel {
-    private DefaultMutableTreeNode root;
-    private DefaultMutableTreeNode[] meshNodes = new DefaultMutableTreeNode[16];
-    private GRCollisionFile coll;
-    public int selectedMesh = -1;
-    public int selectedTri = -1;
-    /**
-     * Creates new form CollEditPanel
-     */
-    public CollEditPanel() {
-        initComponents();
-    }
-    
-	public void unload(){
+
+	private DefaultMutableTreeNode root = new DefaultMutableTreeNode("No map loaded");
+	public List<GRCollisionFile> files = new ArrayList<>();
+	private List<DefaultMutableTreeNode> meshContainers = new ArrayList<>();
+	private List<DefaultMutableTreeNode[]> meshNodes = new ArrayList<>();
+	public GRCollisionFile coll;
+	private int collIndex = -1;
+	public int selectedMesh = -1;
+	public int selectedTri = -1;
+
+	/**
+	 * Creates new form CollEditPanel
+	 */
+	public CollEditPanel() {
+		initComponents();
+		meshTree.addTreeSelectionListener((TreeSelectionEvent e) -> {
+			DefaultMutableTreeNode node = (DefaultMutableTreeNode) meshTree.getLastSelectedPathComponent();
+			if (node == null) {
+				deselectTri();
+				deselectMesh();
+			} else {
+				String label = (String) node.getUserObject();
+				if (label.startsWith("Mesh")) {
+					selectMesh(node.getParent().getIndex(node));
+				} else if (label.startsWith("Triangle")) {
+					int parentMesh = meshContainers.get(collIndex).getIndex(node.getParent());
+					selectTriangle(parentMesh, node.getParent().getIndex(node));
+				} else if (root != node) {
+					deselectTri();
+					deselectMesh();
+					selectFile(root.getIndex(node));
+				}
+			}
+		});
+		v1x.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				adjustX(v1x, 0);
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				adjustX(v1x, 0);
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+			}
+		});
+		v1y.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				adjustY(v1y, 0);
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				adjustY(v1y, 0);
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+			}
+		});
+		v1z.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				adjustZ(v1z, 0);
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				adjustZ(v1z, 0);
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+			}
+		});
+		v2x.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				adjustX(v2x, 1);
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				adjustX(v2x, 1);
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+			}
+		});
+		v2y.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				adjustY(v2y, 1);
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				adjustY(v2y, 1);
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+			}
+		});
+		v2z.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				adjustZ(v2z, 1);
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				adjustZ(v2z, 1);
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+			}
+		});
+		v3x.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				adjustX(v3x, 2);
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				adjustX(v3x, 2);
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+			}
+		});
+		v3y.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				adjustY(v3y, 2);
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				adjustY(v3y, 2);
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+			}
+		});
+		v3z.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				adjustZ(v3z, 2);
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				adjustZ(v3z, 2);
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+			}
+		});
+	}
+
+	public void unload() {
 		selectedMesh = -1;
 		selectedTri = -1;
 		meshTree.setModel(null);
 		coll = null;
-		root = null;
-		meshNodes = new DefaultMutableTreeNode[16];
+		root = new DefaultMutableTreeNode("No map loaded");
+		meshNodes.clear();
+		meshContainers.clear();
+		files.clear();
+	}
+
+	public void loadCollision(GR f){
+		loadCollision(new GRCollisionFile(f), H3DModelNameGet.H3DModelNameGet(f.getFile(1)));
 	}
 	
-    public void loadCollision(GRCollisionFile f){
-        this.coll = f;
-        root = new DefaultMutableTreeNode(mainGR.getOriginFile().getName());
-        meshTree.setModel(new DefaultTreeModel(root));
-        for (int i = 0; i < 16; i++){
-            meshNodes[i] = new DefaultMutableTreeNode("Mesh " + String.valueOf(i));
-            for (int j = 0; j < coll.meshes[i].tris.size(); j++){
-                meshNodes[i].add(new DefaultMutableTreeNode("Triangle " + String.valueOf(j)));
-            }
-            root.add(meshNodes[i]);
-        }
-        meshTree.addTreeSelectionListener((TreeSelectionEvent e) -> {
-            DefaultMutableTreeNode node = (DefaultMutableTreeNode)meshTree.getLastSelectedPathComponent();
-            if (node == null){
-                deselectTri();
-                deselectMesh();
-            }
-            else {
-                String label = (String)node.getUserObject();
-                if (label.startsWith("Mesh")){
-                    selectMesh(node.getParent().getIndex(node));
-                }
-                else if (label.startsWith("Triangle")){
-                    int parentMesh = root.getIndex(node.getParent());
-                    selectTriangle(parentMesh, node.getParent().getIndex(node));
-                }
-                else {
-                    deselectTri();
-                    deselectMesh();
-                }
-            }
-        });
-        v1x.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                adjustX(v1x, 0);
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                adjustX(v1x, 0);
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {}
-        });
-        v1y.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                adjustY(v1y, 0);
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                adjustY(v1y, 0);
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {}
-        });
-        v1z.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                adjustZ(v1z, 0);
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                adjustZ(v1z, 0);
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {}
-        });
-        v2x.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                adjustX(v2x, 1);
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                adjustX(v2x, 1);
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {}
-        });
-        v2y.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                adjustY(v2y, 1);
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                adjustY(v2y, 1);
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {}
-        });
-        v2z.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                adjustZ(v2z, 1);
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                adjustZ(v2z, 1);
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {}
-        });
-        v3x.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                adjustX(v3x, 2);
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                adjustX(v3x, 2);
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {}
-        });
-        v3y.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                adjustY(v3y, 2);
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                adjustY(v3y, 2);
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {}
-        });
-        v3z.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                adjustZ(v3z, 2);
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                adjustZ(v3z, 2);
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {}
-        });
-        deselectMesh();
-        deselectTri();
-    }
-    
-    public void selectTriangle(int mesh, int tri) {
-        deselectTri();
-        deselectMesh();
-        Triangle triobj = coll.meshes[mesh].tris.get(tri);
-        v1x.setValue(triobj.getX(0));
-        v1y.setValue(triobj.getY(0));
-        v1z.setValue(triobj.getZ(0));
-        v2x.setValue(triobj.getX(1));
-        v2y.setValue(triobj.getY(1));
-        v2z.setValue(triobj.getZ(1));
-        v3x.setValue(triobj.getX(2));
-        v3y.setValue(triobj.getY(2));
-        v3z.setValue(triobj.getZ(2));
-        triobj.setSelected(true);
-        selectedMesh = mesh;
-        selectedTri = tri;
-    }
-    public void deselectTri(){
-        if (selectedTri != -1) {
-            coll.meshes[selectedMesh].tris.get(selectedTri).setSelected(false);
-        }
-        selectedTri = -1;
-        v1x.setValue(0f);
-        v1y.setValue(0f);
-        v1z.setValue(0f);
-        v2x.setValue(0f);
-        v2y.setValue(0f);
-        v2z.setValue(0f);
-        v3x.setValue(0f);
-        v3y.setValue(0f);
-        v3z.setValue(0f);
-    }
-    public void selectMesh(int num) {
-        deselectTri();
-        deselectMesh();
-        for (int i = 0; i < coll.meshes[num].tris.size(); i++){
-            coll.meshes[num].tris.get(i).setSelected(true);
-        }
-        selectedMesh = num;
-    }
-    public void deselectMesh(){
-        if (selectedMesh != -1) {
-            for (int i = 0; i < coll.meshes[selectedMesh].tris.size(); i++){
-                coll.meshes[selectedMesh].tris.get(i).setSelected(false);
-            }
-        }
-        selectedMesh = -1;
-    }
-    
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
+	public void store(){
+		for (int i = 0; i < files.size(); i++){
+			files.get(i).write();
+		}
+	}
+	
+	public void loadCollision(GRCollisionFile f, String name) {
+		this.coll = f;
+		root.setUserObject("Collision data");
+		files.add(coll);
+		meshTree.setModel(new DefaultTreeModel(root));
+		DefaultMutableTreeNode[] newNode = new DefaultMutableTreeNode[16];
+		DefaultMutableTreeNode cont = new DefaultMutableTreeNode(name);
+		for (int i = 0; i < 16; i++) {
+			newNode[i] = new DefaultMutableTreeNode("Mesh " + String.valueOf(i));
+			for (int j = 0; j < coll.meshes[i].tris.size(); j++) {
+				newNode[i].add(new DefaultMutableTreeNode("Triangle " + String.valueOf(j)));
+			}
+			cont.add(newNode[i]);
+		}
+		meshNodes.add(newNode);
+		meshContainers.add(cont);
+		root.add(cont);
+		deselectMesh();
+		deselectTri();
+		((DefaultTreeModel) meshTree.getModel()).reload();
+	}
+
+	public void selectFile(int idx) {
+		coll = files.get(idx);
+		collIndex = idx;
+	}
+
+	public void selectTriangle(int mesh, int tri) {
+		deselectTri();
+		deselectMesh();
+		Triangle triobj = coll.meshes[mesh].tris.get(tri);
+		v1x.setValue(triobj.getX(0));
+		v1y.setValue(triobj.getY(0));
+		v1z.setValue(triobj.getZ(0));
+		v2x.setValue(triobj.getX(1));
+		v2y.setValue(triobj.getY(1));
+		v2z.setValue(triobj.getZ(1));
+		v3x.setValue(triobj.getX(2));
+		v3y.setValue(triobj.getY(2));
+		v3z.setValue(triobj.getZ(2));
+		triobj.setSelected(true);
+		selectedMesh = mesh;
+		selectedTri = tri;
+	}
+
+	public void deselectTri() {
+		if (selectedTri != -1) {
+			coll.meshes[selectedMesh].tris.get(selectedTri).setSelected(false);
+		}
+		selectedTri = -1;
+		v1x.setValue(0f);
+		v1y.setValue(0f);
+		v1z.setValue(0f);
+		v2x.setValue(0f);
+		v2y.setValue(0f);
+		v2z.setValue(0f);
+		v3x.setValue(0f);
+		v3y.setValue(0f);
+		v3z.setValue(0f);
+	}
+
+	public void selectMesh(int num) {
+		deselectTri();
+		deselectMesh();
+		for (int i = 0; i < coll.meshes[num].tris.size(); i++) {
+			coll.meshes[num].tris.get(i).setSelected(true);
+		}
+		selectedMesh = num;
+	}
+
+	public void deselectMesh() {
+		if (selectedMesh != -1) {
+			for (int i = 0; i < coll.meshes[selectedMesh].tris.size(); i++) {
+				coll.meshes[selectedMesh].tris.get(i).setSelected(false);
+			}
+		}
+		selectedMesh = -1;
+	}
+
+	/**
+	 * This method is called from within the constructor to initialize the form.
+	 * WARNING: Do NOT modify this code. The content of this method is always
+	 * regenerated by the Form Editor.
+	 */
+	@SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -435,19 +498,19 @@ public class CollEditPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnNewTriangleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewTriangleActionPerformed
-        if (selectedMesh != -1) {
-            coll.meshes[selectedMesh].tris.add(new Triangle(new float[3], new float[3], new float[3]));
-			int index = meshNodes[selectedMesh].getChildCount();
-            meshNodes[selectedMesh].add(new DefaultMutableTreeNode("Triangle " + index));
-            ((DefaultTreeModel)meshTree.getModel()).reload(meshNodes[selectedMesh]);
+		if (selectedMesh != -1) {
+			coll.meshes[selectedMesh].tris.add(new Triangle(new float[3], new float[3], new float[3]));
+			int index = meshNodes.get(collIndex)[selectedMesh].getChildCount();
+			meshNodes.get(collIndex)[selectedMesh].add(new DefaultMutableTreeNode("Triangle " + index));
+			((DefaultTreeModel) meshTree.getModel()).reload(meshNodes.get(collIndex)[selectedMesh]);
 			selectTriangle(selectedMesh, index);
-        }
+		}
     }//GEN-LAST:event_btnNewTriangleActionPerformed
 
     private void btnFillCoordsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFillCoordsActionPerformed
-		if (mTileEditForm.tool instanceof FillTool && selectedMesh != -1){
-			FillTool t = (FillTool)mTileEditForm.tool;
-			if (t.lastX != -1){
+		if (mTileEditForm.tool instanceof FillTool && selectedMesh != -1) {
+			FillTool t = (FillTool) mTileEditForm.tool;
+			if (t.lastX != -1) {
 				int startX = Math.min(t.originX, t.lastX) * 18 - 360;
 				int startY = Math.min(t.originY, t.lastY) * 18 - 360;
 				int width = Math.abs(t.lastX - t.originX) * 18 + 18;
@@ -458,10 +521,10 @@ public class CollEditPanel extends javax.swing.JPanel {
 				float[] vertex3 = new float[]{startX + width, 0, startY + height};
 				coll.meshes[selectedMesh].tris.add(new Triangle(new float[]{vertex0[0], vertex1[0], vertex2[0]}, new float[3], new float[]{vertex0[2], vertex1[2], vertex2[2]}));
 				coll.meshes[selectedMesh].tris.add(new Triangle(new float[]{vertex3[0], vertex1[0], vertex2[0]}, new float[3], new float[]{vertex3[2], vertex1[2], vertex2[2]}));
-				int index = meshNodes[selectedMesh].getChildCount();
-				meshNodes[selectedMesh].add(new DefaultMutableTreeNode("Triangle " + index));
-				meshNodes[selectedMesh].add(new DefaultMutableTreeNode("Triangle " + (index + 1)));
-				((DefaultTreeModel)meshTree.getModel()).reload(meshNodes[selectedMesh]);
+				int index = meshNodes.get(collIndex)[selectedMesh].getChildCount();
+				meshNodes.get(collIndex)[selectedMesh].add(new DefaultMutableTreeNode("Triangle " + index));
+				meshNodes.get(collIndex)[selectedMesh].add(new DefaultMutableTreeNode("Triangle " + (index + 1)));
+				((DefaultTreeModel) meshTree.getModel()).reload(meshNodes.get(collIndex)[selectedMesh]);
 				selectTriangle(selectedMesh, index);
 			}
 		}
@@ -470,48 +533,56 @@ public class CollEditPanel extends javax.swing.JPanel {
     private void btnRemTriangleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemTriangleActionPerformed
 		int mesh = selectedMesh;
 		int tri = selectedTri;
-		if (mesh == -1 || tri == -1) return;
+		if (mesh == -1 || tri == -1) {
+			return;
+		}
 		deselectTri();
 		coll.meshes[mesh].tris.remove(tri);
-		meshNodes[mesh].remove(tri);
+		meshNodes.get(collIndex)[mesh].remove(tri);
 		reloadMeshNode(mesh);
     }//GEN-LAST:event_btnRemTriangleActionPerformed
-    
-	private void reloadMeshNode(int num){
-		((DefaultTreeModel)meshTree.getModel()).reload(meshNodes[num]);
+
+	private void reloadMeshNode(int num) {
+		((DefaultTreeModel) meshTree.getModel()).reload(meshNodes.get(collIndex)[num]);
 	}
-	
-    private void adjustX(JFormattedTextField source, int vertex){
-        if (selectedTri != -1){
-            coll.meshes[selectedMesh].tris.get(selectedTri).setX(vertex, Utils.getFloatFromDocument(source));    
-        }
-    }
-    
-    private void adjustY(JFormattedTextField source, int vertex){
-        if (selectedTri != -1){
-            coll.meshes[selectedMesh].tris.get(selectedTri).setY(vertex, Utils.getFloatFromDocument(source));
-        }
-    }
-    
-    private void adjustZ(JFormattedTextField source, int vertex){
-        if (selectedTri != -1){
-            coll.meshes[selectedMesh].tris.get(selectedTri).setZ(vertex, Utils.getFloatFromDocument(source));
-        }
-    }
-    
-    public void buildTree(){
-		coll.dedupe();
+
+	private void adjustX(JFormattedTextField source, int vertex) {
+		if (selectedTri != -1) {
+			coll.meshes[selectedMesh].tris.get(selectedTri).setX(vertex, Utils.getFloatFromDocument(source));
+		}
+	}
+
+	private void adjustY(JFormattedTextField source, int vertex) {
+		if (selectedTri != -1) {
+			coll.meshes[selectedMesh].tris.get(selectedTri).setY(vertex, Utils.getFloatFromDocument(source));
+		}
+	}
+
+	private void adjustZ(JFormattedTextField source, int vertex) {
+		if (selectedTri != -1) {
+			coll.meshes[selectedMesh].tris.get(selectedTri).setZ(vertex, Utils.getFloatFromDocument(source));
+		}
+	}
+
+	public void buildTree() {
 		root.removeAllChildren();
-		for (int i = 0; i < 16; i++){
-            meshNodes[i] = new DefaultMutableTreeNode("Mesh " + String.valueOf(i));
-            for (int j = 0; j < coll.meshes[i].tris.size(); j++){
-                meshNodes[i].add(new DefaultMutableTreeNode("Triangle " + String.valueOf(j)));
-            }
-            root.add(meshNodes[i]);
-        }
-        ((DefaultTreeModel)meshTree.getModel()).reload();
-    }
-	
+		meshNodes.clear();
+		for (int file = 0; file < files.size(); file++) {
+			files.get(file).dedupe();
+			meshNodes.add(new DefaultMutableTreeNode[16]);
+			meshContainers.get(file).removeAllChildren();
+			for (int i = 0; i < 16; i++) {
+				meshNodes.get(file)[i] = new DefaultMutableTreeNode("Mesh " + String.valueOf(i));
+				for (int j = 0; j < coll.meshes[i].tris.size(); j++) {
+					meshNodes.get(file)[i].add(new DefaultMutableTreeNode("Triangle " + String.valueOf(j)));
+				}
+				meshContainers.get(file).add(meshNodes.get(file)[i]);
+			}
+			root.add(meshContainers.get(file));
+		}
+		((DefaultTreeModel) meshTree.getModel()).reload();
+	}
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnFillCoords;
     private javax.swing.JButton btnNewTriangle;

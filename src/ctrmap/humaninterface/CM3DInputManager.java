@@ -13,6 +13,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
 
+/**
+ * Listens to user input interfaces and forwards any interaction to CM3D.
+ */
 public class CM3DInputManager implements MouseWheelListener, MouseMotionListener, MouseInputListener, KeyListener {
 
 	private int originMouseX;
@@ -24,10 +27,11 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 	private float originRotateZ;
 	private float speed = 10f;
 	private ArrayList<Integer> keycodes = new ArrayList<>();
+	private boolean navi = false;
 
 	@Override
-	public void mouseClicked(MouseEvent arg0) {
-
+	public void mouseClicked(MouseEvent e) {
+		m3DDebugPanel.cycleSelection(e);
 	}
 
 	@Override
@@ -45,6 +49,7 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 		if (!m3DDebugPanel.hasFocus()) {
 			m3DDebugPanel.requestFocus();
 		}
+		navi = m3DDebugPanel.checkNavi(e);
 		setOrigins(e);
 	}
 
@@ -60,9 +65,7 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		if (e.getX() == originMouseX && e.getY() == originMouseY){ //only if mouse was clicked, not dragged
-			m3DDebugPanel.cycleSelection(e);
-		}
+		navi = false;
 	}
 
 	@Override
@@ -71,8 +74,13 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 			m3DDebugPanel.translateX = originScaleX + (e.getX() - originMouseX);
 			m3DDebugPanel.translateY = originScaleY - (e.getY() - originMouseY);
 		} else if (SwingUtilities.isLeftMouseButton(e)) {
-			m3DDebugPanel.rotateY = (originRotateY + (e.getX() - originMouseX) / 2f) % 360f;
-			m3DDebugPanel.rotateX = ((float) Math.max(-90f, Math.min(90f, originRotateX + (e.getY() - originMouseY) / 2f))) % 360f;
+			if (!navi) {
+				m3DDebugPanel.rotateY = (originRotateY + (e.getX() - originMouseX) / 2f) % 360f;
+				m3DDebugPanel.rotateX = ((float) Math.max(-90f, Math.min(90f, originRotateX + (e.getY() - originMouseY) / 2f))) % 360f;
+			}
+			else {
+				m3DDebugPanel.doNavi(e, originMouseX, originMouseY);
+			}
 			setOrigins(e);
 		}
 	}
@@ -103,8 +111,8 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 							while (keycodes.contains(KeyEvent.VK_W)) {
 								try {
 									start = System.currentTimeMillis();
-									m3DDebugPanel.translateX -= Math.sin(Math.toRadians(m3DDebugPanel.rotateY)) * speed;
-									m3DDebugPanel.translateZ += Math.cos(Math.toRadians(m3DDebugPanel.rotateY)) * speed;
+									m3DDebugPanel.translateX -= Math.sin(Math.toRadians(m3DDebugPanel.rotateY)) * Math.min(1f, Math.tan(Math.toRadians(90 - Math.abs(m3DDebugPanel.rotateX)))) * speed;
+									m3DDebugPanel.translateZ += Math.cos(Math.toRadians(m3DDebugPanel.rotateY)) * Math.min(1f, Math.tan(Math.toRadians(90 - Math.abs(m3DDebugPanel.rotateX)))) * speed;
 									m3DDebugPanel.translateY += Math.sin(Math.toRadians(m3DDebugPanel.rotateX)) * speed;
 									Thread.sleep(10); //better than being tied to the framerate eh?
 								} catch (InterruptedException ex) {
@@ -121,8 +129,8 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 							while (keycodes.contains(KeyEvent.VK_S)) {
 								try {
 									start = System.currentTimeMillis();
-									m3DDebugPanel.translateX += Math.sin(Math.toRadians(m3DDebugPanel.rotateY)) * speed;
-									m3DDebugPanel.translateZ -= Math.cos(Math.toRadians(m3DDebugPanel.rotateY)) * speed;
+									m3DDebugPanel.translateX += Math.sin(Math.toRadians(m3DDebugPanel.rotateY)) * Math.min(1f, Math.tan(Math.toRadians(90 - Math.abs(m3DDebugPanel.rotateX)))) * speed;
+									m3DDebugPanel.translateZ -= Math.cos(Math.toRadians(m3DDebugPanel.rotateY)) * Math.min(1f, Math.tan(Math.toRadians(90 - Math.abs(m3DDebugPanel.rotateX)))) * speed;
 									m3DDebugPanel.translateY -= Math.sin(Math.toRadians(m3DDebugPanel.rotateX)) * speed;
 									Thread.sleep(10);
 								} catch (InterruptedException ex) {

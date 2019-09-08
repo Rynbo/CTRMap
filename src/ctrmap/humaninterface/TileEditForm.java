@@ -10,7 +10,6 @@ import ctrmap.humaninterface.tools.EditTool;
 import ctrmap.humaninterface.tools.FillTool;
 import ctrmap.humaninterface.tools.SetTool;
 import java.text.ParseException;
-import java.util.Arrays;
 import javax.swing.DefaultListModel;
 import javax.swing.JFormattedTextField;
 import javax.swing.JSpinner;
@@ -19,6 +18,9 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.text.DefaultFormatterFactory;
 
+/**
+ * CM2D tile editor database accessor.
+ */
 public class TileEditForm extends javax.swing.JPanel {
 
 	private boolean isLocked = false;

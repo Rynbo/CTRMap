@@ -11,17 +11,12 @@ import ctrmap.LittleEndianDataOutputStream;
 import ctrmap.Utils;
 import ctrmap.formats.containers.GR;
 import ctrmap.formats.Triangle;
-import java.awt.Graphics;
+import java.awt.Polygon;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 
 public class GRCollisionFile {
 
@@ -83,6 +78,25 @@ public class GRCollisionFile {
 		bounds.originalExtremes = getMeshExtremes();
 	}
 
+	public float getHeightAtPoint(float x, float y){
+		//just check all the tris, if they are deduped, GF's hacks are useless
+		for (int i = 0; i < meshes.length; i++){
+			for (int j = 0; j < meshes[i].tris.size(); j++){
+				Polygon triPoly = meshes[i].tris.get(j).getAWTPoly();
+				if (triPoly.contains(x, y)){
+					Triangle tri = meshes[i].tris.get(j);
+					float top1 = (tri.getX(1) - tri.getX(0)) * (tri.getY(2) - tri.getY(0)) - (tri.getX(2) - tri.getX(0)) * (tri.getY(1) - tri.getY(0));
+					float bot1 = (tri.getX(1) - tri.getX(0)) * (tri.getZ(2) - tri.getZ(0)) - (tri.getX(2) - tri.getX(0)) * (tri.getZ(1) - tri.getZ(0));
+					float top2 = (tri.getZ(1) - tri.getZ(0)) * (tri.getY(2) - tri.getY(0)) - (tri.getZ(2) - tri.getZ(0)) * (tri.getY(1) - tri.getY(0));
+					
+					float result = tri.getY(0) + (top1 / bot1) * (y - tri.getZ(0))  - (top2 / bot1) * (x - tri.getX(0));
+					return result;
+				}
+			}
+		}
+		return 0f;
+	}
+	
 	public void dedupe(){
 		ArrayList<Triangle> usedTris = new ArrayList<>();
 		for (int i = 0; i < 16; i++) {
@@ -124,7 +138,7 @@ public class GRCollisionFile {
 		LittleEndianDataOutputStream dos = new LittleEndianDataOutputStream(out);
 		try {
 			dos.write4Bytes(COLL_MAGIC);
-			length = 640 /*bounds*/ + 128 /*desc*/ + (offsets[15] + lengths[15]) * 16 /*number of vertexes times 16 bytes*/ + 16 /*term*/;
+			length = 640 /*bounds*/ + 128 /*desc*/ + (offsets[15] + lengths[15]) * 16 /*number of vertices times 16 bytes*/ + 16 /*term*/;
 			dos.writeInt(length);
 			dos.writeInt(unknown_const_0x5D8_1);
 			for (int i = 0; i < 5; i++) {
@@ -238,13 +252,10 @@ public class GRCollisionFile {
 		float height = (extremes[5] - extremes[4]) / 4f;
 		//split the boundary to 16 rectangles
 		Rectangle2D[] rects = new Rectangle2D[16];
-		BufferedImage img = new BufferedImage(720, 720, BufferedImage.TYPE_INT_RGB);
-		Graphics g = img.getGraphics();
 		for (int i = 0; i < 16; i++) {
 			float x = (float) (Math.floor(i / 8f) * 2 * width) + ((i / 4f - Math.floor(i / 4f) >= 0.5f) ? width : 0f) + extremes[0];
 			float y = (((i & 1) == 0) ? 0 : height) + ((i / 8f - Math.floor(i / 8f) >= 0.5f) ? 2 * height : 0f) + extremes[4];
 			rects[i] = new Rectangle2D.Float(x, y, width, height);
-			g.drawRect((int) x + 360, (int) y + 360, (int) width, (int) height);
 		}
 		for (int i = 0; i < tris.size(); i++) {
 			for (int j = 0; j < 16; j++) {
@@ -256,17 +267,6 @@ public class GRCollisionFile {
 					}
 				}
 			}
-		}
-		for (int i = 0; i < tris.size(); i++) {
-			Triangle tri = tris.get(i);
-			g.drawLine((int) tri.x[0] + 360, (int) tri.z[0] + 360, (int) tri.x[1] + 360, (int) tri.z[1] + 360);
-			g.drawLine((int) tri.x[1] + 360, (int) tri.z[1] + 360, (int) tri.x[2] + 360, (int) tri.z[2] + 360);
-			g.drawLine((int) tri.x[2] + 360, (int) tri.z[2] + 360, (int) tri.x[0] + 360, (int) tri.z[0] + 360);
-		}
-		try {
-			ImageIO.write(img, "png", new File("out.png"));
-		} catch (IOException ex) {
-			Logger.getLogger(GRCollisionFile.class.getName()).log(Level.SEVERE, null, ex);
 		}
 		return meshes2;
 	}

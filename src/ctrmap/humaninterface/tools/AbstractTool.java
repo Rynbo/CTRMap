@@ -3,6 +3,9 @@ package ctrmap.humaninterface.tools;
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 
+/**
+ * Abstract class of CM2D editor plug-in tools.
+ */
 public abstract class AbstractTool {
 	public AbstractTool() {
 		this.onToolInit();
@@ -16,4 +19,5 @@ public abstract class AbstractTool {
 	public abstract void onTileMouseDown(MouseEvent e);
 	public abstract void onTileMouseUp(MouseEvent e);
 	public abstract void onTileMouseDragged(MouseEvent e);
+	public abstract void updateComponents();
 }

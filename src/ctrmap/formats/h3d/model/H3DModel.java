@@ -43,6 +43,7 @@ public class H3DModel {
 
 	public Vec3f minVector = new Vec3f();
 	public Vec3f maxVector = new Vec3f();
+	public float[][] boxVectors = new float[32][];
 
 	public List<H3DMaterial> materials = new ArrayList<>();
 
@@ -379,8 +380,13 @@ public class H3DModel {
 				e.printStackTrace();
 			}
 		}
+		makeBox();
 	}
-
+	
+	public void makeBox(){
+		OhanaMeshUtils.makeBox(boxVectors, minVector, maxVector);
+	}
+	
 	/**
 	 * Deprecated. Replaced by fixed rigid skinning instead.
 	 */
@@ -524,8 +530,8 @@ public class H3DModel {
 		gl.glPushMatrix();
 		gl.glTranslatef(worldLocX, worldLocY, worldLocZ);
 		gl.glRotatef(rotationZ, 0f, 0f, 1f);
-		gl.glRotatef(rotationY, 1f, 0f, 0f);
-		gl.glRotatef(rotationX, 0f, 1f, 0f);
+		gl.glRotatef(rotationX, 1f, 0f, 0f);
+		gl.glRotatef(rotationY, 0f, 1f, 0f);
 		gl.glScalef(scaleX, scaleY, scaleZ);
 		for (int i = 0; i < meshes.size(); i++) {
 			meshes.get(i).render(gl, (materials.size() > meshes.get(i).materialId) ? materials.get(meshes.get(i).materialId) : null);
@@ -537,39 +543,16 @@ public class H3DModel {
 		gl.glPushMatrix();
 		gl.glTranslatef(worldLocX, worldLocY, worldLocZ);
 		gl.glRotatef(rotationZ, 0f, 0f, 1f);
-		gl.glRotatef(rotationY, 1f, 0f, 0f);
-		gl.glRotatef(rotationX, 0f, 1f, 0f);
+		gl.glRotatef(rotationX, 1f, 0f, 0f);
+		gl.glRotatef(rotationY, 0f, 1f, 0f);
 		gl.glScalef(scaleX, scaleY, scaleZ);
 		gl.glBegin(GL2.GL_LINES);
 		
 		gl.glColor3f(1f, 0f, 0f);
 		
-		gl.glVertex3f(minVector.x, minVector.y, minVector.z);
-		gl.glVertex3f(minVector.x, maxVector.y, minVector.z);
-		gl.glVertex3f(minVector.x, maxVector.y, minVector.z);
-		gl.glVertex3f(maxVector.x, maxVector.y, minVector.z);
-		gl.glVertex3f(maxVector.x, maxVector.y, minVector.z);
-		gl.glVertex3f(maxVector.x, minVector.y, minVector.z);
-		gl.glVertex3f(maxVector.x, minVector.y, minVector.z);
-		gl.glVertex3f(minVector.x, minVector.y, minVector.z);
-		
-		gl.glVertex3f(minVector.x, minVector.y, maxVector.z);
-		gl.glVertex3f(minVector.x, maxVector.y, maxVector.z);
-		gl.glVertex3f(minVector.x, maxVector.y, maxVector.z);
-		gl.glVertex3f(maxVector.x, maxVector.y, maxVector.z);
-		gl.glVertex3f(maxVector.x, maxVector.y, maxVector.z);
-		gl.glVertex3f(maxVector.x, minVector.y, maxVector.z);
-		gl.glVertex3f(maxVector.x, minVector.y, maxVector.z);
-		gl.glVertex3f(minVector.x, minVector.y, maxVector.z);
-		
-		gl.glVertex3f(minVector.x, minVector.y, minVector.z);
-		gl.glVertex3f(minVector.x, minVector.y, maxVector.z);
-		gl.glVertex3f(minVector.x, maxVector.y, minVector.z);
-		gl.glVertex3f(minVector.x, maxVector.y, maxVector.z);
-		gl.glVertex3f(maxVector.x, maxVector.y, minVector.z);
-		gl.glVertex3f(maxVector.x, maxVector.y, maxVector.z);
-		gl.glVertex3f(maxVector.x, minVector.y, minVector.z);
-		gl.glVertex3f(maxVector.x, minVector.y, maxVector.z);
+		for (int i = 0; i < boxVectors.length; i++){
+			gl.glVertex3fv(boxVectors[i], 0);
+		}
 		
 		gl.glEnd();
 		gl.glPopMatrix();

@@ -11,6 +11,9 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JOptionPane;
 import javax.swing.text.NumberFormatter;
 
+/**
+ * GUI editor for CameraDataFile structs.
+ */
 public class CameraEditForm extends javax.swing.JPanel {
 
 	/**
@@ -18,6 +21,7 @@ public class CameraEditForm extends javax.swing.JPanel {
 	 */
 	public CameraDataFile f;
 	public CameraData cam;
+	public int camIndex = -1;
 	public boolean loaded = false;
 
 	public CameraEditForm() {
@@ -71,6 +75,7 @@ public class CameraEditForm extends javax.swing.JPanel {
 			setComponentsEnabled(new Component[]{d1active, d2active, d1default, d2default, fov1Slider, fov2Slider, x, y, w, h, motion, roll1, roll2, pitch1,
 				pitch2, yaw1, yaw2, plrDist1, plrDist2, transTime, pitchShift1, pitchShift2, yawShift1, yawShift2, entryBox, btnRemove, btnSave}, true);
 		}
+		camIndex = entryNum;
 		if (save) saveCamera(false);
 		cam = f.camData.get(entryNum);
 		neutralCheckbox.setSelected(cam.isNeutral != 0);

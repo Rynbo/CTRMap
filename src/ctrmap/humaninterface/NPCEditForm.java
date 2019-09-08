@@ -15,7 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
 
-public class NPCEditForm extends javax.swing.JPanel {
+/**
+ * GUI form for modifying NPC properties.
+ */
+public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
 
 	/**
 	 * Creates new form NPCEditForm
@@ -42,6 +45,7 @@ public class NPCEditForm extends javax.swing.JPanel {
 		npc = null;
 		regentry = null;
 		entryBox.removeAllItems();
+		if (e == null) return;
 		for (int i = 0; i < e.NPCCount; i++) {
 			entryBox.addItem(String.valueOf(e.npcs.get(i).uid));
 			if (reg != null){
@@ -65,7 +69,7 @@ public class NPCEditForm extends javax.swing.JPanel {
 		}
 		loaded = false;
 		npc = e.npcs.get(index);
-		npcIndex = npc.uid;
+		npcIndex = index;
 		regentry = null;
 		mdl.setValue(npc.model);
 		evtFlag.setValue(npc.spawnFlag);
@@ -168,6 +172,7 @@ public class NPCEditForm extends javax.swing.JPanel {
 		if (loaded) {
 			saveEntry();
 			entryBox.setSelectedIndex(num);
+			m3DDebugPanel.navi.bindModel(e.npcs.get(num));
 		}
 	}
 
@@ -194,10 +199,10 @@ public class NPCEditForm extends javax.swing.JPanel {
 		H3DModel m = models.get(index);
 		if (m == null) return;
 		ZoneEntities.NPC n = e.npcs.get(index);
-		m.worldLocX = n.xTile * 18f; //720 (chunk size) / 40 (tile width per chunk)
-		m.worldLocZ = n.yTile * 18f;
+		m.worldLocX = n.xTile * 18f + 9f; //720 (chunk size) / 40 (tile width per chunk)
+		m.worldLocZ = n.yTile * 18f + 9f;
 		m.worldLocY = n.z3DCoordinate;
-		m.rotationX = get3DOrientation(n.faceDirection);
+		m.rotationY = get3DOrientation(n.faceDirection);
 	}
 	
 	public float get3DOrientation(int faceDirection){
@@ -215,7 +220,8 @@ public class NPCEditForm extends javax.swing.JPanel {
 		}
 	}
 	
-	public void renderH3D(GL2 gl){
+	@Override
+	public void renderCM3D(GL2 gl){
 		if (reg != null){
 			for (int i = 0; i < e.NPCCount; i++){
 				if (models.size() > i && models.get(i) != null){
@@ -228,6 +234,9 @@ public class NPCEditForm extends javax.swing.JPanel {
 			}
 		}
 	}
+	
+	@Override
+	public void renderOverlayCM3D(GL2 gl){}
 
 	/**
 	 * This method is called from within the constructor to initialize the form.

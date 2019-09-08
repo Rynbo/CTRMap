@@ -7,6 +7,9 @@ import ctrmap.LittleEndianDataOutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Container for camera coordinate data.
+ */
 public class CameraCoordinates {
 
 	public float yawShift;

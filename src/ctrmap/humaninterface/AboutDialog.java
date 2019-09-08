@@ -1,5 +1,8 @@
 package ctrmap.humaninterface;
 
+/**
+ * The about dialog and that's about it.
+ */
 public class AboutDialog extends javax.swing.JFrame {
 
 	/**

@@ -5,11 +5,13 @@ import ctrmap.Utils;
 import ctrmap.formats.propdata.ADPropRegistry;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import javax.swing.JFormattedTextField;
 import javax.swing.JOptionPane;
 import javax.swing.text.NumberFormatter;
 
+/**
+ * Regedit form for altering AD-1 Prop registry data.
+ */
 public class ADPropRegistryEditor extends javax.swing.JFrame {
 
 	/**

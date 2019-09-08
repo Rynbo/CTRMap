@@ -14,16 +14,15 @@ import ctrmap.Utils;
 import ctrmap.formats.tilemap.Tilemap;
 import ctrmap.formats.containers.GR;
 import ctrmap.formats.cameradata.CameraData;
+import ctrmap.formats.gfcollision.GRCollisionFile;
 import ctrmap.formats.h3d.BCHFile;
 import ctrmap.formats.h3d.model.H3DModel;
-import ctrmap.formats.h3d.model.H3DSkeleton;
 import ctrmap.formats.h3d.texturing.H3DTexture;
 import ctrmap.formats.mapmatrix.MapMatrix;
 import ctrmap.formats.propdata.GRPropData;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -31,7 +30,10 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 
-public class TileMapPanel extends JPanel {
+/**
+ * Originally for editing tilemaps, this has evolved far beyond its purpose. Currently nests everything tied to the map matrix.
+ */
+public class TileMapPanel extends JPanel implements CM3DRenderable {
 
 	private static final long serialVersionUID = 7357107275764622829L;
 	private boolean rendered = false;
@@ -43,6 +45,7 @@ public class TileMapPanel extends JPanel {
 	public Tilemap[][] tilemaps;
 	public BCHFile[][] models;
 	public BCHFile[][] tallgrass;
+	public GRCollisionFile[][] colls;
 	public MapMatrix mm;
 	public BufferedImage tilemapImage;// = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
 	public BufferedImage tilemapScaledImage = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
@@ -73,6 +76,7 @@ public class TileMapPanel extends JPanel {
 		if (!saveTileMap(true)) {
 			return;
 		}
+		zoneDebugPnl.zone = null;
 		mm = null;
 		mode = ViewportMode.SINGLE;
 		width = 40;
@@ -80,7 +84,18 @@ public class TileMapPanel extends JPanel {
 		remove(placeholder);
 		tilemaps = new Tilemap[1][1];
 		models = new BCHFile[1][1];
+		models[0][0] = new BCHFile(file.getFile(1));
 		tallgrass = new BCHFile[1][1];
+		byte[] tg = file.getFile(5);
+		if (tg[0] == 'B' && tg[1] == 'C' && tg[2] == 'H') {
+			BCHFile tgbch = new BCHFile(tg);
+			if (!tgbch.models.isEmpty()) {
+				H3DModel tgmdl = tgbch.models.get(0);
+				tallgrass[0][0] = tgbch;
+			}
+		}
+		colls = new GRCollisionFile[1][1];
+		colls[0][0] = new GRCollisionFile(file);
 		tilemaps[0][0] = new Tilemap(file);
 		tilemapImage = tilemaps[0][0].getImage();
 		tilemapScaledImage = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().createCompatibleImage(400, 400);
@@ -89,7 +104,11 @@ public class TileMapPanel extends JPanel {
 		loaded = true;
 		isVerified = false;
 		loadProps(null);
-		m3DDebugPanel.loadH3D(new BCHFile(file.getFile(1)));
+		mNPCEditForm.loadFromEntities(null, null);
+		m3DDebugPanel.translateX = 0f; //720/2 to center the camera
+		m3DDebugPanel.translateY = -360f;
+		m3DDebugPanel.translateZ = -720f; //at the end of the map vertically
+		m3DDebugPanel.rotateX = 45f;
 	}
 
 	public void loadProps(List<H3DTexture> propTextures) {
@@ -214,6 +233,7 @@ public class TileMapPanel extends JPanel {
 				tilemaps = new Tilemap[mm.width][mm.height];
 				models = new BCHFile[mm.width][mm.height];
 				tallgrass = new BCHFile[mm.width][mm.height];
+				colls = new GRCollisionFile[mm.width][mm.height];
 				for (int i = 0; i < mm.height; i++) {
 					for (int j = 0; j < mm.width; j++) {
 						if (mm.ids[j][i] != -1) {
@@ -245,6 +265,8 @@ public class TileMapPanel extends JPanel {
 								model.worldLocZ = i * 720f + 360f;
 								models[j][i] = bch;
 							}
+							colls[j][i] = new GRCollisionFile(mm.regions[j][i]);
+							mCollEditPanel.loadCollision(colls[j][i], bch.models.get(0).name);
 						}
 						progress.setBarPercent((int) (((i * mm.width + j) / (float) (mm.width * mm.height)) * 100));
 					}
@@ -319,18 +341,50 @@ public class TileMapPanel extends JPanel {
 		}
 	}
 
-	public void renderH3D(GL2 gl) {
-		for (int i = 0; i < mm.height; i++) {
-			for (int j = 0; j < mm.width; j++) {
-				if (models[j][i] != null) {
-					models[j][i].render(gl);
+	@Override
+	public void renderCM3D(GL2 gl) {
+		if (mode == ViewportMode.MULTI) {
+			for (int i = 0; i < mm.height; i++) {
+				for (int j = 0; j < mm.width; j++) {
+					if (models[j][i] != null) {
+						models[j][i].render(gl);
+					}
+					if (tallgrass[j][i] != null) {
+						tallgrass[j][i].render(gl);
+					}
+					//useless probably? Can't really edit it in CM3D so it's better to just link it with CollEd per region.
+					/*if (colls[j][i] != null) {
+						gl.glPushMatrix();
+						gl.glTranslatef(j * 720 + 360f, 1, i * 720 + 360f); //we translate it 1 unit up so it does not overlap with the world models
+						gl.glBegin(GL2.GL_TRIANGLES);
+						colls[j][i].render(gl);
+						gl.glEnd();
+						gl.glPopMatrix();
+					}*/
 				}
-				if (tallgrass[j][i] != null) {
-					tallgrass[j][i].render(gl);
-				}
+			}
+		} else {
+			if (models[0][0] != null) {
+				models[0][0].render(gl);
+			}
+			if (tallgrass[0][0] != null) {
+				tallgrass[0][0].render(gl);
 			}
 		}
 	}
+	
+	public float getHeightAtWorldLoc(float x, float z){
+		//decide coll mesh to be used
+		GRCollisionFile f = colls[(int)(x / 720f)][(int)(z / 720f)];
+		if (f == null) return 0f;
+		return f.getHeightAtPoint((x % 720f) - 360f, (z % 720f) - 360f);
+	}
+
+	@Override
+	public void renderOverlayCM3D(GL2 gl) {
+	}
+
+	;
 
 	public Tilemap getRegionForTile(int x, int y) {
 		if (tilemaps == null) {

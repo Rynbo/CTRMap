@@ -1,12 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package ctrmap.formats.containers;
 
 import java.io.File;
 
+/**
+ * MapMatrix or MoveModel container class.
+ * 
+ * Contents/MapMatrix:
+ * 0 - Matrix + Zone switches + LOD matrix
+ * 1 - Camera repulsors
+ * 
+ * Contents/MoveModel:
+ * 0 - Model
+ * 1 - Pack of GfMotion animations
+ */
 public class MM extends AbstractGamefreakContainer{
 	public MM(File f) {
 		super(f);

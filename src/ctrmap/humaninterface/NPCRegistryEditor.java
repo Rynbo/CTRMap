@@ -1,9 +1,14 @@
 package ctrmap.humaninterface;
 
+import ctrmap.CtrmapMainframe;
 import ctrmap.Utils;
+import ctrmap.Workspace;
+import ctrmap.formats.containers.MM;
+import ctrmap.formats.h3d.BCHFile;
 import ctrmap.formats.npcreg.NPCRegistry;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
 import javax.swing.DefaultListModel;
@@ -12,6 +17,9 @@ import javax.swing.JOptionPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.text.NumberFormatter;
 
+/**
+ * Regedit class for NPC registries, more comprehensible than PRE.
+ */
 public class NPCRegistryEditor extends javax.swing.JFrame {
 
 	/**
@@ -23,7 +31,7 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
 	private ArrayList<Integer> dict = new ArrayList<>();
 	public NPCRegistryEditor() {
 		initComponents();
-		setUnsignedByteValueClass(new JFormattedTextField[]{areaW, areaH});
+		setUnsignedByteValueClass(new JFormattedTextField[]{shadowType, areaW, areaH});
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e){
@@ -78,9 +86,19 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
 		areaH.setValue(entry.collH);
 		render.setSelected(entry.renderEnabled != 0);
 		shadow.setSelected(entry.shadowEnabled != 0);
+		shadowType.setValue(entry.shadowEnabled);
 		item.setSelected(entry.isItOb == 0);
 		dummy.setSelected(entry.isDummy == 1);
 		e = entry;
+		File bchFile = CtrmapMainframe.mWorkspace.getWorkspaceFile(Workspace.ArchiveType.MOVE_MODELS, entry.model);
+		if (bchFile.exists()){
+			BCHFile mdlBch = new BCHFile(new MM(bchFile).getFile(0));
+			mdlBch.models.get(0).setMaterialTextures(mdlBch.textures);
+			customH3DPreview1.loadModel(mdlBch.models.get(0));
+		}
+		else{
+			customH3DPreview1.loadModel(null);
+		}
 	}
 	
 	public boolean saveEntry(boolean dialog) {
@@ -94,7 +112,7 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
 			else{
 				e2.renderEnabled = 0;
 			}
-			e2.shadowEnabled = shadow.isSelected() ? 1 : 0;
+			e2.shadowEnabled = (Integer)shadowType.getValue();
 			e2.isItOb = item.isSelected() ? 0 : 1;
 			e2.isDummy = dummy.isSelected() ? 1 : 0;
 			e2.collW = (Integer)areaW.getValue();
@@ -146,7 +164,7 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
         item = new javax.swing.JCheckBox();
         dummy = new javax.swing.JCheckBox();
         collLabel = new javax.swing.JLabel();
-        areaW = new javax.swing.JFormattedTextField();
+        shadowType = new javax.swing.JFormattedTextField();
         areaWLabel = new javax.swing.JLabel();
         areaHLabel = new javax.swing.JLabel();
         areaH = new javax.swing.JFormattedTextField();
@@ -157,6 +175,8 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
         entryCountLabel = new javax.swing.JLabel();
         btnAdd = new javax.swing.JButton();
         btnRemove = new javax.swing.JButton();
+        customH3DPreview1 = new ctrmap.humaninterface.CustomH3DPreview();
+        areaW = new javax.swing.JFormattedTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("NRE");
@@ -174,7 +194,12 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
 
         render.setText("Render this model");
 
-        shadow.setText("Draw shadow sprite");
+        shadow.setText("Draw shadow sprite | Type:");
+        shadow.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                shadowActionPerformed(evt);
+            }
+        });
 
         item.setText("This is an item/object");
 
@@ -182,7 +207,7 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
 
         collLabel.setText("Collision area:");
 
-        areaW.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
+        shadowType.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
 
         areaWLabel.setText("Width");
 
@@ -218,28 +243,41 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
             }
         });
 
+        javax.swing.GroupLayout customH3DPreview1Layout = new javax.swing.GroupLayout(customH3DPreview1);
+        customH3DPreview1.setLayout(customH3DPreview1Layout);
+        customH3DPreview1Layout.setHorizontalGroup(
+            customH3DPreview1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 189, Short.MAX_VALUE)
+        );
+        customH3DPreview1Layout.setVerticalGroup(
+            customH3DPreview1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 160, Short.MAX_VALUE)
+        );
+
+        areaW.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(headerSep, javax.swing.GroupLayout.PREFERRED_SIZE, 241, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(areaWLabel)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(areaW, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(areaHLabel)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(areaH, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(headerSep, javax.swing.GroupLayout.PREFERRED_SIZE, 241, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE))
                             .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(areaWLabel)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(areaW, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(areaHLabel)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(areaH, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                                     .addGroup(layout.createSequentialGroup()
                                         .addComponent(uidLabel)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -250,19 +288,22 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
                                         .addComponent(mdl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                                     .addComponent(dummy)
                                     .addComponent(item)
-                                    .addComponent(shadow)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(shadow)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(shadowType, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
                                     .addComponent(render)
                                     .addComponent(collLabel))
-                                .addGap(0, 0, Short.MAX_VALUE)))
-                        .addGap(8, 8, 8)
-                        .addComponent(listSep, javax.swing.GroupLayout.PREFERRED_SIZE, 2, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 205, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(entryCountLabel)))
-                    .addComponent(btnSave, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btnAdd, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btnRemove, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addGap(8, 12, Short.MAX_VALUE)
+                                .addComponent(listSep, javax.swing.GroupLayout.PREFERRED_SIZE, 2, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 205, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(entryCountLabel))))
+                        .addComponent(customH3DPreview1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnSave, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnAdd, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnRemove, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -282,7 +323,9 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
                         .addGap(2, 2, 2)
                         .addComponent(render)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(shadow)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(shadow)
+                            .addComponent(shadowType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(item)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -291,15 +334,17 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
                         .addComponent(collLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(areaW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(areaWLabel)
                             .addComponent(areaH, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(areaHLabel)))
+                            .addComponent(areaHLabel)
+                            .addComponent(areaW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                         .addComponent(listSep, javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(layout.createSequentialGroup()
                             .addGap(35, 35, 35)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(customH3DPreview1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnSave)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -337,6 +382,20 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
 		}
 		reg.modified = true;
     }//GEN-LAST:event_btnRemoveActionPerformed
+
+    private void shadowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shadowActionPerformed
+		if (shadow.isSelected()){
+			if (e.shadowEnabled != 0){
+				shadowType.setValue(e.shadowEnabled);
+			}
+			else {
+				shadowType.setValue(1);
+			}
+		}
+		else {
+			shadowType.setValue(0);
+		}
+    }//GEN-LAST:event_shadowActionPerformed
 
 	/**
 	 * @param args the command line arguments
@@ -382,6 +441,7 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
     private javax.swing.JButton btnRemove;
     private javax.swing.JButton btnSave;
     private javax.swing.JLabel collLabel;
+    private ctrmap.humaninterface.CustomH3DPreview customH3DPreview1;
     private javax.swing.JCheckBox dummy;
     private javax.swing.JLabel entryCountLabel;
     private javax.swing.JList<String> entryList;
@@ -393,6 +453,7 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
     private javax.swing.JLabel mdlLabel;
     private javax.swing.JCheckBox render;
     private javax.swing.JCheckBox shadow;
+    private javax.swing.JFormattedTextField shadowType;
     private javax.swing.JSpinner uid;
     private javax.swing.JLabel uidLabel;
     // End of variables declaration//GEN-END:variables
