@@ -8,8 +8,16 @@ import ctrmap.formats.mapmatrix.MapMatrix;
 import ctrmap.formats.text.LocationNames;
 import ctrmap.formats.zone.Zone;
 import ctrmap.formats.zone.ZoneEntities;
+import ctrmap.resources.ResourceAccess;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFormattedTextField;
+import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import javax.swing.text.NumberFormatter;
 
@@ -129,6 +137,8 @@ public class ZoneDebugPanel extends javax.swing.JPanel {
         unknownFlag = new javax.swing.JCheckBox();
         zoneList = new javax.swing.JComboBox<>();
         loadZoneLabel = new javax.swing.JLabel();
+        freecam = new javax.swing.JButton();
+        freecamReg = new javax.swing.JButton();
 
         camFlags.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
 
@@ -176,6 +186,20 @@ public class ZoneDebugPanel extends javax.swing.JPanel {
 
         loadZoneLabel.setText("Load Zone");
 
+        freecam.setText("Alakazam alakazoo");
+        freecam.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                freecamActionPerformed(evt);
+            }
+        });
+
+        freecamReg.setText("Abra Kadabra");
+        freecamReg.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                freecamRegActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -218,7 +242,11 @@ public class ZoneDebugPanel extends javax.swing.JPanel {
                             .addComponent(loadZoneLabel)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addComponent(zoneList, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addComponent(btnSave, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(btnSave, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(freecam)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(freecamReg)))
                 .addContainerGap(529, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -259,7 +287,11 @@ public class ZoneDebugPanel extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(zoneList, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(loadZoneLabel))
-                .addContainerGap(53, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(freecam)
+                    .addComponent(freecamReg))
+                .addContainerGap(24, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -302,6 +334,50 @@ public class ZoneDebugPanel extends javax.swing.JPanel {
 		}
     }//GEN-LAST:event_zoneListActionPerformed
 
+    private void freecamActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_freecamActionPerformed
+		if (zones != null){
+			byte[] ad7 = ResourceAccess.getByteArray("DummyLumioseCollision.bin");
+			for (int i = 0; i < zones.length; i++){
+				zones[i].header.fetchArchives();
+				zones[i].header.areadata.storeFile(7, ad7);
+				zones[i].header.freeArchives();
+			}
+		}
+    }//GEN-LAST:event_freecamActionPerformed
+
+    private void freecamRegActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_freecamRegActionPerformed
+		//ORAS has longer AD file 536 (44 byte entry instead of 36) so we ban it idk if it even works, will try sometime
+		//well apparently ORAS doesn't have Lumiose Camera programmed in
+		/*if (mWorkspace.game == Workspace.GameType.ORAS){
+			JOptionPane.showMessageDialog(frame, "ORAS is not supported", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}*/
+		
+		if (zones != null){
+			for (int i = 0; i < zones.length; i++){
+				System.out.println(zones[i].header.enableRollerSkates);
+				zones[i].header.enableRollerSkates = true;
+				zones[i].store(false);
+			}
+		}
+		
+		File f170 = mWorkspace.game == Workspace.GameType.XY ? mWorkspace.getWorkspaceFile(Workspace.ArchiveType.AREA_DATA, 170)
+				: mWorkspace.getWorkspaceFile(Workspace.ArchiveType.AREA_DATA, 536);
+		try {
+			RandomAccessFile raf = new RandomAccessFile(f170, "rw");
+			int skip = mWorkspace.game == Workspace.GameType.XY ? 0x14 : 0x1c;
+			while (raf.getFilePointer() + 0xf < raf.length()){
+				raf.skipBytes(0xf);
+				raf.write(1);
+				raf.skipBytes(skip);
+			}
+			raf.close();
+			mWorkspace.addPersist(f170);
+		} catch (IOException ex) {
+			Logger.getLogger(ZoneDebugPanel.class.getName()).log(Level.SEVERE, null, ex);
+		}
+    }//GEN-LAST:event_freecamRegActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JFormattedTextField OLValue;
@@ -316,6 +392,8 @@ public class ZoneDebugPanel extends javax.swing.JPanel {
     private javax.swing.JFormattedTextField coords2;
     private javax.swing.JLabel coordsLabel5;
     private javax.swing.JLabel coordsLabel6;
+    private javax.swing.JButton freecam;
+    private javax.swing.JButton freecamReg;
     private javax.swing.JLabel loadZoneLabel;
     private javax.swing.JLabel olLabel;
     private javax.swing.JLabel uFlabel;
