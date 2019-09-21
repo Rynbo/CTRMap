@@ -19,8 +19,11 @@ way cooler stuff, so don't go into the issue tracker and harass them please, oka
 ## Building CTRMap
 1. Clone the repo and import the project into a Java IDE of choice. Netbeans is recommended as it's the only one that can
 edit the GUI forms.
-2. Click the build/run button to just compile the classes or run the project.
-3. If you want to export a JAR file, open the Files tab in netbeans, right click build.xml, select
+2. Download and extract JogAmp from https://jogamp.org/deployment/jogamp-current/archive/jogamp-all-platforms.7z.
+3. Copy gluegen-rt.jar, jogl-all.jar and the \*native\*.jar from the jars directory to \<project root\>/lib.
+4. Check build path configuration to ensure that the jars are correctly linked.
+5. Click the build/run button to just compile the classes or run the project.
+6. If you want to export a JAR file, open the Files tab in netbeans, right click build.xml, select
 Run Target > Other Targets > package-for-store. Your jar should be in store/CTRMap.jar.
 
 ## Bug reporting
