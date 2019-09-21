@@ -114,7 +114,7 @@ public class PICACommandReader {
 	/// <returns></returns>
 	public PICACommand.vshAttribute[] getVSHAttributesBufferPermutation() {
 		long permutation = getParameter(PICACommand.vertexShaderAttributesPermutationLow);
-		permutation |= (long) getParameter(PICACommand.vertexShaderAttributesPermutationHigh) << 32;
+		permutation |= getParameter(PICACommand.vertexShaderAttributesPermutationHigh) << 32;
 
 		PICACommand.vshAttribute[] attributes = new PICACommand.vshAttribute[23];
 		for (int attribute = 0; attribute < attributes.length; attribute++) {
@@ -139,14 +139,14 @@ public class PICACommandReader {
 	/// <returns></returns>
 	public PICACommand.attributeFormat[] getVSHAttributesBufferFormat() {
 		long format = getParameter(PICACommand.vertexShaderAttributesBufferFormatLow);
-		format |= (long) getParameter(PICACommand.vertexShaderAttributesBufferFormatHigh) << 32;
+		format |= getParameter(PICACommand.vertexShaderAttributesBufferFormatHigh) << 32;
 
 		PICACommand.attributeFormat[] formats = new PICACommand.attributeFormat[23];
 		for (int attribute = 0; attribute < formats.length; attribute++) {
 			byte value = (byte) ((format >> (attribute * 4)) & 0xf);
 			formats[attribute] = new PICACommand.attributeFormat();
 			formats[attribute].type = PICACommand.attributeFormatType.values()[(value & 3)];
-			formats[attribute].attributeLength = (int) (value >> 2);
+			formats[attribute].attributeLength = value >> 2;
 		}
 		return formats;
 	}
@@ -178,7 +178,7 @@ public class PICACommandReader {
 	public boolean[] getVSHBooleanUniforms() {
 		boolean[] output = new boolean[16];
 
-		long value = getParameter((short) PICACommand.vertexShaderBooleanUniforms);
+		long value = getParameter(PICACommand.vertexShaderBooleanUniforms);
 		for (int i = 0; i < 16; i++) {
 			output[i] = (value & (1 << i)) > 0;
 		}
@@ -193,7 +193,7 @@ public class PICACommandReader {
 	/// <returns></returns>
 	public int[] getVSHAttributesBufferPermutation(int bufferIndex) {
 		long permutation = getParameter((short) (PICACommand.vertexShaderAttributesBuffer0Permutation + (bufferIndex * 3)));
-		permutation |= (long) (getParameter((short) (PICACommand.vertexShaderAttributesBuffer0Stride + (bufferIndex * 3))) & 0xffff) << 32;
+		permutation |= (getParameter((short) (PICACommand.vertexShaderAttributesBuffer0Stride + (bufferIndex * 3))) & 0xffff) << 32;
 
 		int[] attributes = new int[23];
 		for (int attribute = 0; attribute < attributes.length; attribute++) {
@@ -219,9 +219,9 @@ public class PICACommandReader {
 	/// <returns></returns>
 	public Stack<Float> getVSHFloatUniformData(int register) {
 		Stack<Float> data = new Stack<>();
-		for (Float value : floatUniform.get(register)) {
+		floatUniform.get(register).forEach((value) -> {
 			data.push(value);
-		}
+		});
 		return data;
 	}
 
@@ -258,7 +258,7 @@ public class PICACommandReader {
 	public H3DMaterial.TextureCombiner getTevStage(byte stage) {
 		H3DMaterial.TextureCombiner output = new H3DMaterial.TextureCombiner();
 
-		short baseCommand = 0;
+		short baseCommand;
 		switch (stage) {
 			case 0:
 				baseCommand = PICACommand.tevStage0Source;

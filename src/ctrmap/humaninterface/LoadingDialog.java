@@ -44,7 +44,7 @@ public class LoadingDialog extends javax.swing.JPanel {
 		return ret;
 	}
 	
-	public void show(){
+	public void showDialog(){
 		dlg.setLocationRelativeTo(CtrmapMainframe.frame);
 		dlg.setVisible(true);
 	}

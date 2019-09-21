@@ -1,6 +1,12 @@
 package ctrmap.humaninterface;
 
+import com.jogamp.opengl.DefaultGLCapabilitiesChooser;
 import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLCapabilities;
+import com.jogamp.opengl.GLDrawableFactory;
+import com.jogamp.opengl.GLProfile;
+import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.GridBagLayout;
@@ -20,9 +26,15 @@ import ctrmap.formats.h3d.model.H3DModel;
 import ctrmap.formats.h3d.texturing.H3DTexture;
 import ctrmap.formats.mapmatrix.MapMatrix;
 import ctrmap.formats.propdata.GRPropData;
+import java.awt.AlphaComposite;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
+import java.awt.Transparency;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -31,12 +43,12 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 
 /**
- * Originally for editing tilemaps, this has evolved far beyond its purpose. Currently nests everything tied to the map matrix.
+ * Originally for editing tilemaps, this has evolved far beyond its purpose.
+ * Currently nests everything tied to the map matrix.
  */
 public class TileMapPanel extends JPanel implements CM3DRenderable {
 
 	private static final long serialVersionUID = 7357107275764622829L;
-	private boolean rendered = false;
 	public static final String PROP_IMGSTATE = "imageUpdated";
 	private static final String ESC = "keyEscape";
 
@@ -49,6 +61,7 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 	public MapMatrix mm;
 	public BufferedImage tilemapImage;// = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
 	public BufferedImage tilemapScaledImage = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
+	public BufferedImage cm2dOverlayImage = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
 	public double tilemapScale = 1.0d;
 	public boolean loaded = false;
 	private final JLabel placeholder = new JLabel("No map loaded");
@@ -56,6 +69,11 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 	private Graphics g;
 	public int width;
 	public int height;
+
+	private final GLProfile glp;
+	private final GLCapabilities caps;
+	private GLAutoDrawable CM2DDrawable;
+	public boolean update = true;
 
 	public enum ViewportMode {
 		SINGLE,
@@ -70,13 +88,49 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 		this.addMouseWheelListener(mTilemapInputManager);
 		this.addMouseMotionListener(mTilemapInputManager);
 		this.addMouseListener(mTilemapInputManager);
+		glp = GLProfile.get(GLProfile.GL2);
+		caps = new GLCapabilities(glp);
+		caps.setHardwareAccelerated(true);
+		caps.setDoubleBuffered(false);
+		caps.setAlphaBits(8);
+		caps.setRedBits(8);
+		caps.setBlueBits(8);
+		caps.setGreenBits(8);
+		caps.setOnscreen(false);
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				if (CM2DDrawable != null) {
+					CM3DComponents.forEach((r) -> {
+						r.deleteGLInstanceBuffers(CM2DDrawable.getGL().getGL2());
+					});
+					update = true;
+				}
+				GLDrawableFactory factory = GLDrawableFactory.getFactory(glp);
+				CM2DDrawable = factory.createOffscreenAutoDrawable(factory.getDefaultDevice(), caps, new DefaultGLCapabilitiesChooser(), mTilemapScrollPane.getViewport().getWidth(), mTilemapScrollPane.getViewport().getHeight());
+				CM2DDrawable.display();
+				CM2DDrawable.getContext().makeCurrent();
+
+				GL2 gl = CM2DDrawable.getGL().getGL2();
+
+				gl.glShadeModel(GL2.GL_SMOOTH);
+				gl.glClearColor(0f, 0f, 0f, 0f);
+				gl.glClearDepth(1.0f);
+				gl.glEnable(GL2.GL_TEXTURE_2D);
+				gl.glEnable(GL2.GL_DEPTH_TEST);
+				gl.glCullFace(GL2.GL_BACK);
+				gl.glEnable(GL2.GL_CULL_FACE);
+				gl.glDepthFunc(GL2.GL_LEQUAL);
+				gl.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL2.GL_NICEST);
+			}
+		});
 	}
 
 	public void loadTileMap(GR file) {
 		if (!saveTileMap(true)) {
 			return;
 		}
-		zoneDebugPnl.zone = null;
+		mZonePnl.zone = null;
 		mm = null;
 		mode = ViewportMode.SINGLE;
 		width = 40;
@@ -138,6 +192,9 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 		mm = null;
 		mainGR = null;
 		tilemaps = null;
+		models = null;
+		tallgrass = null;
+		colls = null;
 	}
 
 	public void verifyCompat() {
@@ -188,7 +245,7 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 								};
 
 								worker.execute();
-								progress.show();
+								progress.showDialog();
 
 								try {
 									worker.get();
@@ -247,6 +304,7 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 									//GR overworld map BCH files have just 1 model, the tall grass is entirely separate BCH
 									tgmdl.worldLocX = j * 720f + 360f;
 									tgmdl.worldLocZ = i * 720f + 360f;
+									tgmdl.makeAllBOs();
 									tallgrass[j][i] = tgbch;
 								}
 							}
@@ -263,6 +321,7 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 								//GR overworld map BCH files have just 1 model, the tall grass is entirely separate BCH
 								model.worldLocX = j * 720f + 360f;
 								model.worldLocZ = i * 720f + 360f;
+								model.makeAllBOs();
 								models[j][i] = bch;
 							}
 							colls[j][i] = new GRCollisionFile(mm.regions[j][i]);
@@ -290,7 +349,7 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 			}
 		};
 		worker.execute();
-		progress.show();
+		progress.showDialog();
 		try {
 			worker.get();
 		} catch (InterruptedException | ExecutionException ex) {
@@ -322,7 +381,11 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 	}
 
 	public void renderTileMap() {
-		tilemapScaledImage = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().createCompatibleImage((int) (width * 10 * tilemapScale), (int) (height * 10 * tilemapScale));
+		GraphicsConfiguration gConfig = GraphicsEnvironment
+				.getLocalGraphicsEnvironment().getDefaultScreenDevice()
+				.getDefaultConfiguration();
+		tilemapScaledImage = gConfig.createCompatibleImage((int) (width * 10 * tilemapScale), (int) (height * 10 * tilemapScale));
+		cm2dOverlayImage = gConfig.createCompatibleImage((int) (width * 10 * tilemapScale), (int) (height * 10 * tilemapScale), Transparency.TRANSLUCENT);
 		g = tilemapScaledImage.getGraphics();
 		g.setColor(new Color(0xffffff));
 		g.fillRect(0, 0, width * 10, height * 10);
@@ -339,6 +402,22 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 				}
 			}
 		}
+	}
+
+	public BufferedImage renderGL(GL2 gl) {
+		if (update) {
+			CM3DComponents.forEach((r) -> {
+				r.uploadBuffers(gl);
+			});
+			update = false;
+		}
+
+		CM3DComponents.forEach((r) -> {
+			r.renderCM3D(gl);
+		});
+
+		gl.glFlush();
+		return new AWTGLReadBufferUtil(glp, true).readPixelsToBufferedImage(gl, true);
 	}
 
 	@Override
@@ -372,11 +451,17 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 			}
 		}
 	}
-	
-	public float getHeightAtWorldLoc(float x, float z){
+
+	public float getHeightAtWorldLoc(float x, float z) {
 		//decide coll mesh to be used
-		GRCollisionFile f = colls[(int)(x / 720f)][(int)(z / 720f)];
-		if (f == null) return 0f;
+		if (x / 720f >= colls.length || z / 720f >= colls.length) {
+			return Float.NaN;
+			//methods using this should handle Float.NaN
+		}
+		GRCollisionFile f = colls[(int) (x / 720f)][(int) (z / 720f)];
+		if (f == null) {
+			return 0f;
+		}
 		return f.getHeightAtPoint((x % 720f) - 360f, (z % 720f) - 360f);
 	}
 
@@ -384,7 +469,37 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 	public void renderOverlayCM3D(GL2 gl) {
 	}
 
-	;
+	@Override
+	public void uploadBuffers(GL2 gl) {
+		if (loaded && mode == ViewportMode.MULTI && mm != null) {
+			for (int i = 0; i < mm.height; i++) {
+				for (int j = 0; j < mm.width; j++) {
+					if (models[j][i] != null) {
+						models[j][i].models.get(0).uploadAllBOs(gl);
+					}
+					if (tallgrass[j][i] != null) {
+						tallgrass[j][i].models.get(0).uploadAllBOs(gl);
+					}
+				}
+			}
+		}
+	}
+
+	@Override
+	public void deleteGLInstanceBuffers(GL2 gl) {
+		if (loaded && mode == ViewportMode.MULTI && mm != null) {
+			for (int i = 0; i < mm.height; i++) {
+				for (int j = 0; j < mm.width; j++) {
+					if (models[j][i] != null) {
+						models[j][i].models.get(0).destroyAllBOs(gl);
+					}
+					if (tallgrass[j][i] != null) {
+						tallgrass[j][i].models.get(0).destroyAllBOs(gl);
+					}
+				}
+			}
+		}
+	}
 
 	public Tilemap getRegionForTile(int x, int y) {
 		if (tilemaps == null) {
@@ -396,10 +511,10 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 	public Point getRawAtViewportCentre() {
 		int imgstartx = (this.getWidth() - tilemapScaledImage.getWidth()) / 2;
 		int imgstarty = (this.getHeight() - tilemapScaledImage.getHeight()) / 2;
-		int WPStartX = (int) Math.round(mTilemapScrollPane.getViewport().getViewPosition().x - imgstartx);
-		int WPStartY = (int) Math.round(mTilemapScrollPane.getViewport().getViewPosition().y - imgstarty);
-		int xFromWPStart = (int) Math.round(mTilemapScrollPane.getViewport().getWidth() / 2);
-		int yFromWPStart = (int) Math.round(mTilemapScrollPane.getViewport().getHeight() / 2);
+		int WPStartX = Math.round(mTilemapScrollPane.getViewport().getViewPosition().x - imgstartx);
+		int WPStartY = Math.round(mTilemapScrollPane.getViewport().getViewPosition().y - imgstarty);
+		int xFromWPStart = Math.round(mTilemapScrollPane.getViewport().getWidth() / 2);
+		int yFromWPStart = Math.round(mTilemapScrollPane.getViewport().getHeight() / 2);
 		return new Point(WPStartX + xFromWPStart, WPStartY + yFromWPStart);
 	}
 
@@ -441,8 +556,30 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 			 * pleasant mapping experience.
 			 */
 			g.drawImage(crop, imgstartx + scrollpanex, imgstarty + scrollpaney, null);
+
 			double globimgdim = tilemapScaledImage.getHeight() / (double) height;
 			int gidround = (int) Math.round(globimgdim);
+			CM2DDrawable.display();
+			CM2DDrawable.getContext().makeCurrent();
+			GL2 gl = CM2DDrawable.getGL().getGL2();
+			gl.glViewport(0, 0, scrollpanew, scrollpaneh);
+			gl.glMatrixMode(GL2.GL_PROJECTION);
+			gl.glLoadIdentity();
+
+			gl.glOrtho(scrollpanex/globimgdim * 18d, (scrollpanex + scrollpanew)/globimgdim * 18d, (scrollpaney + scrollpaneh)/globimgdim * 18d, (scrollpaney)/globimgdim * 18d, 10000d, -50d);
+
+			gl.glMatrixMode(GL2.GL_MODELVIEW);
+			gl.glLoadIdentity();
+
+			gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+			gl.glLoadIdentity();
+			gl.glRotatef(-90f, 1.0f, 0.0f, 0.0f);
+			BufferedImage crop2 = renderGL(gl);
+			Graphics2D g2d = (Graphics2D) g;
+			g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
+			g2d.drawImage(crop2, imgstartx + scrollpanex, scrollpaney - imgstarty, null);
+			g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+
 			mTileEditForm.tool.drawOverlay(g, imgstartx, imgstarty, globimgdim);
 			g.setColor(Color.RED);
 			if (mTileEditForm.tool.getSelectorEnabled()) {
@@ -482,13 +619,10 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 			}
 		};
 		worker.execute();
-		progress.show();
+		progress.showDialog();
 		try {
 			worker.get();
-		} catch (InterruptedException ex) {
-			Logger.getLogger(TileMapPanel.class
-					.getName()).log(Level.SEVERE, null, ex);
-		} catch (ExecutionException ex) {
+		} catch (InterruptedException | ExecutionException ex) {
 			Logger.getLogger(TileMapPanel.class
 					.getName()).log(Level.SEVERE, null, ex);
 		}

@@ -96,6 +96,7 @@ public class PropTool extends AbstractTool {
 		mPropEditForm.prop.z = (float)(yshift + e.getY() * (720f/400f) / mTileMapPanel.tilemapScale - imgstarty);
 		mPropEditForm.props.modified = true;
 		mPropEditForm.showProp(mPropEditForm.propIndex);
+		mTileMapPanel.renderTileMap();
 	}
 
 	@Override
@@ -107,5 +108,10 @@ public class PropTool extends AbstractTool {
 	public void updateComponents() {
 		mPropEditForm.props.modified = true;
 		mPropEditForm.showProp(mPropEditForm.propIndex);
+	}
+	
+	@Override
+	public boolean getNaviEnabled() {
+		return true;
 	}
 }

@@ -36,7 +36,7 @@ public class CameraTool extends AbstractTool {
 				}
 			}
 			Collections.sort(layers);
-			for (Byte layer : layers) {
+			layers.forEach((layer) -> {
 				for (int i = 0; i < mCamEditForm.f.camData.size(); i++) {
 					CameraData cam = mCamEditForm.f.camData.get(i);
 					if (cam.layer != layer) {
@@ -53,7 +53,7 @@ public class CameraTool extends AbstractTool {
 					g.setFont(new Font(Font.SERIF, Font.PLAIN, Math.min(Math.min(h - 1, 20), w - 2))); //width is used to approximately prevent the text from stretching out beyond the rectangle horizontally
 					g.drawString("C" + String.valueOf(i), xdraw + 1, ydraw + Math.min(h / 2, 20));
 				}
-			}
+			});
 			if (mCamEditForm.cam != null) {
 				CameraData cam = mCamEditForm.cam;
 				g.setColor(new Color(0xff0000));
@@ -95,5 +95,10 @@ public class CameraTool extends AbstractTool {
 	@Override
 	public void updateComponents() {
 		mCamEditForm.showCamera(mCamEditForm.camIndex, false);
+	}
+
+	@Override
+	public boolean getNaviEnabled() {
+		return false;
 	}
 }

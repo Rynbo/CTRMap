@@ -125,9 +125,9 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		this.propTextures = propTextures;
 		models.clear();
 		reg = null;
-		if (mWorkspace.valid && zoneDebugPnl.zone != null) {
-			if (zoneDebugPnl.zone.header.areadata != null) {
-				reg = new ADPropRegistry(zoneDebugPnl.zone.header.areadata, propTextures);
+		if (mWorkspace.valid && mZonePnl.zone != null) {
+			if (mZonePnl.zone.header.areadata != null) {
+				reg = new ADPropRegistry(mZonePnl.zone.header.areadata, propTextures);
 			}
 		}
 		prop = null;
@@ -149,6 +149,18 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		if (entryBox.getItemCount() > 0) {
 			showProp(0);
 		}
+	}
+	
+	public void unload(){
+		loaded = false;
+		propIndex = -1;
+		prop = null;
+		props = null;
+		models.clear();
+		reg = null;
+		regentry = null;
+		entryBox.setSelectedIndex(-1);
+		entryBox.removeAllItems();
 	}
 
 	public void updateH3D(int index) {
@@ -274,6 +286,24 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		}
 	}
 
+	@Override
+	public void uploadBuffers(GL2 gl) {
+		for (int i = 0; i < models.size(); i++) {
+			if (models.get(i) != null) {
+				models.get(i).uploadAllBOs(gl);
+			}
+		}
+	}
+
+	@Override
+	public void deleteGLInstanceBuffers(GL2 gl) {
+		for (int i = 0; i < models.size(); i++) {
+			if (models.get(i) != null) {
+				models.get(i).destroyAllBOs(gl);
+			}
+		}
+	}
+	
 	public boolean equalsData(GRProp p1, GRProp p2) {
 		if (p1.uid != p2.uid) {
 			return false;
@@ -332,10 +362,14 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		sy.setValue(prop.scaleY);
 		sz.setValue(prop.scaleZ);
 		updateModel(index);
+		m3DDebugPanel.bindNavi(props.props.get(entryBox.getSelectedIndex()));
 		loaded = true;
 	}
 
 	public void updateModel(int index) {
+		if (index > models.size() - 1) {
+			PropPreview.loadModel(null);
+		}
 		if (reg != null) {
 			models.set(index, reg.getModel(props.props.get(index).uid));
 		}
@@ -355,6 +389,10 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 	public void saveAndRefresh() {
 		if (loaded) {
 			saveProp();
+			if (prop == null) {
+				showProp(-1);
+				return;
+			}
 			showProp(entryBox.getSelectedIndex());
 			if (reg != null) {
 				regentry = reg.entries.get(prop.uid);
@@ -382,7 +420,6 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 				}
 			}
 		}
-		m3DDebugPanel.bindNavi(props.props.get(entryBox.getSelectedIndex()));
 	}
 
 	/**

@@ -2,15 +2,8 @@ package ctrmap.formats.h3d.texturing;
 
 import ctrmap.formats.h3d.PICACommandReader;
 import java.awt.Color;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 
 
 /**
@@ -18,8 +11,8 @@ import javax.imageio.ImageIO;
  */
 public class TextureCodec {
 
-	private static int[] tileOrder = {0, 1, 8, 9, 2, 3, 10, 11, 16, 17, 24, 25, 18, 19, 26, 27, 4, 5, 12, 13, 6, 7, 14, 15, 20, 21, 28, 29, 22, 23, 30, 31, 32, 33, 40, 41, 34, 35, 42, 43, 48, 49, 56, 57, 50, 51, 58, 59, 36, 37, 44, 45, 38, 39, 46, 47, 52, 53, 60, 61, 54, 55, 62, 63};
-	private static int[][] etc1LUT = {{2, 8, -2, -8}, {5, 17, -5, -17}, {9, 29, -9, -29}, {13, 42, -13, -42}, {18, 60, -18, -60}, {24, 80, -24, -80}, {33, 106, -33, -106}, {47, 183, -47, -183}};
+	private static final int[] tileOrder = {0, 1, 8, 9, 2, 3, 10, 11, 16, 17, 24, 25, 18, 19, 26, 27, 4, 5, 12, 13, 6, 7, 14, 15, 20, 21, 28, 29, 22, 23, 30, 31, 32, 33, 40, 41, 34, 35, 42, 43, 48, 49, 56, 57, 50, 51, 58, 59, 36, 37, 44, 45, 38, 39, 46, 47, 52, 53, 60, 61, 54, 55, 62, 63};
+	private static final int[][] etc1LUT = {{2, 8, -2, -8}, {5, 17, -5, -17}, {9, 29, -9, -29}, {13, 42, -13, -42}, {18, 60, -18, -60}, {24, 80, -24, -80}, {33, 106, -33, -106}, {47, 183, -47, -183}};
 
 	public static byte[] decode(byte[] data, int width, int height, PICACommandReader.TextureFormat format) {
 		byte[] output = new byte[width * height * 4];
@@ -269,7 +262,7 @@ public class TextureCodec {
 							for (int x = 0; x < 4; x++) {
 								dataOffset = ((TX * 4) + x + (((TY * 4) + y) * width)) * 4;
 								long outputOffset = ((tX * 4) + x + (((tY * 4 + y)) * width)) * 4;
-								System.arraycopy(decodedData, (int) dataOffset, output, (int) outputOffset, 4);
+								System.arraycopy(decodedData, dataOffset, output, (int) outputOffset, 4);
 							}
 						}
 						i += 1;
@@ -454,9 +447,9 @@ public class TextureCodec {
 				? etc1LUT[(int)table][(int)(((block >> (index + 24)) & 1) + ((MSB >> (index + 8)) & 2))]
 				: etc1LUT[(int)table][(int)(((block >> (index + 8)) & 1) + ((MSB >> (index - 8)) & 2))];
 		
-		r = saturate((int) (r + pixel));
-		g = saturate((int) (g + pixel));
-		b = saturate((int) (b + pixel));
+		r = saturate(r + pixel);
+		g = saturate(g + pixel);
+		b = saturate(b + pixel);
 
 		Color ret = new Color(r, g, b);
 		return ret;

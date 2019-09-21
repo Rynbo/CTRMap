@@ -60,4 +60,9 @@ public class EditTool extends AbstractTool {
 	@Override
 	public void updateComponents() {
 	}
+	
+	@Override
+	public boolean getNaviEnabled() {
+		return false;
+	}
 }

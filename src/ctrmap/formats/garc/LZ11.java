@@ -97,7 +97,7 @@ public class LZ11 {
 		compressed[1] = (byte) (data.length & 0xFF);
 		compressed[2] = (byte) ((data.length & 0xFF00) >> 8);
 		compressed[3] = (byte) ((data.length & 0xFF0000) >> 16);
-		compressedOffset = 4;
+		compressedOffset += 4;
 		int bitsPtr = 0;
 		while (dataOffset < data.length) {
 			if (bitCount == 0) {

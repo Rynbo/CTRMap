@@ -155,7 +155,7 @@ public class ADPropRegistry {
 		
 		@Override
 		public boolean equals(Object obj){
-			if (obj instanceof ADPropRegistryEntry && obj != null){
+			if (obj != null && obj instanceof ADPropRegistryEntry){
 				ADPropRegistryEntry e = (ADPropRegistryEntry) obj;
 				return e.reference == reference && e.model == model && e.eventScr1 == eventScr1 && e.eventScr2 == eventScr2 &&
 						e.u0 == u0 && e.isOmnipresentAnimated == isOmnipresentAnimated && e.u1 == u1 &&

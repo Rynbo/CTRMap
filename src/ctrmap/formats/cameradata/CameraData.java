@@ -105,6 +105,23 @@ public class CameraData {
 		coords2 = new CameraCoordinates();
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (o != null && o instanceof CameraData) {
+			CameraData c2 = (CameraData) o;
+			return this.acceptCoords1 == c2.acceptCoords1 && this.acceptCoords2 == c2.acceptCoords2
+					&& this.boundX1 == c2.boundX1 && this.boundX2 == c2.boundX2
+					&& this.boundY1 == c2.boundY1 && this.boundY2 == c2.boundY2
+					&& this.coords1.equals(c2.coords1) && this.coords2.equals(c2.coords2)
+					&& this.isFirstEnabled == c2.isFirstEnabled && this.isSecondEnabled == c2.isSecondEnabled
+					&& this.isNeutral == c2.isNeutral && this.layer == c2.layer
+					&& this.transitionPeriod == c2.transitionPeriod && this.movementDirection == c2.movementDirection
+					&& this.unknown00 == c2.unknown00 && this.unknown01or03 == c2.unknown01or03;
+			
+		}
+		return false;
+	}
+
 	public void write(LittleEndianDataOutputStream dos) {
 		try {
 			dos.write(unknownBytes);

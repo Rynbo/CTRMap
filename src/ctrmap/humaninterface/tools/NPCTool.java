@@ -91,4 +91,9 @@ public class NPCTool extends AbstractTool {
 		mNPCEditForm.e.modified = true;
 		mNPCEditForm.showEntry(mNPCEditForm.npcIndex);
 	}
+	
+	@Override
+	public boolean getNaviEnabled() {
+		return true;
+	}
 }

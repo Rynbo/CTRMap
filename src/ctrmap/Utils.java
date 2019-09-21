@@ -14,7 +14,8 @@ import javax.swing.JRadioButton;
 import javax.swing.text.BadLocationException;
 
 /**
- * Class to store methods used between various classes that do not extend the same abstract base.
+ * Class to store methods used between various classes that do not extend the
+ * same abstract base.
  */
 public class Utils {
 
@@ -57,7 +58,7 @@ public class Utils {
 	}
 
 	public static void mkDirsIfNotContains(File container, String[] requiredContents) {
-		List<String> contents = (List<String>) Arrays.asList(container.list());
+		List<String> contents = Arrays.asList(container.list());
 		for (int i = 0; i < requiredContents.length; i++) {
 			if (!contents.contains(requiredContents[i])) {
 				new File(container.getAbsolutePath() + "/" + requiredContents[i]).mkdir();
@@ -89,9 +90,19 @@ public class Utils {
 		adjustSplitPanes();
 		frame.revalidate();
 	}
+
+	public static boolean checkBCHMagic(byte[] data) {
+		if (data[0] == 'B' && data[1] == 'C' && data[2] == 'H') {
+			return true;
+		} else {
+			System.out.println(data[0]);
+			return false;
+		}
+	}
+
 	/*
 	From: https://stackoverflow.com/questions/31225062/rotating-a-vector-by-angle-and-axis-in-java
-	*/
+	 */
 	public static Vec3f noGlRotatef(Vec3f vec, Vec3f axis, double theta) {
 		float x, y, z;
 		float u, v, w;
@@ -101,13 +112,13 @@ public class Utils {
 		u = axis.x;
 		v = axis.y;
 		w = axis.z;
-		float xPrime = (float)(u * (u * x + v * y + w * z) * (1d - Math.cos(theta))
+		float xPrime = (float) (u * (u * x + v * y + w * z) * (1d - Math.cos(theta))
 				+ x * Math.cos(theta)
 				+ (-w * y + v * z) * Math.sin(theta));
-		float yPrime = (float)(v * (u * x + v * y + w * z) * (1d - Math.cos(theta))
+		float yPrime = (float) (v * (u * x + v * y + w * z) * (1d - Math.cos(theta))
 				+ y * Math.cos(theta)
 				+ (w * x - u * z) * Math.sin(theta));
-		float zPrime = (float)(w * (u * x + v * y + w * z) * (1d - Math.cos(theta))
+		float zPrime = (float) (w * (u * x + v * y + w * z) * (1d - Math.cos(theta))
 				+ z * Math.cos(theta)
 				+ (-v * x + u * y) * Math.sin(theta));
 		return new Vec3f(xPrime, yPrime, zPrime);

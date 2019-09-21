@@ -15,9 +15,8 @@ import java.util.ArrayList;
 public class WavefrontOBJ {
 	private ArrayList<OBJMesh> meshes = new ArrayList<>();
 	public WavefrontOBJ(File f){
-		BufferedReader src = null;
 		try {
-			src = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+			BufferedReader src = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 			String line;
 			ArrayList<float[]> vertices = new ArrayList<>();
 			int meshIndex = 0;

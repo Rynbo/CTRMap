@@ -76,7 +76,7 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 		} else if (SwingUtilities.isLeftMouseButton(e)) {
 			if (!navi) {
 				m3DDebugPanel.rotateY = (originRotateY + (e.getX() - originMouseX) / 2f) % 360f;
-				m3DDebugPanel.rotateX = ((float) Math.max(-90f, Math.min(90f, originRotateX + (e.getY() - originMouseY) / 2f))) % 360f;
+				m3DDebugPanel.rotateX = Math.max(-90f, Math.min(90f, originRotateX + (e.getY() - originMouseY) / 2f)) % 360f;
 			}
 			else {
 				m3DDebugPanel.doNavi(e, originMouseX, originMouseY);
@@ -106,6 +106,7 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 			switch (e.getKeyCode()) {
 				case KeyEvent.VK_W:
 					Thread continuousUpdateThreadW = new Thread() {
+						@Override
 						public void run() {
 							long start;
 							while (keycodes.contains(KeyEvent.VK_W)) {
@@ -124,6 +125,7 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 					break;
 				case KeyEvent.VK_S:
 					Thread continuousUpdateThreadS = new Thread() {
+						@Override
 						public void run() {
 							long start;
 							while (keycodes.contains(KeyEvent.VK_S)) {
@@ -142,6 +144,7 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 					break;
 				case KeyEvent.VK_A:
 					Thread continuousUpdateThreadA = new Thread() {
+						@Override
 						public void run() {
 							long start;
 							while (keycodes.contains(KeyEvent.VK_A)) {
@@ -159,6 +162,7 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 					break;
 				case KeyEvent.VK_D:
 					Thread continuousUpdateThreadD = new Thread() {
+						@Override
 						public void run() {
 							long start;
 							while (keycodes.contains(KeyEvent.VK_D)) {

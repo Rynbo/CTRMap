@@ -43,6 +43,7 @@ public class RandomAccessBAIS extends LittleEndianDataInputStream {
 		return Short.toUnsignedInt(readShort());
 	}
 
+	@Override
 	public short read2Bytes() throws IOException {
 		position += 2;
 		return super.read2Bytes();

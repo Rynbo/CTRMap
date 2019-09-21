@@ -1,5 +1,6 @@
 package ctrmap.humaninterface.tools;
 
+import ctrmap.CtrmapMainframe;
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 
@@ -9,12 +10,16 @@ import java.awt.event.MouseEvent;
 public abstract class AbstractTool {
 	public AbstractTool() {
 		this.onToolInit();
+		if (!getNaviEnabled()){
+			CtrmapMainframe.m3DDebugPanel.bindNavi(null);
+		}
 	}
 	public abstract void onToolInit();
 	public abstract void onToolShutdown();
 	public abstract void fireCancel();
 	public abstract void drawOverlay(Graphics g, int imgstartx, int imgstarty, double globimgdim);
 	public abstract boolean getSelectorEnabled();
+	public abstract boolean getNaviEnabled();
 	public abstract void onTileClick(MouseEvent e);
 	public abstract void onTileMouseDown(MouseEvent e);
 	public abstract void onTileMouseUp(MouseEvent e);

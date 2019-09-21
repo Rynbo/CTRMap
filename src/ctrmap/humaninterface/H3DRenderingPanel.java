@@ -47,15 +47,16 @@ public class H3DRenderingPanel extends GLJPanel implements GLEventListener {
 
 	public CM3DNavigator navi = new CM3DNavigator();
 
+	public boolean reload = false;
+
 	public H3DRenderingPanel() {
 		super(new GLCapabilities(GLProfile.get(GLProfile.GL2)));
 		super.addGLEventListener(this);
-		FPSAnimator animator = new FPSAnimator(this, 75, true);
-		animator.start();
 		this.addMouseWheelListener(mCM3DInputManager);
 		this.addMouseMotionListener(mCM3DInputManager);
 		this.addMouseListener(mCM3DInputManager);
 		this.addKeyListener(mCM3DInputManager);
+		new FPSAnimator(this, 60).start();
 	}
 
 	public void loadH3D(BCHFile file) {
@@ -65,14 +66,20 @@ public class H3DRenderingPanel extends GLJPanel implements GLEventListener {
 	@Override
 	public void init(GLAutoDrawable drawable) {
 		GL2 gl = drawable.getGL().getGL2();
+		gl.setSwapInterval(1);
 		gl.glShadeModel(GL2.GL_SMOOTH);
 		gl.glClearColor(0f, 0f, 0f, 0f);
 		gl.glClearDepth(1.0f);
 		gl.glEnable(GL2.GL_TEXTURE_2D);
 		gl.glEnable(GL2.GL_DEPTH_TEST);
-		gl.glDisable(GL2.GL_CULL_FACE);
+		gl.glCullFace(GL2.GL_BACK);
+		gl.glEnable(GL2.GL_CULL_FACE);
 		gl.glDepthFunc(GL2.GL_LEQUAL);
 		gl.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL2.GL_NICEST);
+		CM3DComponents.forEach((r) -> {
+			r.uploadBuffers(gl);
+		});
+		reload = false;
 	}
 
 	public void cycleSelection(MouseEvent e) { //this method would largely benefit from abstractization of the edit forms as it has two unnecessary copy-pasted ifs. On the other hand, I actually like this way more than constant type casting like ((form.getObjectClass()) form.objects.get(i)). Too imprecise for reading, in a SPICA kind of way.
@@ -168,9 +175,9 @@ public class H3DRenderingPanel extends GLJPanel implements GLEventListener {
 		float[][] winPosArray = new float[box.length][3];
 		for (int j = 0; j < box.length; j++) {
 			Vec3f vec = new Vec3f(box[j][0] * scale.x, box[j][1] * scale.y, box[j][2] * scale.z);
-			Vec3f rotatedVec = Utils.noGlRotatef(Utils.noGlRotatef(Utils.noGlRotatef(vec, 
-					new Vec3f(0f, 1f, 0f), Math.toRadians(rotate.y)), 
-					new Vec3f(1f, 0f, 0f), Math.toRadians(rotate.x)), 
+			Vec3f rotatedVec = Utils.noGlRotatef(Utils.noGlRotatef(Utils.noGlRotatef(vec,
+					new Vec3f(0f, 1f, 0f), Math.toRadians(rotate.y)),
+					new Vec3f(1f, 0f, 0f), Math.toRadians(rotate.x)),
 					new Vec3f(0f, 0f, 1f), Math.toRadians(rotate.z));
 			glu.gluProject(rotatedVec.x + position.x, rotatedVec.y + position.y, rotatedVec.z + position.z, mvMatrix, 0, projMatrix, 0, view, 0, winPosArray[j], 0);
 			winPosArray[j][1] = getHeight() - winPosArray[j][1];
@@ -215,6 +222,12 @@ public class H3DRenderingPanel extends GLJPanel implements GLEventListener {
 			gl.glGetFloatv(GL2.GL_PROJECTION_MATRIX, projMatrix, 0);
 			gl.glGetIntegerv(GL2.GL_VIEWPORT, view, 0);
 
+			if (reload) {
+				CM3DComponents.forEach((r) -> {
+					r.uploadBuffers(gl);
+				});
+				reload = false;
+			}
 			CM3DComponents.forEach((r) -> {
 				r.renderCM3D(gl);
 			});
@@ -228,7 +241,6 @@ public class H3DRenderingPanel extends GLJPanel implements GLEventListener {
 			}
 
 			gl.glFlush();
-			gl.glFinish();
 		}
 	}
 

@@ -18,7 +18,7 @@ import javax.swing.JOptionPane;
 /**
  * GUI form for modifying NPC properties.
  */
-public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
+public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
 
 	/**
 	 * Creates new form NPCEditForm
@@ -45,10 +45,12 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
 		npc = null;
 		regentry = null;
 		entryBox.removeAllItems();
-		if (e == null) return;
+		if (e == null) {
+			return;
+		}
 		for (int i = 0; i < e.NPCCount; i++) {
 			entryBox.addItem(String.valueOf(e.npcs.get(i).uid));
-			if (reg != null){
+			if (reg != null) {
 				models.add(reg.getModel(e.npcs.get(i).model));
 			}
 		}
@@ -58,10 +60,22 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
 		}
 	}
 
-	public void refresh(){
-		entryBox.setSelectedIndex(entryBox.getSelectedIndex());
+	public void unload(){
+		loaded = false;
+		npcIndex = -1;
+		reg = null;
+		regentry = null;
+		e = null;
+		npc = null;
+		models.clear();
+		entryBox.setSelectedIndex(-1);
+		entryBox.removeAllItems();
 	}
 	
+	public void refresh() {
+		entryBox.setSelectedIndex(entryBox.getSelectedIndex());
+	}
+
 	public void showEntry(int index) {
 		npcIndex = -1;
 		if (index == -1) {
@@ -93,9 +107,9 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
 		areaSY.setValue(npc.areaStartY);
 		zl2.setValue(npc.leashWidth);
 		zl3.setValue(npc.leashHeight);
-		if (reg != null){
+		if (reg != null) {
 			regentry = reg.entries.get(npc.model);
-			if (regentry == null){
+			if (regentry == null) {
 				int createEntry = JOptionPane.showConfirmDialog(frame,
 						"This NPC's MoveModel properties could not be found\n"
 						+ "in this area's MoveModel registry under the model UID.\n\n"
@@ -111,21 +125,23 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
 				failsafe.uid = npc.model; //in this case, GF sometimes uses different UIDs than models, for it****s and ob****s. It's not required though.
 				failsafe.model = npc.model;
 				reg.entries.put(failsafe.uid, failsafe);
+				reg.mapModel(failsafe.uid, failsafe.uid);
 				reg.modified = true;
 				regentry = failsafe;
 			}
 		}
 		updateModel(index);
 		updateH3D(index);
+		m3DDebugPanel.navi.bindModel(e.npcs.get(index));
 		loaded = true;
 	}
 
-	public void updateModel(int index){
-		if (reg != null){
+	public void updateModel(int index) {
+		if (reg != null) {
 			models.set(index, reg.getModel(e.npcs.get(index).model));
 		}
 	}
-	
+
 	public void saveEntry() {
 		if (npc == null) {
 			return;
@@ -154,7 +170,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
 		npc2.multiZoneLinkOriginZone = (Integer) originZone.getValue();
 		npc2.multiZoneLinkTargetZone = (Integer) linkedZone.getValue();
 		npc2.multiZoneLink1Type = (Integer) linkID.getValue();
-		
+
 		if (!npc2.equals(npc)) {
 			int idx = e.npcs.indexOf(npc);
 			npc = npc2;
@@ -163,16 +179,17 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
 		}
 	}
 
-	public boolean saveRegistry(boolean dialog){
-		if (reg == null) return true;
+	public boolean saveRegistry(boolean dialog) {
+		if (reg == null) {
+			return true;
+		}
 		return reg.store(dialog);
 	}
-	
+
 	public void setNPC(int num) {
 		if (loaded) {
 			saveEntry();
 			entryBox.setSelectedIndex(num);
-			m3DDebugPanel.navi.bindModel(e.npcs.get(num));
 		}
 	}
 
@@ -194,19 +211,21 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
 			((NumberFormatter) fields[i].getFormatter()).setValueClass(Integer.class);
 		}
 	}
-	
-	public void updateH3D(int index){
+
+	public void updateH3D(int index) {
 		H3DModel m = models.get(index);
-		if (m == null) return;
+		if (m == null) {
+			return;
+		}
 		ZoneEntities.NPC n = e.npcs.get(index);
 		m.worldLocX = n.xTile * 18f + 9f; //720 (chunk size) / 40 (tile width per chunk)
 		m.worldLocZ = n.yTile * 18f + 9f;
 		m.worldLocY = n.z3DCoordinate;
 		m.rotationY = get3DOrientation(n.faceDirection);
 	}
-	
-	public float get3DOrientation(int faceDirection){
-		switch (faceDirection){
+
+	public float get3DOrientation(int faceDirection) {
+		switch (faceDirection) {
 			case 0:
 				return 180f;
 			case 1:
@@ -219,24 +238,43 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
 				return 0f;
 		}
 	}
-	
+
 	@Override
-	public void renderCM3D(GL2 gl){
-		if (reg != null){
-			for (int i = 0; i < e.NPCCount; i++){
-				if (models.size() > i && models.get(i) != null){
+	public void renderCM3D(GL2 gl) {
+		if (reg != null) {
+			for (int i = 0; i < e.NPCCount; i++) {
+				if (models.size() > i && models.get(i) != null) {
 					updateH3D(i);
 					models.get(i).render(gl);
-					if (i == npcIndex && mTileEditForm.tool instanceof NPCTool){
+					if (i == npcIndex && mTileEditForm.tool instanceof NPCTool) {
 						models.get(i).renderBox(gl);
 					}
 				}
 			}
 		}
 	}
+
+	@Override
+	public void uploadBuffers(GL2 gl) {
+		for (int i = 0; i < models.size(); i++) {
+			if (models.get(i) != null) {
+				models.get(i).uploadAllBOs(gl);
+			}
+		}
+	}
 	
 	@Override
-	public void renderOverlayCM3D(GL2 gl){}
+	public void deleteGLInstanceBuffers(GL2 gl) {
+		for (int i = 0; i < models.size(); i++) {
+			if (models.get(i) != null) {
+				models.get(i).destroyAllBOs(gl);
+			}
+		}
+	}
+
+	@Override
+	public void renderOverlayCM3D(GL2 gl) {
+	}
 
 	/**
 	 * This method is called from within the constructor to initialize the form.
@@ -701,7 +739,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
     private void btnNewEntryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewEntryActionPerformed
 		ZoneEntities.NPC newNPC = new ZoneEntities.NPC();
 		int newuid = 0;
-		for (int i = 0; i < e.npcs.size(); i++){
+		for (int i = 0; i < e.npcs.size(); i++) {
 			newuid = Math.max(e.npcs.get(i).uid + 1, newuid); //get first free UID but don't pollute free spaces if any
 		}
 		newNPC.uid = newuid;
@@ -710,7 +748,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
 		newNPC.xTile = defaultPos.x;
 		newNPC.yTile = defaultPos.y;
 		e.npcs.add(newNPC);
-		if (reg != null){
+		if (reg != null) {
 			models.add(reg.getModel(newNPC.model));
 		}
 		e.NPCCount++;
@@ -726,7 +764,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
     }//GEN-LAST:event_btnSaveActionPerformed
 
     private void btnRemoveEntryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveEntryActionPerformed
-		if (reg != null){
+		if (reg != null) {
 			models.remove(reg.getModel(npc.model));
 		}
 		e.npcs.remove(npc);
@@ -742,7 +780,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable{
     }//GEN-LAST:event_btnRemoveEntryActionPerformed
 
     private void mdlStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_mdlStateChanged
-        setNPC(entryBox.getSelectedIndex());
+		setNPC(entryBox.getSelectedIndex());
     }//GEN-LAST:event_mdlStateChanged
 
 

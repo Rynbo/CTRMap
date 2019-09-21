@@ -63,17 +63,24 @@ public class GRCollisionBounds {
                                 structs[j].z[i] = (float)Math.round(structs[j].z[i]);
                                 structs[j+1].z[i] = (float)Math.round(structs[j+1].z[i]);*/
 			}
-			if (j == 0) {
-				multiplier = 0.5f;
-				baseX = 0.5f * adjustMinX;
-				baseZ = 0.5f * adjustMinZ;
-			} else if (j == 2) {
-				baseZ = 0.5f * adjustMaxZ;
-			} else if (j == 4) {
-				baseX = 0.5f * adjustMaxX;
-				baseZ = 0.5f * adjustMinZ;
-			} else if (j == 6) {
-				baseZ = 0.5f * adjustMaxZ;
+			switch (j) {
+				case 0:
+					multiplier = 0.5f;
+					baseX = 0.5f * adjustMinX;
+					baseZ = 0.5f * adjustMinZ;
+					break;
+				case 2:
+					baseZ = 0.5f * adjustMaxZ;
+					break;
+				case 4:
+					baseX = 0.5f * adjustMaxX;
+					baseZ = 0.5f * adjustMinZ;
+					break;
+				case 6:
+					baseZ = 0.5f * adjustMaxZ;
+					break;
+				default:
+					break;
 			}
 		}
 		for (int i = 0; i < 10; i++) {

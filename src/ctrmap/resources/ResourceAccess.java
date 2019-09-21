@@ -3,7 +3,6 @@ package ctrmap.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 
 public class ResourceAccess {
 	public static byte[] getByteArray(String name){

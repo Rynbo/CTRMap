@@ -38,7 +38,7 @@ public class NPCRegistry {
 				NPCRegistryEntry e = new NPCRegistryEntry(dis);
 				entries.put(e.uid, e);
 				BCHFile bch = new BCHFile(new MM(CtrmapMainframe.mWorkspace.getWorkspaceFile(Workspace.ArchiveType.MOVE_MODELS, e.model)).getFile(0));
-				if (!bch.models.isEmpty()){
+				if (!bch.models.isEmpty()) {
 					bch.models.get(0).setMaterialTextures(bch.textures);
 					models.put(e.uid, bch.models.get(0));
 				}
@@ -49,15 +49,25 @@ public class NPCRegistry {
 		}
 	}
 
-	public H3DModel getModel(int uid){
+	public void mapModel(int uid, int mdlnum) {
+		BCHFile bch = new BCHFile(new MM(CtrmapMainframe.mWorkspace.getWorkspaceFile(Workspace.ArchiveType.MOVE_MODELS, mdlnum)).getFile(0));
+		if (!bch.models.isEmpty()) {
+			bch.models.get(0).setMaterialTextures(bch.textures);
+			models.put(uid, bch.models.get(0));
+		}
+	}
+
+	public H3DModel getModel(int uid) {
 		return models.get(uid);
 	}
-	
+
 	public boolean store(boolean dialog) {
-		if (!modified) return true;
-		if (dialog){
+		if (!modified) {
+			return true;
+		}
+		if (dialog) {
 			int result = Utils.showSaveConfirmationDialog("NPC registry");
-			switch (result){
+			switch (result) {
 				case JOptionPane.YES_OPTION:
 					break;
 				case JOptionPane.NO_OPTION:

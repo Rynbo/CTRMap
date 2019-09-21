@@ -1,5 +1,6 @@
 package ctrmap.formats.tilemap;
 
+import java.awt.Color;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -68,5 +69,14 @@ public class EditorTileset {
 			}
 		}
 		return null;
+	}
+	
+	public Color getSimpleColor(int binary){
+		for (int i = 0; i < tiles.length; i++) {
+			if ((tiles[i].binary & 0xFF) == (binary & 0xFF)) {
+				return tiles[i].color;
+			}
+		}
+		return Color.RED;
 	}
 }

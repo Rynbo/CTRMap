@@ -73,7 +73,7 @@ public class Tilemap {
 	public void updateImage() {
 		for (int x = 0; x < 40; x++) {
 			for (int y = 0; y < 40; y++) {
-				g.setColor(CtrmapMainframe.mTileEditForm.tileset.getTemplate(Utils.ba2int(rawTileData[x][y])).color);
+				g.setColor(CtrmapMainframe.mTileEditForm.tileset.getSimpleColor(Utils.ba2int(rawTileData[x][y])));
 				g.fillRect(x*10, y*10, 10, 10);
 			}
 		}

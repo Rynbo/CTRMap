@@ -26,6 +26,8 @@ public class BCHFile {
 	public ArrayList<H3DModel> models = new ArrayList<>();
 	public ArrayList<H3DTexture> textures = new ArrayList<>();
 
+	public int errorlevel = 0;
+
 	public BCHFile(byte[] src) {
 		try {
 			buf = src.clone();
@@ -72,7 +74,7 @@ public class BCHFile {
 				int value = in.readInt();
 				int offset = value & 0x1ffffff;
 				byte flags = (byte) (value >> 25);
-				int seek = 0;
+				int seek;
 
 				switch (flags) {
 					case 0:
@@ -168,6 +170,11 @@ public class BCHFile {
 					}
 				}
 			}
+
+			if (errorlevel > 0){
+				return;
+			}
+			
 			in.seek(header.mainHeaderOffset);
 			contentHeader = new BCHContentHeader();
 			contentHeader.modelsPointerTableOffset = in.readInt();
@@ -239,6 +246,7 @@ public class BCHFile {
 			}
 			in.close();
 		} catch (IOException ex) {
+			errorlevel++;
 			Logger.getLogger(BCHFile.class.getName()).log(Level.SEVERE, null, ex);
 		}
 	}
@@ -253,14 +261,19 @@ public class BCHFile {
 		return ByteBuffer.wrap(b, offset, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
 	}
 
-	public static void relocateOffset(int offsetOfTheOffset, int relocationMod, byte[] b) {
-		ByteBuffer buf = ByteBuffer.wrap(b, offsetOfTheOffset, 4);
-		int originalOffset = Integer.reverseBytes(buf.getInt());
-		buf.putInt(0, Integer.reverseBytes(originalOffset + relocationMod));
-		buf.rewind();
-		byte[] ret = new byte[4];
-		buf.get(ret);
-		System.arraycopy(ret, 0, b, offsetOfTheOffset, 4);
+	public void relocateOffset(int offsetOfTheOffset, int relocationMod, byte[] b) {
+		try {
+			ByteBuffer buf = ByteBuffer.wrap(b, offsetOfTheOffset, 4);
+			int originalOffset = Integer.reverseBytes(buf.getInt());
+			buf.putInt(0, Integer.reverseBytes(originalOffset + relocationMod));
+			buf.rewind();
+			byte[] ret = new byte[4];
+			buf.get(ret);
+			System.arraycopy(ret, 0, b, offsetOfTheOffset, 4);
+		} catch (Exception e) {
+			errorlevel++;
+			Logger.getLogger(BCHFile.class.getName()).log(Level.SEVERE, null, e);
+		}
 	}
 
 	public static void changeValueTo(int offset, int newValue, byte[] b) {

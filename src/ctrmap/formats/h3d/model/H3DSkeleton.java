@@ -1,6 +1,5 @@
 package ctrmap.formats.h3d.model;
 
-import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.math.Matrix4;
 import com.sun.javafx.geom.Vec3f;
 import ctrmap.formats.h3d.RandomAccessBAIS;
@@ -8,7 +7,6 @@ import ctrmap.formats.h3d.StringUtils;
 import ctrmap.formats.h3d.texturing.H3DMaterial;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class H3DSkeleton {

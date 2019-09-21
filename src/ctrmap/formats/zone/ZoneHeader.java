@@ -3,6 +3,7 @@ package ctrmap.formats.zone;
 import static ctrmap.CtrmapMainframe.*;
 import ctrmap.LittleEndianDataInputStream;
 import ctrmap.LittleEndianDataOutputStream;
+import ctrmap.Utils;
 import ctrmap.Workspace;
 import ctrmap.formats.containers.AD;
 import ctrmap.formats.containers.MM;
@@ -54,7 +55,7 @@ public class ZoneHeader {
 	public boolean enableRunning;
 	public boolean enableEscapeRope;
 	public boolean enableFlyFrom;
-	public boolean enableBGM;
+	public boolean enableCyclingBGM;
 	public boolean unknownFlag;
 
 	public int camera1;
@@ -74,6 +75,11 @@ public class ZoneHeader {
 	public int PY2;
 
 	public int unknownFlags;
+	
+	public boolean enableDowsingMachine;
+	public boolean enableBreathFX;
+	public boolean enableSpecialWalking;
+	public boolean enableGhosting;
 
 	public ZoneHeader(byte[] data) {
 		try {
@@ -108,7 +114,7 @@ public class ZoneHeader {
 			enableRunning = ((H0x20 >> 11) & 1) == 1;
 			enableEscapeRope = ((H0x20 >> 12) & 1) == 1;
 			enableFlyFrom = ((H0x20 >> 13) & 1) == 1;
-			enableBGM = ((H0x20 >> 14) & 1) == 1;
+			enableCyclingBGM = ((H0x20 >> 14) & 1) == 1;
 			unknownFlag = ((H0x20 >> 15) & 1) == 1;
 
 			camera1 = dis.readShort();
@@ -117,6 +123,11 @@ public class ZoneHeader {
 
 			unknownFlags = dis.readInt();
 
+			enableDowsingMachine = (unknownFlags >> 12 & 1) == 1;
+			enableBreathFX = (unknownFlags >> 11 & 1) == 1;
+			enableSpecialWalking = (unknownFlags >> 2 & 1) == 0;
+			enableGhosting = (unknownFlags & 1) == 1;
+			
 			X = dis.readShort();
 			Z = dis.readShort();
 			Y = dis.readShort();
@@ -159,7 +170,7 @@ public class ZoneHeader {
 			H0x20 = (short) (H0x20 | ((enableRunning) ? 1 : 0) << 11);
 			H0x20 = (short) (H0x20 | ((enableEscapeRope) ? 1 : 0) << 12);
 			H0x20 = (short) (H0x20 | ((enableFlyFrom) ? 1 : 0) << 13);
-			H0x20 = (short) (H0x20 | ((enableBGM) ? 1 : 0) << 14);
+			H0x20 = (short) (H0x20 | ((enableCyclingBGM) ? 1 : 0) << 14);
 			H0x20 = (short) (H0x20 | ((unknownFlag) ? 1 : 0) << 15);
 			dos.writeShort(H0x20);
 
@@ -167,6 +178,11 @@ public class ZoneHeader {
 			dos.writeShort((short) camera2);
 			dos.writeShort((short) cameraFlags);
 
+			unknownFlags = unknownFlags | ((enableGhosting) ? 1 : 0);
+			unknownFlags = unknownFlags | ((enableBreathFX) ? 1 : 0) << 11;
+			unknownFlags = unknownFlags | ((enableDowsingMachine) ? 1 : 0) << 12;
+			unknownFlags = unknownFlags | ((enableSpecialWalking) ? 0 : 1) << 2;
+			
 			dos.writeInt(unknownFlags);
 
 			dos.writeShort((short) X);
@@ -186,7 +202,13 @@ public class ZoneHeader {
 
 	public void fetchArchives() {
 		areadata = new AD(mWorkspace.getWorkspaceFile(Workspace.ArchiveType.AREA_DATA, areadataID));
-		propTextures.addAll(new BCHFile(areadata.getFile(1)).textures);
+		byte[] adbch1 = areadata.getFile(1);
+		if (Utils.checkBCHMagic(adbch1)){
+			BCHFile adbch1bch = new BCHFile(adbch1);
+			if (adbch1bch.errorlevel == 0){
+				propTextures.addAll(adbch1bch.textures);
+			}
+		}
 		byte[] wTex = areadata.getFile(11);
 		if (wTex[0] == 0x11) {
 			//LZ11 COMPRESSED THOT ALERT

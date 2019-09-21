@@ -16,11 +16,11 @@ import java.util.List;
 public class H3DMaterial {
 
 	public String name;
-	
+
 	public String name0;
 	public String name1;
 	public String name2;
-	
+
 	public H3DTexture texture0;
 	public H3DTexture texture1;
 	public H3DTexture texture2;
@@ -49,9 +49,9 @@ public class H3DMaterial {
 		int textureCommandsOffset = in.readInt();
 		int textureCommandsWordCount = in.readInt();
 
-		int materialMapperOffset = 0;
+		int materialMapperOffset;
 		if (properties.backwardCompatibility < 0x21) {
-			materialMapperOffset = (int) in.position;
+			materialMapperOffset = in.position;
 			in.seek(0x30 + materialMapperOffset);
 		} else {
 			materialMapperOffset = in.readInt();
@@ -92,7 +92,7 @@ public class H3DMaterial {
 
 				coordinators[i] = coordinator;
 			}
-			
+
 			lightSetIndex = in.readUnsignedShort();
 			fogIndex = in.readUnsignedShort();
 
@@ -109,7 +109,7 @@ public class H3DMaterial {
 			params.colConstant5 = OhanaMeshUtils.getColor(in);
 			Color blendColor = OhanaMeshUtils.getColor(in);
 			params.colorScale = in.readFloat();
-			
+
 			in.readInt();
 			in.readInt();
 			in.readInt();
@@ -121,7 +121,6 @@ public class H3DMaterial {
 			int position = in.position;
 			in.seek(position + 24);
 			in.readInt();
-			
 
 			params.polygonOffsetUnit = in.readFloat();
 			int fshCommandsOffset = in.readInt();
@@ -349,8 +348,8 @@ public class H3DMaterial {
 		public float LODBias;
 		public Color borderColor;
 
-		public static int getGlTextureWrap(TextureWrap wrap){
-			switch (wrap){
+		public static int getGlTextureWrap(TextureWrap wrap) {
+			switch (wrap) {
 				default:
 				case repeat:
 					return GL2.GL_REPEAT;
@@ -362,10 +361,12 @@ public class H3DMaterial {
 					return GL2.GL_CLAMP_TO_BORDER;
 			}
 		}
-		
+
 		public enum TextureMinFilter {
+			nearest,
 			nearestMipmapNearest,
 			nearestMipmapLinear,
+			linear,
 			linearMipmapNearest,
 			linearMipmapLinear
 		}
@@ -430,9 +431,9 @@ public class H3DMaterial {
 		public boolean isTestEnabled;
 		public TestFunction testFunction;
 		public int testReference;
-		
-		public int getGlTestFunc(){
-			switch (testFunction){
+
+		public int getGlTestFunc() {
+			switch (testFunction) {
 				case never:
 					return GL2.GL_NEVER;
 				case always:
@@ -529,8 +530,8 @@ public class H3DMaterial {
 		public BlendEquation alphaBlendEquation;
 		public Color blendColor;
 
-		public static int getGlBlendFunc(BlendFunction func){
-			switch (func){
+		public static int getGlBlendFunc(BlendFunction func) {
+			switch (func) {
 				default:
 				case zero:
 					return GL2.GL_ZERO;
@@ -564,9 +565,9 @@ public class H3DMaterial {
 					return GL2.GL_SRC_ALPHA_SATURATE;
 			}
 		}
-		
-		public static int getGlBlendEqt(BlendEquation eqt){
-			switch (eqt){
+
+		public static int getGlBlendEqt(BlendEquation eqt) {
+			switch (eqt) {
 				default:
 				case add:
 					return GL2.GL_FUNC_ADD;
@@ -580,7 +581,7 @@ public class H3DMaterial {
 					return GL2.GL_MAX;
 			}
 		}
-		
+
 		public enum BlendMode {
 			logical,
 			dummy,

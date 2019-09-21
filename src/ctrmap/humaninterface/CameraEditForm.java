@@ -61,12 +61,14 @@ public class CameraEditForm extends javax.swing.JPanel {
 		}
 	}
 
-	public void showCamera(int entryNum){
+	public void showCamera(int entryNum) {
 		showCamera(entryNum, true);
 	}
-	
+
 	public void showCamera(int entryNum, boolean save) {
-		if (!loaded) return;
+		if (!loaded) {
+			return;
+		}
 		if (entryNum == -1) {
 			setComponentsEnabled(new Component[]{d1active, d2active, d1default, d2default, fov1Slider, fov2Slider, x, y, w, h, motion, roll1, roll2, pitch1,
 				pitch2, yaw1, yaw2, plrDist1, plrDist2, transTime, pitchShift1, pitchShift2, yawShift1, yawShift2, entryBox, btnRemove, btnSave}, false);
@@ -76,12 +78,14 @@ public class CameraEditForm extends javax.swing.JPanel {
 				pitch2, yaw1, yaw2, plrDist1, plrDist2, transTime, pitchShift1, pitchShift2, yawShift1, yawShift2, entryBox, btnRemove, btnSave}, true);
 		}
 		camIndex = entryNum;
-		if (save) saveCamera(false);
+		if (save) {
+			saveCamera(false);
+		}
 		cam = f.camData.get(entryNum);
 		neutralCheckbox.setSelected(cam.isNeutral != 0);
 		transTime.setValue(Short.toUnsignedInt(cam.transitionPeriod) * 35);
 		motion.setSelectedIndex(getMotionIndex(cam.movementDirection));
-		if (cam.unknown01or03 == 03){
+		if (cam.unknown01or03 == 03) {
 			motion.setSelectedIndex(2); //different static
 		}
 		x.setValue(Short.toUnsignedInt(cam.boundX1));
@@ -134,10 +138,10 @@ public class CameraEditForm extends javax.swing.JPanel {
 		entryBox.setSelectedIndex(idx);
 	}
 
-	public void saveCamera(){
+	public void saveCamera() {
 		saveCamera(true);
 	}
-	
+
 	public void saveCamera(boolean update) {
 		if (cam == null) {
 			return;
@@ -153,11 +157,10 @@ public class CameraEditForm extends javax.swing.JPanel {
 			cam2.isFirstEnabled = (!d1default.isSelected()) ? (short) -1 : 0;
 			cam2.isSecondEnabled = (!d2default.isSelected()) ? (short) -1 : 0;
 		} else {
-			if (cam.isFirstEnabled == -1 && cam.isSecondEnabled == -1){
+			if (cam.isFirstEnabled == -1 && cam.isSecondEnabled == -1) {
 				cam2.isFirstEnabled = -1;
 				cam2.isSecondEnabled = -1;
-			}
-			else {
+			} else {
 				cam2.isFirstEnabled = 0;
 				cam2.isSecondEnabled = 0;
 			}
@@ -166,11 +169,14 @@ public class CameraEditForm extends javax.swing.JPanel {
 			transTime.setValue(65535);
 		}
 		cam2.transitionPeriod = (short) Math.round((Integer) transTime.getValue() / 35f);
-		if (neutralCheckbox.isSelected()){
-			if (cam.isNeutral != 0) cam2.isNeutral = cam.isNeutral; else cam2.isNeutral = 0x2;
+		if (neutralCheckbox.isSelected()) {
+			if (cam.isNeutral != 0) {
+				cam2.isNeutral = cam.isNeutral;
+			} else {
+				cam2.isNeutral = 0x2;
+			}
 			//OA uses 0x1 for this while XY uses 0x2. If there is a difference, I'll be sure to link it to the workspace but for now, 2 (XY) is the default.
-		}
-		else{
+		} else {
 			cam2.isNeutral = 0x0;
 		}
 		cam2.coords1.pitchShift = (Float) pitchShift1.getValue();
@@ -190,111 +196,25 @@ public class CameraEditForm extends javax.swing.JPanel {
 		cam2.coords2.distanceFromTarget = (Float) plrDist2.getValue();
 		cam2.layer = ((Integer) layer.getValue()).byteValue();
 		cam2.unknown01or03 = cam.unknown01or03;
-		if (cam.unknown01or03 == 0x03 && getMotionRaw(motion.getSelectedIndex()) == 0x07){
-			cam2.movementDirection = cam.movementDirection; //might not be set to static, so we'll keep it the same as 03 overrides it
+		if (cam.movementDirection == 0 && getMotionRaw(motion.getSelectedIndex()) == 0x07) {
+			cam2.movementDirection = 0;
+		} else {
+			if (cam.unknown01or03 == 0x03 && getMotionRaw(motion.getSelectedIndex()) == 0x07) {
+				cam2.movementDirection = cam.movementDirection; //might not be set to static, so we'll keep it the same as 03 overrides it
+			} else {
+				cam2.movementDirection = getMotionRaw(motion.getSelectedIndex());
+			}
 		}
-		else{
-			cam2.movementDirection = getMotionRaw(motion.getSelectedIndex());
-		}
-		if (!equalsData(cam, cam2)){
+		if (!cam.equals(cam2)) {
 			//set this after verifying as it is a nonstandard op specific to this editor and we don't wanna invoke the save dialog on autocorrect
 			cam2.unknown01or03 = (cam2.movementDirection == 0x07) ? 0x03 : 0x01; //no idea what the difference between 00 and 01 is but 03 is static and so is MD7, so doing this is a good measure to allow users to change static cameras to dynamic without messing with this unknown
 			f.camData.set(f.camData.indexOf(cam), cam2);
 			cam = cam2;
 			f.modified = true;
 		}
-		else {
+		if (update) {
+			showCamera(entryBox.getSelectedIndex(), false);
 		}
-		if (update) showCamera(entryBox.getSelectedIndex(), false);
-	}
-
-	public boolean equalsData(CameraData c1, CameraData c2) {
-		if (c1.acceptCoords1 != c2.acceptCoords1) {
-			return false;
-		}
-		if (c1.acceptCoords2 != c2.acceptCoords2) {
-			return false;
-		}
-		if (c1.boundX1 != c2.boundX1) {
-			return false;
-		}
-		if (c1.boundX2 != c2.boundX2) {
-			return false;
-		}
-		if (c1.boundY1 != c2.boundY1) {
-			return false;
-		}
-		if (c1.boundY2 != c2.boundY2) {
-			return false;
-		}
-		if (c1.isFirstEnabled != c2.isFirstEnabled) {
-			return false;
-		}
-		if (c1.isSecondEnabled != c2.isSecondEnabled) {
-			return false;
-		}
-		if (c1.isNeutral != c2.isNeutral) {
-			return false;
-		}
-		if (c1.layer != c2.layer) {
-			return false;
-		}
-		if (c1.movementDirection != c2.movementDirection) {
-			return false;
-		}
-		if (c1.transitionPeriod != c2.transitionPeriod) {
-			return false;
-		}
-		if (c1.unknown00 != c2.unknown00) {
-			return false;
-		}
-		if (c1.unknown01or03 != c2.unknown01or03) {
-			return false;
-		}
-		//yep we even need to check the coordinates manually
-		if (!Utils.impreciseFloatEquals(Math.round(c1.coords1.FOV), Math.round(c2.coords1.FOV))) {
-			return false;
-		}
-		if (!Utils.impreciseFloatEquals(c1.coords1.pitchShift, c2.coords1.pitchShift)) {
-			return false;
-		}
-		if (!Utils.impreciseFloatEquals(c1.coords1.yawShift, c2.coords1.yawShift)) {
-			return false;
-		}
-		if (!Utils.impreciseFloatEquals(c1.coords1.distanceFromTarget, c2.coords1.distanceFromTarget)) {
-			return false;
-		}
-		if (!Utils.impreciseFloatEquals(c1.coords1.pitch, c2.coords1.pitch)) {
-			return false;
-		}
-		if (!Utils.impreciseFloatEquals(c1.coords1.yaw, c2.coords1.yaw)) {
-			return false;
-		}
-		if (!Utils.impreciseFloatEquals(c1.coords1.roll, c2.coords1.roll)) {
-			return false;
-		}
-		if (!Utils.impreciseFloatEquals(Math.round(c1.coords2.FOV), Math.round(c2.coords2.FOV))) {
-			return false;
-		}
-		if (!Utils.impreciseFloatEquals(c1.coords2.pitchShift, c2.coords2.pitchShift)) {
-			return false;
-		}
-		if (!Utils.impreciseFloatEquals(c1.coords2.yawShift, c2.coords2.yawShift)) {
-			return false;
-		}
-		if (!Utils.impreciseFloatEquals(c1.coords2.distanceFromTarget, c2.coords2.distanceFromTarget)) {
-			return false;
-		}
-		if (!Utils.impreciseFloatEquals(c1.coords2.pitch, c2.coords2.pitch)) {
-			return false;
-		}
-		if (!Utils.impreciseFloatEquals(c1.coords2.yaw, c2.coords2.yaw)) {
-			return false;
-		}
-		if (!Utils.impreciseFloatEquals(c1.coords2.roll, c2.coords2.roll)) {
-			return false;
-		}
-		return true;
 	}
 
 	public float getFloatFromField(JFormattedTextField field) {
@@ -332,6 +252,8 @@ public class CameraEditForm extends javax.swing.JPanel {
 
 	public int getMotionIndex(short raw) {
 		switch (raw) {
+			case 0:
+				return 2;
 			case 1:
 				return 0;
 			case 2:

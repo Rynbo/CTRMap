@@ -16,8 +16,12 @@ import ctrmap.formats.h3d.texturing.H3DTexture;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 public class H3DModel {
@@ -195,7 +199,7 @@ public class H3DModel {
 			try {
 
 				for (int f = 0; f < facesCount; f++) {
-					ArrayList<Integer> nodeList = new ArrayList<Integer>();
+					ArrayList<Integer> nodeList = new ArrayList<>();
 					int idxBufferOffset;
 					PICACommand.indexBufferFormat idxBufferFormat;
 					int idxBufferTotalVertices;
@@ -382,11 +386,11 @@ public class H3DModel {
 		}
 		makeBox();
 	}
-	
-	public void makeBox(){
+
+	public void makeBox() {
 		OhanaMeshUtils.makeBox(boxVectors, minVector, maxVector);
 	}
-	
+
 	/**
 	 * Deprecated. Replaced by fixed rigid skinning instead.
 	 */
@@ -427,7 +431,25 @@ public class H3DModel {
 
 	public void makeAllBOs() {
 		for (int i = 0; i < meshes.size(); i++) {
-			meshes.get(i).makeBOs();
+			if (materials.size() > meshes.get(i).materialId) {
+				meshes.get(i).makeBOs(materials.get(meshes.get(i).materialId));
+			} else {
+				meshes.get(i).makeBOs(null);
+			}
+			meshes.get(i).doVBOUpdate = true;
+			meshes.get(i).useVBO = true;
+		}
+	}
+
+	public void uploadAllBOs(GL2 gl) {
+		for (int i = 0; i < meshes.size(); i++) {
+			meshes.get(i).uploadVBO(gl);
+		}
+	}
+
+	public void destroyAllBOs(GL2 gl) {
+		for (int i = 0; i < meshes.size(); i++) {
+			meshes.get(i).destroyGl(gl);
 		}
 	}
 
@@ -474,15 +496,15 @@ public class H3DModel {
 
 		switch (format.type) {
 			case signedByte:
-				output.x = (byte) input.readByte();
+				output.x = input.readByte();
 				if (format.attributeLength > 0) {
-					output.y = (byte) input.readByte();
+					output.y = input.readByte();
 				}
 				if (format.attributeLength > 1) {
-					output.z = (byte) input.readByte();
+					output.z = input.readByte();
 				}
 				if (format.attributeLength > 2) {
-					output.w = (byte) input.readByte();
+					output.w = input.readByte();
 				}
 				break;
 			case unsignedByte:
@@ -539,7 +561,7 @@ public class H3DModel {
 		gl.glPopMatrix();
 	}
 
-	public void renderBox(GL2 gl){ //calculated by calculateBounds
+	public void renderBox(GL2 gl) { //calculated by calculateBounds
 		gl.glPushMatrix();
 		gl.glTranslatef(worldLocX, worldLocY, worldLocZ);
 		gl.glRotatef(rotationZ, 0f, 0f, 1f);
@@ -547,17 +569,17 @@ public class H3DModel {
 		gl.glRotatef(rotationY, 0f, 1f, 0f);
 		gl.glScalef(scaleX, scaleY, scaleZ);
 		gl.glBegin(GL2.GL_LINES);
-		
+
 		gl.glColor3f(1f, 0f, 0f);
-		
-		for (int i = 0; i < boxVectors.length; i++){
+
+		for (int i = 0; i < boxVectors.length; i++) {
 			gl.glVertex3fv(boxVectors[i], 0);
 		}
-		
+
 		gl.glEnd();
 		gl.glPopMatrix();
 	}
-	
+
 	public static class H3DMesh {
 
 		public String name;
@@ -585,31 +607,97 @@ public class H3DModel {
 		public ArrayList<H3DVertex> vertices = new ArrayList<>();
 		public Vec3f centerVector;
 
-		public float[] vbo;
-		public byte[] vcbo;
-		public double[][] tcbo;
+		public FloatBuffer vbo;
+		public ByteBuffer vcbo;
+		public DoubleBuffer[] tcbo;
 
-		public void makeBOs() { //maybe someday?
-			vbo = new float[vertices.size() * 3];
-			vcbo = new byte[vertices.size() * 4];
-			tcbo = new double[3][vertices.size() * 2];
+		public boolean doVBOUpdate = true;
+		public boolean useVBO = false;
+
+		public Map<GL2, int[]> glBufPtrs = new HashMap<>();
+
+		public void makeBOs(H3DMaterial mat) { //maybe someday?
+			vbo = FloatBuffer.allocate(vertices.size() * 3);
+			vcbo = ByteBuffer.allocateDirect(vertices.size() * 4);
+			tcbo = new DoubleBuffer[3];
+			boolean mirrorx0 = false;
+			boolean mirrorx1 = false;
+			boolean mirrorx2 = false;
+
+			if (mat != null) {
+				tcbo[0] = DoubleBuffer.allocate(vertices.size() * 2);
+				tcbo[1] = DoubleBuffer.allocate(vertices.size() * 2);
+				tcbo[2] = DoubleBuffer.allocate(vertices.size() * 2);
+
+				if (H3DMaterial.TextureMapper.getGlTextureWrap(mat.mappers[0].wrapU) == GL2.GL_MIRRORED_REPEAT) {
+					mirrorx0 = true;
+				}
+				if (H3DMaterial.TextureMapper.getGlTextureWrap(mat.mappers[1].wrapU) == GL2.GL_MIRRORED_REPEAT) {
+					mirrorx1 = true;
+				}
+				if (H3DMaterial.TextureMapper.getGlTextureWrap(mat.mappers[2].wrapU) == GL2.GL_MIRRORED_REPEAT) {
+					mirrorx2 = true;
+				}
+			}
 			for (int i = 0; i < vertices.size(); i++) {
 				H3DVertex v = vertices.get(i);
-				vbo[i * 3] = v.position.x;
-				vbo[i * 3 + 1] = v.position.y;
-				vbo[i * 3 + 2] = v.position.z;
+				vbo.put(v.position.x);
+				vbo.put(v.position.y);
+				vbo.put(v.position.z);
 
-				vcbo[i * 4] = (byte) (v.diffuseColor >> 16 & 0xFF);
-				vcbo[i * 4 + 1] = (byte) (v.diffuseColor >> 8 & 0xFF);
-				vcbo[i * 4 + 2] = (byte) (v.diffuseColor & 0xFF);
-				vcbo[i * 4 + 3] = (byte) (v.diffuseColor >> 24 & 0xFF);
+				if (mat == null || !(mat.name.contains("blc") || mat.name0.equals("enc_grass"))) {
+					vcbo.put((byte) (v.diffuseColor >> 16 & 0xFF));
+					vcbo.put((byte) (v.diffuseColor >> 8 & 0xFF));
+					vcbo.put((byte) (v.diffuseColor & 0xFF));
+					vcbo.put((byte) (v.diffuseColor >> 24 & 0xFF));
+				} else {
+					vcbo.putInt(0xffffffff);
+				}
+				if (mat != null) {
+					tcbo[0].put(((mirrorx0) ? 1 : 0) - v.texture0.x);
+					tcbo[0].put(v.texture0.y);
+					tcbo[1].put(((mirrorx1) ? 1 : 0) - v.texture1.x);
+					tcbo[1].put(v.texture1.y);
+					tcbo[2].put(((mirrorx2) ? 1 : 0) - v.texture2.x);
+					tcbo[2].put(v.texture2.y);
+				}
+			}
+		}
 
-				tcbo[0][i * 2] = v.texture0.x;
-				tcbo[0][i * 2 + 1] = v.texture0.y;
-				tcbo[1][i * 2] = v.texture1.x;
-				tcbo[1][i * 2 + 1] = v.texture1.y;
-				tcbo[2][i * 2] = v.texture2.x;
-				tcbo[2][i * 2 + 1] = v.texture2.y;
+		public void destroyGl(GL2 gl) {
+			if (glBufPtrs.get(gl) != null) {
+				gl.glDeleteBuffers(1, glBufPtrs.get(gl), 0);
+				glBufPtrs.remove(gl);
+			}
+		}
+
+		public void uploadVBO(GL2 gl) {
+			if (vbo == null) {
+				useVBO = false;
+				return;
+			}
+			if (!glBufPtrs.containsKey(gl)) {
+				int[] ptr = new int[1];
+				gl.glGenBuffers(1, ptr, 0);
+				glBufPtrs.put(gl, ptr);
+			}
+			int[] vboPtr = glBufPtrs.get(gl);
+			gl.glDeleteBuffers(1, vboPtr, 0);
+			vbo.rewind();
+			vcbo.rewind();
+			tcbo[0].rewind();
+			tcbo[1].rewind();
+			tcbo[2].rewind();
+			long cap = vbo.capacity() * Float.BYTES + vcbo.capacity();
+			if (tcbo[0] != null) {
+				cap += tcbo[0].capacity() * Double.BYTES;
+			}
+			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vboPtr[0]);
+			gl.glBufferData(GL2.GL_ARRAY_BUFFER, cap, null, GL2.GL_STATIC_DRAW);
+			gl.glBufferSubData(GL2.GL_ARRAY_BUFFER, 0, vbo.capacity() * Float.BYTES, vbo);
+			gl.glBufferSubData(GL2.GL_ARRAY_BUFFER, vbo.capacity() * Float.BYTES, vcbo.capacity(), vcbo);
+			if (tcbo[0] != null) {
+				gl.glBufferSubData(GL2.GL_ARRAY_BUFFER, vbo.capacity() * Float.BYTES + vcbo.capacity(), tcbo[0].capacity() * Double.BYTES, tcbo[0]);
 			}
 		}
 
@@ -618,7 +706,7 @@ public class H3DModel {
 			Stuff involving checking for "blc" in material name is a workaround for tall grass rendering, which uses weird vertex coloring and alpha testing
 			 */
 			int[] textureIDs = new int[1];
-			int texindex = 0;
+			int texindex;
 			gl.glGenTextures(1, textureIDs, 0);
 			gl.glBindTexture(GL2.GL_TEXTURE_2D, textureIDs[0]);
 			boolean mirrorx = false;
@@ -663,20 +751,39 @@ public class H3DModel {
 					}
 				}
 			}
-			gl.glBegin(GL2.GL_TRIANGLES);
-			for (int i = 0; i < vertices.size(); i++) {
-				H3DVertex v = vertices.get(i);
-				if (hasColor && !(mat.name.contains("blc") || mat.name0.equals("enc_grass"))) {
-					gl.glColor4ub((byte) (v.diffuseColor >> 16 & 0xFF), (byte) (v.diffuseColor >> 8 & 0xFF), (byte) (v.diffuseColor & 0xFF), (byte) (v.diffuseColor >> 24 & 0xFF));
-				} else {
-					gl.glColor3f(1f, 1f, 1f);
+			if (useVBO) {
+				gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, glBufPtrs.get(gl)[0]);
+				gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+				gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+
+				gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
+				gl.glColorPointer(4, GL2.GL_UNSIGNED_BYTE, 0, vbo.capacity() * Float.BYTES);
+
+				if (tcbo[0] != null) {
+					gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+					gl.glTexCoordPointer(2, GL2.GL_DOUBLE, 0, vbo.capacity() * Float.BYTES + vcbo.capacity());
 				}
-				if (mat != null) {
-					gl.glTexCoord2d(((mirrorx) ? 1 : 0) - v.texture0.x, v.texture0.y);
+
+				gl.glDrawArrays(GL2.GL_TRIANGLES, 0, vbo.capacity() / 3);
+				gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);  // disable vertex arrays
+				gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
+				gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+			} else {
+				gl.glBegin(GL2.GL_TRIANGLES);
+				for (int i = 0; i < vertices.size(); i++) {
+					H3DVertex v = vertices.get(i);
+					if (hasColor && !(mat.name.contains("blc") || mat.name0.equals("enc_grass"))) {
+						gl.glColor4ub((byte) (v.diffuseColor >> 16 & 0xFF), (byte) (v.diffuseColor >> 8 & 0xFF), (byte) (v.diffuseColor & 0xFF), (byte) (v.diffuseColor >> 24 & 0xFF));
+					} else {
+						gl.glColor3f(1f, 1f, 1f);
+					}
+					if (mat != null) {
+						gl.glTexCoord2d(((mirrorx) ? 1 : 0) - v.texture0.x, v.texture0.y);
+					}
+					gl.glVertex3f(v.position.x, v.position.y, v.position.z);
 				}
-				gl.glVertex3f(v.position.x, v.position.y, v.position.z);
+				gl.glEnd();
 			}
-			gl.glEnd();
 			gl.glDeleteTextures(1, textureIDs, 0);
 		}
 	}

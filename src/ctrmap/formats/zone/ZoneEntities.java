@@ -302,7 +302,10 @@ public class ZoneEntities {
 		}
 
 		public void setYFromColl(float x, float y) {
-			z3DCoordinate = CtrmapMainframe.mTileMapPanel.getHeightAtWorldLoc(x, y);
+			float newz3DCoordinate = CtrmapMainframe.mTileMapPanel.getHeightAtWorldLoc(x, y);
+			if (newz3DCoordinate != Float.NaN){
+				z3DCoordinate = newz3DCoordinate;
+			}
 		}
 
 		@Override

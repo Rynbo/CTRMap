@@ -1,8 +1,7 @@
 package ctrmap;
 
-import static ctrmap.CtrmapMainframe.mCamEditForm;
-import static ctrmap.CtrmapMainframe.mCollEditPanel;
-import static ctrmap.CtrmapMainframe.mTileMapPanel;
+import static ctrmap.CtrmapMainframe.*;
+import ctrmap.formats.csar.BCSArStringLoader;
 import ctrmap.formats.tilemap.EditorTileset;
 import ctrmap.formats.garc.GARC;
 import ctrmap.formats.text.LocationNames;
@@ -55,6 +54,8 @@ public class Workspace {
 	public GARC npcreg;
 	public GARC npcmm;
 
+	public String[] musicNames;
+	
 	public GameType game;
 	public boolean valid = false;
 
@@ -147,6 +148,7 @@ public class Workspace {
 					buildingmodels = new File(basepath + getArchivePath(ArchiveType.BUILDING_MODELS, game));
 					npcregistries = new File(basepath + getArchivePath(ArchiveType.NPC_REGISTRIES, game));
 					movemodels = new File(basepath + getArchivePath(ArchiveType.MOVE_MODELS, game));
+					musicNames = BCSArStringLoader.getStrings(new File(basepath + getArchivePath(ArchiveType.SOUND_BCSAR, game)));
 					if (!areadata.exists()) {
 						errors.add("AreaData GARC not found");
 					}
@@ -178,7 +180,7 @@ public class Workspace {
 			valid = true;
 			loadArchives();
 			LocationNames.loadFromGarc(game);
-			CtrmapMainframe.zoneDebugPnl.loadEverything();
+			CtrmapMainframe.mZonePnl.loadEverything();
 		} else {
 			valid = false;
 			StringBuilder sb = new StringBuilder();
@@ -215,6 +217,8 @@ public class Workspace {
 					return "/a/1/4/9";
 				case MOVE_MODELS:
 					return "/a/0/2/1";
+				case SOUND_BCSAR:
+					return "/sound/xy_sound.bcsar";
 			}
 		} else {
 			switch (archiveType) {
@@ -234,6 +238,8 @@ public class Workspace {
 					return "/a/1/3/7";
 				case MOVE_MODELS:
 					return "/a/0/2/1";
+				case SOUND_BCSAR:
+					return "/sound/sango_sound.bcsar";
 			}
 		}
 		return null;
@@ -249,6 +255,8 @@ public class Workspace {
 		mTileMapPanel.unload();
 		mCollEditPanel.unload();
 		mCamEditForm.unload();
+		mNPCEditForm.unload();
+		mPropEditForm.unload();
 		cleanAll();
 	}
 
@@ -354,7 +362,7 @@ public class Workspace {
 	public File getWorkspaceFile(ArchiveType arc, int fileNum) {
 		File wsFile;
 		wsFile = new File(getExtractionDirectory(arc).getAbsolutePath() + "/" + fileNum);
-		if (!wsFile.exists() && getArchive(arc).entries.size() > fileNum) {
+		if (!wsFile.exists() && getArchive(arc).length > fileNum) {
 			try {
 				OutputStream os = new FileOutputStream(wsFile);
 				byte[] b = getArchive(arc).getDecompressedEntry(fileNum);
@@ -410,8 +418,12 @@ public class Workspace {
 				}
 			};
 			worker.execute();
-			progress.show();
+			progress.showDialog();
 		}
+	}
+	
+	public String getMusicName(int id){
+		return musicNames[id - 65536];
 	}
 
 	public enum GameType {
@@ -427,7 +439,8 @@ public class Workspace {
 		ZONE_DATA,
 		BUILDING_MODELS,
 		NPC_REGISTRIES,
-		MOVE_MODELS
+		MOVE_MODELS,
+		SOUND_BCSAR
 	}
 
 	public void saveWorkspace() {

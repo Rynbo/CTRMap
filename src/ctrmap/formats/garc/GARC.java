@@ -25,7 +25,9 @@ public class GARC {
 
 	public short padding;
 	
-	public ArrayList<GARCEntry> entries = new ArrayList<>();
+	private ArrayList<GARCEntry> entries = new ArrayList<>();
+	
+	public int length;
 	
 	public GARC(File f) {
 		try {
@@ -53,6 +55,7 @@ public class GARC {
             String fatoMagic = new String(strbuf);
             int fatoLength = Integer.reverseBytes(in.readInt());
             short fatoEntries = Short.reverseBytes(in.readShort());
+			length = fatoEntries;
 			short pad = in.readShort(); //0xFFFF
 			
 			long fatbPosition = fatoPosition + fatoLength;

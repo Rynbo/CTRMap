@@ -68,8 +68,8 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 			float rotateX = mGLPanel.rotateY;
 			float rotateX180multi = (float)Math.floor(rotateX/180f);
 			float rotateXmed = (rotateX - rotateX180multi*180f)/180f;
-			float backwardsMultiplier1 = (((int)Math.round(rotateX/180f) & 1) == 0) ? 1 : -1;
-			float backwardsMultiplier2 = (((int)Math.round((rotateX + 90f)/180f) & 1) == 0) ? -1 : 1;
+			float backwardsMultiplier1 = ((Math.round(rotateX/180f) & 1) == 0) ? 1 : -1;
+			float backwardsMultiplier2 = ((Math.round((rotateX + 90f)/180f) & 1) == 0) ? -1 : 1;
 			if (rotateXmed > 0.5f) rotateXmed = 1f - rotateXmed;
 			mGLPanel.rotateZ = originRotateZ + backwardsMultiplier2*rotateXmed*(e.getY() - originMouseY)/2f;
 			mGLPanel.rotateX = originRotateX + backwardsMultiplier1*(0.5f - rotateXmed)*(e.getY() - originMouseY)/2f;

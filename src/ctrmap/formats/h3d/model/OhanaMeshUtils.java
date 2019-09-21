@@ -108,7 +108,7 @@ public class OhanaMeshUtils {
 	public class optimizedMesh {
 
 		public List<H3DVertex> vertices = new ArrayList<>();
-		public List<Integer> indices = new ArrayList<Integer>();
+		public List<Integer> indices = new ArrayList<>();
 
 		public boolean hasNormal;
 		public boolean hasTangent;

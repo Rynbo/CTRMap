@@ -22,8 +22,7 @@ public class CustomH3DPreview extends GLJPanel implements GLEventListener {
 	public CustomH3DPreview() {
 		super(new GLCapabilities(GLProfile.get(GLProfile.GL2)));
 		super.addGLEventListener(this);
-		FPSAnimator animator = new FPSAnimator(this, 75, true);
-		animator.start();
+		new FPSAnimator(this, 60).start();
 	}
 
 	@Override
@@ -57,6 +56,7 @@ public class CustomH3DPreview extends GLJPanel implements GLEventListener {
 //			gl.glRotatef(90f, 0.0f, 1.0f, 0.0f);
 
 			for (int i = 0; i < model.meshes.size(); i++) { //direct rendering to bypass translation
+				model.meshes.get(i).uploadVBO(gl);
 				model.meshes.get(i).render(gl, (model.materials.size() > model.meshes.get(i).materialId) ? model.materials.get(model.meshes.get(i).materialId) : null);
 			}
 		}

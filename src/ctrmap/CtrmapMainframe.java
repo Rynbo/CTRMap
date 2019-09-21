@@ -41,6 +41,7 @@ import ctrmap.humaninterface.CameraDebugPanel;
 import ctrmap.humaninterface.CameraEditForm;
 import ctrmap.humaninterface.CollEditPanel;
 import ctrmap.humaninterface.CollInputManager;
+import ctrmap.humaninterface.ExtrasPanel;
 import ctrmap.humaninterface.GLPanel;
 import ctrmap.humaninterface.H3DRenderingPanel;
 import ctrmap.humaninterface.NPCEditForm;
@@ -49,7 +50,7 @@ import ctrmap.humaninterface.TileEditForm;
 import ctrmap.humaninterface.TilemapPanelInputManager;
 import ctrmap.humaninterface.TileMapPanel;
 import ctrmap.humaninterface.WorkspaceSettings;
-import ctrmap.humaninterface.ZoneDebugPanel;
+import ctrmap.humaninterface.ZoneLoadingPanel;
 import ctrmap.humaninterface.tools.EditTool;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -120,7 +121,8 @@ public class CtrmapMainframe {
 	public static H3DRenderingPanel m3DDebugPanel;
 	public static CollEditPanel mCollEditPanel;
 
-	public static ZoneDebugPanel zoneDebugPnl;
+	public static ZoneLoadingPanel mZonePnl;
+	public static ExtrasPanel mExtrasPnl;
 
 	public static JPanel tileEditMasterPnl;
 	public static JSplitPane jsp;
@@ -206,7 +208,8 @@ public class CtrmapMainframe {
 		collEditMasterPnl = new JPanel(new BorderLayout());
 		camDebugPnl = new CameraDebugPanel();
 		camDebugPnl.setLayout(new BoxLayout(camDebugPnl, BoxLayout.PAGE_AXIS));
-		zoneDebugPnl = new ZoneDebugPanel();
+		mZonePnl = new ZoneLoadingPanel();
+		mExtrasPnl = new ExtrasPanel();
 
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frame.setLocationByPlatform(true);
@@ -240,8 +243,8 @@ public class CtrmapMainframe {
 
 		tabs.add("Tilemap Editor", tileEditMasterPnl);
 		tabs.add("Collision Editor", collEditMasterPnl);
-		//tabs.add("Camera Editor (debug)", camDebugPnl);
-		tabs.add("Zone Editor (debug)", zoneDebugPnl);
+		tabs.add("Zone Loader", mZonePnl);
+		tabs.add("Extras", mExtrasPnl);
 
 		frame.getContentPane().add(tabs);
 
@@ -278,13 +281,11 @@ public class CtrmapMainframe {
 				jfc.setMultiSelectionEnabled(false);
 				jfc.showOpenDialog(frame);
 				if (jfc.getSelectedFile() != null) {
-
-					InputStream in = null;
 					try {
 						prefs.put("LAST_DIR", jfc.getSelectedFile().getParent());
 						/*CameraDataFile cdf = new CameraDataFile(new AD(jfc.getSelectedFile()));
 						mCamEditForm.loadDataFile(cdf);*/
-						in = new FileInputStream(jfc.getSelectedFile());
+						InputStream in = new FileInputStream(jfc.getSelectedFile());
 						byte[] b = new byte[in.available()];
 						in.read(b);
 						in.close();
@@ -303,7 +304,7 @@ public class CtrmapMainframe {
 				mCamEditForm.store(false);
 				mPropEditForm.store(false);
 				mNPCEditForm.saveRegistry(false);
-				zoneDebugPnl.store(false);
+				mZonePnl.store(false);
 			}
 		});
 		tilesetWriter.addActionListener(new ActionListener() {
@@ -328,10 +329,7 @@ public class CtrmapMainframe {
 						if (f.isDirectory()) {
 							return true;
 						}
-						if (f.getName().endsWith(".obj")) {
-							return true;
-						}
-						return false;
+						return f.getName().endsWith(".obj");
 					}
 
 					@Override
@@ -397,7 +395,7 @@ public class CtrmapMainframe {
 				jfc.showOpenDialog(frame);
 				if (jfc.getSelectedFile() != null) {
 					prefs.put("LAST_DIR", jfc.getSelectedFile().getParent());
-					zoneDebugPnl.loadZone(new Zone(new ZO(jfc.getSelectedFile())));
+					mZonePnl.loadZone(new Zone(new ZO(jfc.getSelectedFile())));
 				}
 			}
 		});
@@ -427,7 +425,7 @@ public class CtrmapMainframe {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				mWorkspace.cleanAndReload();
-				zoneDebugPnl.loadEverything();
+				mZonePnl.loadEverything();
 			}
 		});
 		filemenu.add(opengr);
@@ -475,7 +473,7 @@ public class CtrmapMainframe {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				if (mCamEditForm.store(true) && mTileMapPanel.saveTileMap(true) && mPropEditForm.store(true) && mNPCEditForm.saveRegistry(true) && zoneDebugPnl.store(true)) {
+				if (mCamEditForm.store(true) && mTileMapPanel.saveTileMap(true) && mPropEditForm.store(true) && mNPCEditForm.saveRegistry(true) && mZonePnl.store(true)) {
 					mWorkspace.cleanUnchanged();
 					mWorkspace.saveWorkspace();
 					System.exit(0);

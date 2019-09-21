@@ -20,6 +20,8 @@ public class Zone {
 	public boolean store(boolean dialog){
 		byte[] headerData = header.assembleData();
 		if (!Arrays.equals(headerData, file.getFile(0))){
+			/*System.out.println(Arrays.toString(headerData));
+			System.out.println(Arrays.toString(file.getFile(0)));*/
 			if (dialog){
 				int result = Utils.showSaveConfirmationDialog("Zone header");
 				switch (result){
