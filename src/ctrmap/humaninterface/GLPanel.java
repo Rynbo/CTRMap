@@ -9,8 +9,8 @@ import com.jogamp.opengl.awt.GLJPanel;
 import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.util.FPSAnimator;
 
-import static ctrmap.CtrmapMainframe.*;
 import ctrmap.formats.containers.GR;
+import ctrmap.formats.gfcollision.GRCollisionFile;
 
 /**
  * Collision editor OpenGL surface. Very old.
@@ -26,18 +26,14 @@ public class GLPanel extends GLJPanel implements GLEventListener {
 	public float rotateX = 0f;
 	public float rotateZ = 0f;
 
-	public GLPanel() {
+	private CollEditPanel parent;
+	
+	public GLPanel(CollEditPanel parent) {
 		super(new GLCapabilities(GLProfile.get(GLProfile.GL2)));
+		this.parent = parent;
 		super.addGLEventListener(this);
 		FPSAnimator animator = new FPSAnimator(this, 300, true);
 		animator.start();
-		this.addMouseWheelListener(mCollInputManager);
-		this.addMouseMotionListener(mCollInputManager);
-		this.addMouseListener(mCollInputManager);
-	}
-
-	public void loadCollision(GR file) {
-		mCollEditPanel.loadCollision(file);
 	}
 
 	@Override
@@ -66,8 +62,8 @@ public class GLPanel extends GLJPanel implements GLEventListener {
 		gl.glRotatef(rotateZ, 0.0f, 0.0f, 1.0f);
 		gl.glBegin(GL2.GL_TRIANGLES);
 
-		if (mCollEditPanel.coll != null) {
-			mCollEditPanel.coll.render(gl);
+		if (parent.coll != null) {
+			parent.coll.render(gl);
 		}
 
 		gl.glEnd();

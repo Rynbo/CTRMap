@@ -2,10 +2,10 @@ package ctrmap.humaninterface;
 
 import static ctrmap.CtrmapMainframe.*;
 import ctrmap.Utils;
+import ctrmap.Workspace;
 import ctrmap.formats.tilemap.EditorTileset;
 import ctrmap.formats.tilemap.TileTemplate;
 import ctrmap.formats.tilemap.Tilemap;
-import ctrmap.humaninterface.tools.AbstractTool;
 import ctrmap.humaninterface.tools.EditTool;
 import ctrmap.humaninterface.tools.FillTool;
 import ctrmap.humaninterface.tools.SetTool;
@@ -27,7 +27,6 @@ public class TileEditForm extends javax.swing.JPanel {
 	private DefaultListModel<String> currentListModel = new DefaultListModel<>();
 	private DefaultListModel<String>[] models = new DefaultListModel[13];
 	public EditorTileset tileset;
-	public AbstractTool tool;
 
 	/**
 	 * Creates new form TileEditForm
@@ -38,7 +37,7 @@ public class TileEditForm extends javax.swing.JPanel {
 		byte1.setName("1");
 		byte2.setName("2");
 		byte3.setName("3");
-		tileset = mWorkspace.getTileset();
+		tileset = Workspace.getTileset();
 		tileList.addListSelectionListener((ListSelectionEvent e) -> {
 			if (tileList.getSelectedValue() == null) {
 				return;
@@ -107,7 +106,7 @@ public class TileEditForm extends javax.swing.JPanel {
 					//could have affected multiple regions, update them all
 					mTileMapPanel.updateAll();
 				}
-				mTileMapPanel.firePropertyChange(TileMapPanel.PROP_IMGSTATE, false, true);
+				firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
 			}
 		};
 
