@@ -36,7 +36,9 @@ public class GRCollisionFile {
 	private int unknown_const_0x0;
 	private int unknown_const_0x5D8_2;
 	private int unknown_const_0x1;
-
+	
+	public boolean modified = false;
+	
 	public GRCollisionFile(GR mapFile) {
 		this.mapFile = mapFile;
 		LittleEndianDataInputStream dis = new LittleEndianDataInputStream(new ByteArrayInputStream(this.mapFile.getFile(2)));
@@ -124,10 +126,9 @@ public class GRCollisionFile {
 	}
 	
 	public void write() {
-		mCollEditPanel.deselectTri();
-		mCollEditPanel.deselectMesh();
 		bounds.updateBounds(this);
 		GRCollisionMesh[] newMeshes = computeMeshOrder();
+		
 		offsets[0] = 0;
 		lengths[0] = newMeshes[0].tris.size() * 3;
 		for (int i = 1; i < 16; i++) {
@@ -157,13 +158,11 @@ public class GRCollisionFile {
 			dos.writeInt(unknown_const_0x5D8_2);
 			dos.writeInt(unknown_const_0x1);
 			//ayy padding
-			dos.write(Utils.getPadding(mapFile.getOffset(2), dos.size()));
 			dos.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		mapFile.storeFile(2, out.toByteArray());
-		mCollEditPanel.buildTree();
 	}
 
 	public float[] getMeshExtremes() {

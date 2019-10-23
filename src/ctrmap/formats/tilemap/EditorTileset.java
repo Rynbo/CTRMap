@@ -72,10 +72,19 @@ public class EditorTileset {
 	}
 	
 	public Color getSimpleColor(int binary){
+		int imperfectMatch = -1;
 		for (int i = 0; i < tiles.length; i++) {
 			if ((tiles[i].binary & 0xFF) == (binary & 0xFF)) {
-				return tiles[i].color;
+				if (tiles[i].binary == binary){
+					return tiles[i].color;
+				}
+				else {
+					imperfectMatch = i;
+				}
 			}
+		}
+		if (imperfectMatch != -1){
+			return tiles[imperfectMatch].color;
 		}
 		return Color.RED;
 	}

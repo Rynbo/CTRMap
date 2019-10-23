@@ -35,11 +35,13 @@ public class SetTool extends AbstractTool {
 
 	@Override
 	public void onTileMouseUp(MouseEvent e) {
+		CM2DNoUpdate = false;
 	}
 
 	@Override
 	public void onTileMouseDragged(MouseEvent e) {
 		if (!SwingUtilities.isRightMouseButton(e)){
+			CM2DNoUpdate = true;
 			updateTile();
 		}
 	}

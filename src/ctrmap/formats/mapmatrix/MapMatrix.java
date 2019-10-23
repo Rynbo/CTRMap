@@ -5,7 +5,6 @@
  */
 package ctrmap.formats.mapmatrix;
 
-import static ctrmap.CtrmapMainframe.*;
 import ctrmap.LittleEndianDataInputStream;
 import ctrmap.Workspace;
 import ctrmap.formats.containers.GR;
@@ -42,8 +41,8 @@ public class MapMatrix {
 			for (int i = 0; i < height; i++){
 				for (int j = 0; j < width; j++){
 					ids[j][i] = dis.readShort();
-					if (mWorkspace.valid && ids[j][i] != -1){
-						regions[j][i] = new GR(mWorkspace.getWorkspaceFile(Workspace.ArchiveType.FIELD_DATA, ids[j][i]));
+					if (Workspace.valid && ids[j][i] != -1){
+						regions[j][i] = new GR(Workspace.getWorkspaceFile(Workspace.ArchiveType.FIELD_DATA, ids[j][i]));
 					}
 				}
 			}

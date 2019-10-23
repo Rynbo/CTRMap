@@ -16,19 +16,40 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="aiSep" max="32767" attributes="0"/>
-          <Component id="zlSep" alignment="0" max="32767" attributes="0"/>
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="headerSep" alignment="0" max="32767" attributes="0"/>
-                  <Component id="worldSep" alignment="0" max="32767" attributes="0"/>
-                  <Group type="102" alignment="1" attributes="0">
-                      <Group type="103" groupAlignment="1" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="zl2Label" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="zl2" min="-2" pref="100" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="zl3Label" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="zl3" min="-2" pref="100" max="-2" attributes="0"/>
+                          </Group>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="u10Label" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="u10" min="-2" pref="100" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="u12Label" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="u12" min="-2" pref="100" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                  </Group>
+                  <Group type="102" attributes="0">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="headerSep" max="32767" attributes="0"/>
                           <Component id="btnRegEdit" alignment="0" max="32767" attributes="0"/>
                           <Component id="btnSave" alignment="0" max="32767" attributes="0"/>
                           <Component id="btnRemoveEntry" alignment="0" max="32767" attributes="0"/>
                           <Component id="btnNewEntry" alignment="0" max="32767" attributes="0"/>
+                          <Component id="worldSep" alignment="0" max="32767" attributes="0"/>
                           <Component id="entryBox" alignment="0" max="32767" attributes="0"/>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="xLabel" min="-2" max="-2" attributes="0"/>
@@ -66,31 +87,8 @@
                               <Component id="range" max="32767" attributes="0"/>
                           </Group>
                           <Component id="worldLocNote" alignment="0" pref="387" max="32767" attributes="0"/>
-                          <Group type="102" alignment="0" attributes="0">
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Group type="103" alignment="0" groupAlignment="0" max="-2" attributes="0">
-                                      <Component id="areaWLabel" max="32767" attributes="0"/>
-                                      <Component id="u14Label" max="32767" attributes="0"/>
-                                  </Group>
-                                  <Component id="motLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="areaW" max="32767" attributes="0"/>
-                                  <Component id="areaSX" max="32767" attributes="0"/>
-                                  <Component id="mot" max="32767" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="areaHLabel" min="-2" max="-2" attributes="0"/>
-                                  <Component id="u16Label" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="areaH" max="32767" attributes="0"/>
-                                  <Component id="areaSY" max="32767" attributes="0"/>
-                              </Group>
-                          </Group>
+                          <Component id="zlSep" alignment="0" max="32767" attributes="0"/>
+                          <Component id="aiSep" alignment="0" max="32767" attributes="0"/>
                           <Group type="102" alignment="0" attributes="0">
                               <Group type="103" groupAlignment="1" attributes="0">
                                   <Group type="102" alignment="0" attributes="0">
@@ -116,36 +114,46 @@
                               <Component id="linkedZone" max="32767" attributes="0"/>
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
-                              <Group type="103" groupAlignment="0" attributes="0">
+                              <Group type="103" groupAlignment="1" attributes="0">
                                   <Component id="aiLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                                   <Component id="worldLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                                   <Component id="linkIDLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  <Group type="102" alignment="0" attributes="0">
-                                      <Component id="zl2Label" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="zl2" min="-2" pref="100" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="zl3Label" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="zl3" min="-2" pref="100" max="-2" attributes="0"/>
-                                  </Group>
                                   <Component id="horizonLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  <Group type="102" alignment="0" attributes="0">
-                                      <Component id="mp2Label" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="mp2" min="-2" pref="100" max="-2" attributes="0"/>
-                                  </Group>
-                                  <Group type="102" alignment="0" attributes="0">
-                                      <Component id="u10Label" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="u10" min="-2" pref="100" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="u12Label" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="u12" min="-2" pref="100" max="-2" attributes="0"/>
-                                  </Group>
                               </Group>
                               <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                          </Group>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="103" alignment="0" groupAlignment="0" max="-2" attributes="0">
+                                      <Component id="areaWLabel" max="32767" attributes="0"/>
+                                      <Component id="u14Label" max="32767" attributes="0"/>
+                                  </Group>
+                                  <Component id="motLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="mp2Label" alignment="0" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="areaW" max="32767" attributes="0"/>
+                                  <Component id="areaSX" max="32767" attributes="0"/>
+                                  <Component id="mot" max="32767" attributes="0"/>
+                                  <Component id="mp2" max="32767" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="102" attributes="0">
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Component id="areaHLabel" min="-2" max="-2" attributes="0"/>
+                                          <Component id="u16Label" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Component id="areaH" max="32767" attributes="0"/>
+                                          <Component id="areaSY" max="32767" attributes="0"/>
+                                      </Group>
+                                  </Group>
+                                  <Component id="motDropdown" max="32767" attributes="0"/>
+                                  <Component id="mot2Dropdown" alignment="0" max="32767" attributes="0"/>
+                              </Group>
                           </Group>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
@@ -169,7 +177,7 @@
                   <Component id="scr" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="headerSep" min="-2" max="-2" attributes="0"/>
+              <Component id="headerSep" min="-2" pref="2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="worldLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
@@ -191,7 +199,7 @@
                   <Component id="range" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="-2" pref="4" max="-2" attributes="0"/>
-              <Component id="worldSep" min="-2" max="-2" attributes="0"/>
+              <Component id="worldSep" min="-2" pref="2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="aiLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
@@ -212,9 +220,16 @@
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="motLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="mot" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="motDropdown" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="aiSep" min="-2" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="mp2Label" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="mp2" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="mot2Dropdown" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="aiSep" min="-2" pref="2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="zlLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
@@ -235,14 +250,9 @@
                   <Component id="linkID" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="zlSep" min="-2" max="-2" attributes="0"/>
+              <Component id="zlSep" min="-2" pref="2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="horizonLabel" min="-2" max="-2" attributes="0"/>
-              <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="mp2Label" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="mp2" alignment="3" min="-2" max="-2" attributes="0"/>
-              </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="u10Label" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -446,6 +456,9 @@
           <Format format="#0" subtype="-1" type="0"/>
         </Property>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="motActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JSeparator" name="aiSep">
     </Component>
@@ -458,7 +471,7 @@
     </Component>
     <Component class="javax.swing.JLabel" name="mp2Label">
       <Properties>
-        <Property name="text" type="java.lang.String" value="MP2"/>
+        <Property name="text" type="java.lang.String" value="Move events"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JFormattedTextField" name="mp2">
@@ -467,6 +480,9 @@
           <Format format="#0" subtype="-1" type="0"/>
         </Property>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="mp2ActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JLabel" name="u10Label">
       <Properties>
@@ -672,6 +688,32 @@
       </Properties>
     </Component>
     <Component class="javax.swing.JSeparator" name="zlSep">
+    </Component>
+    <Component class="javax.swing.JComboBox" name="motDropdown">
+      <Properties>
+        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+          <StringArray count="0"/>
+        </Property>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="motDropdownActionPerformed"/>
+      </Events>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
+      </AuxValues>
+    </Component>
+    <Component class="javax.swing.JComboBox" name="mot2Dropdown">
+      <Properties>
+        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+          <StringArray count="0"/>
+        </Property>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="mot2DropdownActionPerformed"/>
+      </Events>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
+      </AuxValues>
     </Component>
   </SubComponents>
 </Form>

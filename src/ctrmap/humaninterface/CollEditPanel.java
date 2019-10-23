@@ -1,11 +1,12 @@
 package ctrmap.humaninterface;
 
-import static ctrmap.CtrmapMainframe.*;
+import ctrmap.CtrmapMainframe;
 import ctrmap.Utils;
 import ctrmap.formats.Triangle;
 import ctrmap.formats.containers.GR;
 import ctrmap.formats.gfcollision.GRCollisionFile;
 import ctrmap.formats.h3d.H3DModelNameGet;
+import ctrmap.humaninterface.tools.AbstractTool;
 import ctrmap.humaninterface.tools.FillTool;
 import java.util.ArrayList;
 import java.util.List;
@@ -202,16 +203,19 @@ public class CollEditPanel extends javax.swing.JPanel {
 		files.clear();
 	}
 
-	public void loadCollision(GR f){
+	public void loadCollision(GR f) {
 		loadCollision(new GRCollisionFile(f), H3DModelNameGet.H3DModelNameGet(f.getFile(1)));
 	}
-	
-	public void store(){
-		for (int i = 0; i < files.size(); i++){
-			files.get(i).write();
+
+	public void store() {
+		for (int i = 0; i < files.size(); i++) {
+			if (files.get(i).modified) {
+				files.get(i).write();
+			}
 		}
+		buildTree();
 	}
-	
+
 	public void loadCollision(GRCollisionFile f, String name) {
 		this.coll = f;
 		root.setUserObject("Collision data");
@@ -242,6 +246,9 @@ public class CollEditPanel extends javax.swing.JPanel {
 	public void selectTriangle(int mesh, int tri) {
 		deselectTri();
 		deselectMesh();
+		if (mesh == -1 || tri == -1 || tri >= coll.meshes[mesh].tris.size()) {
+			return;
+		}
 		Triangle triobj = coll.meshes[mesh].tris.get(tri);
 		v1x.setValue(triobj.getX(0));
 		v1y.setValue(triobj.getY(0));
@@ -505,14 +512,16 @@ public class CollEditPanel extends javax.swing.JPanel {
 			((DefaultTreeModel) meshTree.getModel()).reload(meshNodes.get(collIndex)[selectedMesh]);
 			selectTriangle(selectedMesh, index);
 		}
+		coll.modified = true;
     }//GEN-LAST:event_btnNewTriangleActionPerformed
 
     private void btnFillCoordsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFillCoordsActionPerformed
-		if (mTileEditForm.tool instanceof FillTool && selectedMesh != -1) {
-			FillTool t = (FillTool) mTileEditForm.tool;
+		AbstractTool tool = CtrmapMainframe.tool;
+		if (tool != null && tool instanceof FillTool && selectedMesh != -1) {
+			FillTool t = (FillTool) tool;
 			if (t.lastX != -1) {
-				int startX = Math.min(t.originX, t.lastX) * 18 - 360;
-				int startY = Math.min(t.originY, t.lastY) * 18 - 360;
+				int startX = (Math.min(t.originX, t.lastX) % 40) * 18 - 360;
+				int startY = (Math.min(t.originY, t.lastY) % 40) * 18 - 360;
 				int width = Math.abs(t.lastX - t.originX) * 18 + 18;
 				int height = Math.abs(t.lastY - t.originY) * 18 + 18;
 				float[] vertex0 = new float[]{startX, 0, startY};
@@ -524,10 +533,11 @@ public class CollEditPanel extends javax.swing.JPanel {
 				int index = meshNodes.get(collIndex)[selectedMesh].getChildCount();
 				meshNodes.get(collIndex)[selectedMesh].add(new DefaultMutableTreeNode("Triangle " + index));
 				meshNodes.get(collIndex)[selectedMesh].add(new DefaultMutableTreeNode("Triangle " + (index + 1)));
-				((DefaultTreeModel) meshTree.getModel()).reload(meshNodes.get(collIndex)[selectedMesh]);
+				reloadMeshNode(selectedMesh);
 				selectTriangle(selectedMesh, index);
 			}
 		}
+		coll.modified = true;
     }//GEN-LAST:event_btnFillCoordsActionPerformed
 
     private void btnRemTriangleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemTriangleActionPerformed
@@ -540,6 +550,7 @@ public class CollEditPanel extends javax.swing.JPanel {
 		coll.meshes[mesh].tris.remove(tri);
 		meshNodes.get(collIndex)[mesh].remove(tri);
 		reloadMeshNode(mesh);
+		coll.modified = true;
     }//GEN-LAST:event_btnRemTriangleActionPerformed
 
 	private void reloadMeshNode(int num) {
@@ -549,18 +560,21 @@ public class CollEditPanel extends javax.swing.JPanel {
 	private void adjustX(JFormattedTextField source, int vertex) {
 		if (selectedTri != -1) {
 			coll.meshes[selectedMesh].tris.get(selectedTri).setX(vertex, Utils.getFloatFromDocument(source));
+			coll.modified = true;
 		}
 	}
 
 	private void adjustY(JFormattedTextField source, int vertex) {
 		if (selectedTri != -1) {
 			coll.meshes[selectedMesh].tris.get(selectedTri).setY(vertex, Utils.getFloatFromDocument(source));
+			coll.modified = true;
 		}
 	}
 
 	private void adjustZ(JFormattedTextField source, int vertex) {
 		if (selectedTri != -1) {
 			coll.meshes[selectedMesh].tris.get(selectedTri).setZ(vertex, Utils.getFloatFromDocument(source));
+			coll.modified = true;
 		}
 	}
 
@@ -573,7 +587,7 @@ public class CollEditPanel extends javax.swing.JPanel {
 			meshContainers.get(file).removeAllChildren();
 			for (int i = 0; i < 16; i++) {
 				meshNodes.get(file)[i] = new DefaultMutableTreeNode("Mesh " + String.valueOf(i));
-				for (int j = 0; j < coll.meshes[i].tris.size(); j++) {
+				for (int j = 0; j < files.get(file).meshes[i].tris.size(); j++) {
 					meshNodes.get(file)[i].add(new DefaultMutableTreeNode("Triangle " + String.valueOf(j)));
 				}
 				meshContainers.get(file).add(meshNodes.get(file)[i]);

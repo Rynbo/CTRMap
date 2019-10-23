@@ -1,6 +1,8 @@
 package ctrmap.formats.zone;
 
+import ctrmap.formats.scripts.GFLPawnScript;
 import ctrmap.Utils;
+import ctrmap.Workspace;
 import ctrmap.formats.containers.ZO;
 import java.util.Arrays;
 import javax.swing.JOptionPane;
@@ -12,10 +14,12 @@ public class Zone {
 	public ZO file;
 	public ZoneHeader header;
 	public ZoneEntities entities;
-	public Zone(ZO data){
+	public GFLPawnScript s;
+	public Zone(ZO data, Workspace.GameType game){
 		file = data;
-		header = new ZoneHeader(data.getFile(0));
+		header = new ZoneHeader(data.getFile(0), game);
 		entities = new ZoneEntities(data.getFile(1));
+		s = new GFLPawnScript(data.getFile(2));
 	}
 	public boolean store(boolean dialog){
 		byte[] headerData = header.assembleData();
@@ -54,6 +58,7 @@ public class Zone {
 			}
 			entities.modified = false;
 		}
+		file.storeFile(2, s.getScriptBytes());
 		return true;
 	}
 }

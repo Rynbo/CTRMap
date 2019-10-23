@@ -37,9 +37,10 @@ public class NPCRegistry {
 			while (dis.available() >= 0x18) {
 				NPCRegistryEntry e = new NPCRegistryEntry(dis);
 				entries.put(e.uid, e);
-				BCHFile bch = new BCHFile(new MM(CtrmapMainframe.mWorkspace.getWorkspaceFile(Workspace.ArchiveType.MOVE_MODELS, e.model)).getFile(0));
+				BCHFile bch = new BCHFile(new MM(Workspace.getWorkspaceFile(Workspace.ArchiveType.MOVE_MODELS, e.model)).getFile(0));
 				if (!bch.models.isEmpty()) {
 					bch.models.get(0).setMaterialTextures(bch.textures);
+					bch.models.get(0).makeAllBOs();
 					models.put(e.uid, bch.models.get(0));
 				}
 			}
@@ -50,7 +51,7 @@ public class NPCRegistry {
 	}
 
 	public void mapModel(int uid, int mdlnum) {
-		BCHFile bch = new BCHFile(new MM(CtrmapMainframe.mWorkspace.getWorkspaceFile(Workspace.ArchiveType.MOVE_MODELS, mdlnum)).getFile(0));
+		BCHFile bch = new BCHFile(new MM(Workspace.getWorkspaceFile(Workspace.ArchiveType.MOVE_MODELS, mdlnum)).getFile(0));
 		if (!bch.models.isEmpty()) {
 			bch.models.get(0).setMaterialTextures(bch.textures);
 			models.put(uid, bch.models.get(0));
@@ -77,7 +78,7 @@ public class NPCRegistry {
 					return false;
 			}
 		}
-		CtrmapMainframe.mWorkspace.addPersist(f);
+		Workspace.addPersist(f);
 		try {
 			LittleEndianDataOutputStream dos = new LittleEndianDataOutputStream(new FileOutputStream(f));
 			for (Map.Entry<Integer, NPCRegistryEntry> e : entries.entrySet()) {

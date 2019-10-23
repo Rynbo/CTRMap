@@ -1,6 +1,8 @@
 package ctrmap.humaninterface;
 
 import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.glu.gl2.GLUgl2;
+import ctrmap.CtrmapMainframe;
 import ctrmap.formats.npcreg.NPCRegistry;
 import ctrmap.formats.zone.ZoneEntities;
 import java.awt.event.FocusAdapter;
@@ -8,11 +10,18 @@ import java.awt.event.FocusEvent;
 import javax.swing.JFormattedTextField;
 import javax.swing.text.NumberFormatter;
 import static ctrmap.CtrmapMainframe.*;
+import ctrmap.Utils;
+import ctrmap.Workspace;
 import ctrmap.formats.h3d.model.H3DModel;
+import ctrmap.formats.h3d.model.H3DVertex;
+import ctrmap.formats.vectors.Vec3f;
 import ctrmap.humaninterface.tools.NPCTool;
+import java.awt.Component;
 import java.awt.Point;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 
 /**
@@ -30,15 +39,27 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
 	public NPCRegistry.NPCRegistryEntry regentry;
 	public int npcIndex;
 	public List<H3DModel> models = new ArrayList<>();
+	public DefaultComboBoxModel motionModel = new DefaultComboBoxModel();
+	public DefaultComboBoxModel motion2Model = new DefaultComboBoxModel();
 
 	public NPCEditForm() {
 		initComponents();
 		setIntegerValueClass(new JFormattedTextField[]{x, y, areaW, areaH, mot, mp2, u10, u12, areaSX, areaSY, zl2, zl3, hostZone, originZone, linkedZone, linkID});
 		((NumberFormatter) altitude.getFormatter()).setValueClass(Float.class);
+		motDropdown.setModel(motionModel);
+		mot2Dropdown.setModel(motion2Model);
 	}
 
 	public void loadFromEntities(ZoneEntities e, NPCRegistry reg) {
 		models.clear();
+		motionModel.removeAllElements();
+		motion2Model.removeAllElements();
+		addBaseMotion();
+		if (Workspace.isXY()) {
+			addXYMotion();
+		} else {
+			addOAMotion();
+		}
 		this.reg = reg;
 		this.e = e;
 		loaded = false;
@@ -60,7 +81,209 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		}
 	}
 
-	public void unload(){
+	private void addBaseMotion() {
+		String[] baseMoveCodes = new String[]{
+			"Dummy",
+			"MoveCodeNone",
+			"MoveCodeDirRnd",
+			"MoveCodeDirRndUD",
+			"MoveCodeDirRndLR",
+			"MoveCodeDirRndUL",
+			"MoveCodeDirRndUR",
+			"MoveCodeDirRndDL",
+			"MoveCodeDirRndDR",
+			"MoveCodeDirRndUDL",
+			"MoveCodeDirRndUDR",
+			"MoveCodeDirRndULR",
+			"MoveCodeDirRndDLR",
+			"MoveCodeUp",
+			"MoveCodeDown",
+			"MoveCodeLeft",
+			"MoveCodeRight",
+			"MoveCodeRndHLim",
+			"MoveCodeRndBLim",
+			"Move constant in left vertical limit",
+			"Move constant in left vertical & upper horizontal limit",
+			"Move constant in left vertical & upper horizontal limit; H first",
+			"Move constant in left vertical & upper horizontal limit; V first 1",
+			"Move constant in left vertical & upper horizontal limit; V first 2",
+			"???",
+			"???",
+			"???",
+			"Move constant in right vertical & upper horizontal limit",
+			"???",
+			"Move constant in left vertical & lower horizontal limit",
+			"???",
+			"Surf along vertical limit",
+			"???",
+			"???",
+			"???",
+			"MoveCodeSit",
+			"MoveCodeAlongWallLeftHandLimitChange 1",
+			"MoveCodeAlongWallLeftHandLimitChange 2",
+			"MoveCodeAlongWallLeftHandLimitChange; VH limit invert",
+			"MoveCodeAlongWallLeftHandLimitChange; H limit invert",
+			"???",
+			"MoveCodeAlongWallRightHandLimitChange; V limit invert",
+			"???",
+			"MoveCodeAlongWallRightHandLimitChange",
+			"???",
+			"???",
+			"Clockwise cruise along edges of area with unwalkables on edges",
+			"MoveCodeRand",
+			"???",
+			"???",
+			"MoveCodeAlongBitLeftHandRoller",
+			"MoveCodeAlongBitLeftHandRoller",
+			"MoveCodeKakuremino",
+			"???",
+			"???",
+			"???",
+			"MoveCodeTsutikemuriAlongBitLeftHand",
+			"MoveCodeTsutikemuriAlongBitRightHand",
+			"MoveCodeTsutikemuriRand"
+		};
+		String[] baseMove2Codes = new String[]{
+			"None",
+			"Approaching trainer (Standard)",
+			"Approaching trainer - see 1 tile around extra",
+			"Approaching trainer - tilt head in expectation",
+			"Item",
+			"AI Motion",
+			"Approaching trainer - paired",
+			"Mirror trainer (down)",
+			"Fixed line of sight (left)",
+			"Fixed line of sight (right)",
+			"Mirror trainer pair (down)",
+			"Jumpout trainer",};
+		motModelStrArrMerge(baseMoveCodes);
+		mot2ModelStrArrMerge(baseMove2Codes);
+	}
+
+	private void addXYMotion() {
+		String[] XYMoveCodes = new String[]{
+			"MoveCodeYagiQuick",
+			"MoveCodeYagiSlow",
+			"MoveCodeYagiStay",};
+		String[] XYMove2Codes = new String[]{
+			"Approaching Painter (XY Extension)",
+			"Rolling skater (XY Extension)",
+			"EvTypeTrFighting (GymFight Skater) (XY Extension)"
+		};
+		motModelStrArrMerge(XYMoveCodes);
+		mot2ModelStrArrMerge(XYMove2Codes);
+	}
+
+	private void addOAMotion() {
+		String[] OAMoveCodes = new String[]{
+			"???",
+			"MoveCodeSeiza",
+			"MoveCodeSecretBaseTrainer",
+			"MoveCodeFishing2",};
+		String[] OAMove2Codes = new String[]{
+			"Approaching diver (OA Extension)",
+			"Secret Base Trainer (OA Extension)"
+		};
+		motModelStrArrMerge(OAMoveCodes);
+		mot2ModelStrArrMerge(OAMove2Codes);
+	}
+
+	public int getMot2Index(int raw) {
+		if (raw <= 4) {
+			return raw;
+		}
+		switch (raw) {
+			case 7:
+				return 5;
+			case 9: //XY
+			case 10: //OA
+				return 6;
+			case 11:
+				return 12; //XY extension
+			case 12:
+				return 7;
+			case 14:
+				return 8;
+			case 15:
+				return 9;
+			case 16:
+				return 10;
+			case 20:
+				return 11;
+		}
+		if (Workspace.isXY()) {
+			switch (raw) {
+				case 22:
+					return 13;
+				case 23:
+					return 14;
+			}
+		} else {
+			switch (raw) {
+				case 22:
+					return 12;
+				case 23:
+					return 13;
+			}
+		}
+		return -1;
+	}
+
+	public int getMot2Raw(int index) {
+		if (index <= 4) {
+			return index;
+		}
+		switch (index) {
+			case 5:
+				return 7;
+			case 12:
+				return 11; //XY extension
+			case 7:
+				return 12;
+			case 8:
+				return 14;
+			case 9:
+				return 15;
+			case 10:
+				return 16;
+			case 11:
+				return 20;
+		}
+		if (Workspace.isXY()) {
+			switch (index) {
+				case 6:
+					return 9;
+				case 13:
+					return 22;
+				case 14:
+					return 23;
+			}
+		} else {
+			switch (index) {
+				case 6:
+					return 10;
+				case 12:
+					return 22;
+				case 13:
+					return 23;
+			}
+		}
+		return -1;
+	}
+
+	public void motModelStrArrMerge(String[] strings) {
+		for (int i = 0; i < strings.length; i++) {
+			motionModel.addElement(strings[i]);
+		}
+	}
+
+	public void mot2ModelStrArrMerge(String[] strings) {
+		for (int i = 0; i < strings.length; i++) {
+			motion2Model.addElement(strings[i]);
+		}
+	}
+
+	public void unload() {
 		loaded = false;
 		npcIndex = -1;
 		reg = null;
@@ -71,7 +294,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		entryBox.setSelectedIndex(-1);
 		entryBox.removeAllItems();
 	}
-	
+
 	public void refresh() {
 		entryBox.setSelectedIndex(entryBox.getSelectedIndex());
 	}
@@ -96,11 +319,21 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		areaW.setValue(npc.areaWidth);
 		areaH.setValue(npc.areaHeight);
 		mot.setValue(npc.movePerm1);
+		if (npc.movePerm1 < motionModel.getSize()) {
+			motDropdown.setSelectedIndex(npc.movePerm1);
+		} else {
+			motDropdown.setSelectedIndex(-1);
+		}
+		mp2.setValue(npc.movePerm2);
+		if (getMot2Index(npc.movePerm2) < motion2Model.getSize()) {
+			mot2Dropdown.setSelectedIndex(getMot2Index(npc.movePerm2));
+		} else {
+			mot2Dropdown.setSelectedIndex(-1);
+		}
 		hostZone.setValue(npc.multiZoneLinkHostZone);
 		originZone.setValue(npc.multiZoneLinkOriginZone);
 		linkedZone.setValue(npc.multiZoneLinkTargetZone);
 		linkID.setValue(npc.multiZoneLink1Type);
-		mp2.setValue(npc.movePerm2);
 		u10.setValue(npc.u10);
 		u12.setValue(npc.u12);
 		areaSX.setValue(npc.areaStartX);
@@ -124,15 +357,20 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
 				NPCRegistry.NPCRegistryEntry failsafe = new NPCRegistry.NPCRegistryEntry();
 				failsafe.uid = npc.model; //in this case, GF sometimes uses different UIDs than models, for it****s and ob****s. It's not required though.
 				failsafe.model = npc.model;
-				reg.entries.put(failsafe.uid, failsafe);
-				reg.mapModel(failsafe.uid, failsafe.uid);
-				reg.modified = true;
-				regentry = failsafe;
+				if (reg.entries.size() < 31) {
+					reg.entries.put(failsafe.uid, failsafe);
+					reg.mapModel(failsafe.uid, failsafe.uid);
+					reg.modified = true;
+					regentry = failsafe;
+				} else {
+					JOptionPane.showMessageDialog(this, "The registry's maximum capacity of 31 unique NPCs has been reached.\n"
+							+ "Please free up space in the registry editor and try again.", "Could not create registry entry", JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		}
 		updateModel(index);
 		updateH3D(index);
-		m3DDebugPanel.navi.bindModel(e.npcs.get(index));
+		m3DDebugPanel.bindNavi(e.npcs.get(index));
 		loaded = true;
 	}
 
@@ -246,7 +484,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
 				if (models.size() > i && models.get(i) != null) {
 					updateH3D(i);
 					models.get(i).render(gl);
-					if (i == npcIndex && mTileEditForm.tool instanceof NPCTool) {
+					if (i == npcIndex && CtrmapMainframe.tool instanceof NPCTool) {
 						models.get(i).renderBox(gl);
 					}
 				}
@@ -262,7 +500,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
 			}
 		}
 	}
-	
+
 	@Override
 	public void deleteGLInstanceBuffers(GL2 gl) {
 		for (int i = 0; i < models.size(); i++) {
@@ -343,6 +581,8 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
         linkedZoneLabel = new javax.swing.JLabel();
         linkedZone = new javax.swing.JFormattedTextField();
         zlSep = new javax.swing.JSeparator();
+        motDropdown = new javax.swing.JComboBox<>();
+        mot2Dropdown = new javax.swing.JComboBox<>();
 
         mdlLabel.setText("Model");
 
@@ -406,12 +646,22 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
         motLabel.setText("Motion AI");
 
         mot.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
+        mot.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                motActionPerformed(evt);
+            }
+        });
 
         horizonLabel.setText("There's much to do and many unknowns on the horizon:");
 
-        mp2Label.setText("MP2");
+        mp2Label.setText("Move events");
 
         mp2.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
+        mp2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mp2ActionPerformed(evt);
+            }
+        });
 
         u10Label.setText("U10");
 
@@ -500,25 +750,54 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
         linkedZone.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
         linkedZone.setMinimumSize(new java.awt.Dimension(100, 20));
 
+        motDropdown.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                motDropdownActionPerformed(evt);
+            }
+        });
+
+        mot2Dropdown.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mot2DropdownActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(aiSep)
-            .addComponent(zlSep)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(headerSep)
-                    .addComponent(worldSep)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(btnRegEdit, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnSave, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnRemoveEntry, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnNewEntry, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(entryBox, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(zl2Label)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(zl2, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(zl3Label)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(zl3, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(u10Label)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(u10, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(u12Label)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(u12, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(headerSep)
+                            .addComponent(btnRegEdit, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(btnSave, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(btnRemoveEntry, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(btnNewEntry, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(worldSep)
+                            .addComponent(entryBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(layout.createSequentialGroup()
                                 .addComponent(xLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(x)
@@ -530,7 +809,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
                                 .addComponent(altitudeLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(altitude))
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                            .addGroup(layout.createSequentialGroup()
                                 .addComponent(mdlLabel)
                                 .addGap(3, 3, 3)
                                 .addComponent(mdl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -542,7 +821,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
                                 .addComponent(scrLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(scr, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                            .addGroup(layout.createSequentialGroup()
                                 .addComponent(facedirLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(facedir, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -550,27 +829,10 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
                                 .addComponent(rangeLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(range, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addComponent(worldLocNote, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 387, Short.MAX_VALUE)
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                        .addComponent(areaWLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(u14Label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                    .addComponent(motLabel))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(areaW)
-                                    .addComponent(areaSX, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(mot))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(areaHLabel)
-                                    .addComponent(u16Label, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(areaH)
-                                    .addComponent(areaSY, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                            .addComponent(worldLocNote, javax.swing.GroupLayout.DEFAULT_SIZE, 387, Short.MAX_VALUE)
+                            .addComponent(zlSep)
+                            .addComponent(aiSep)
+                            .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                         .addComponent(zlLabel)
@@ -588,33 +850,38 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
                                 .addComponent(linkedZoneLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(linkedZone, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(aiLabel, javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(worldLabel, javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(linkIDLabel, javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(horizonLabel, javax.swing.GroupLayout.Alignment.LEADING))
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(aiLabel)
-                                    .addComponent(worldLabel)
-                                    .addComponent(linkIDLabel)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(areaWLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(u14Label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .addComponent(motLabel)
+                                    .addComponent(mp2Label))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(areaW)
+                                    .addComponent(areaSX, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(mot)
+                                    .addComponent(mp2))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addGroup(layout.createSequentialGroup()
-                                        .addComponent(zl2Label)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(areaHLabel)
+                                            .addComponent(u16Label, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(zl2, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(zl3Label)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(zl3, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addComponent(horizonLabel)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(mp2Label)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(mp2, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(u10Label)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(u10, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(u12Label)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(u12, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGap(0, 0, Short.MAX_VALUE)))
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(areaH)
+                                            .addComponent(areaSY, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                                    .addComponent(motDropdown, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(mot2Dropdown, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                         .addContainerGap())))
         );
         layout.setVerticalGroup(
@@ -631,7 +898,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
                     .addComponent(scrLabel)
                     .addComponent(scr, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(headerSep, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(headerSep, javax.swing.GroupLayout.PREFERRED_SIZE, 2, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(worldLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -651,7 +918,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
                     .addComponent(rangeLabel)
                     .addComponent(range, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(4, 4, 4)
-                .addComponent(worldSep, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(worldSep, javax.swing.GroupLayout.PREFERRED_SIZE, 2, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(aiLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -669,9 +936,15 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(motLabel)
-                    .addComponent(mot, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(mot, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(motDropdown, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(aiSep, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(mp2Label)
+                    .addComponent(mp2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(mot2Dropdown, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(aiSep, javax.swing.GroupLayout.PREFERRED_SIZE, 2, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(zlLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -689,13 +962,9 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
                     .addComponent(linkIDLabel)
                     .addComponent(linkID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(zlSep, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(zlSep, javax.swing.GroupLayout.PREFERRED_SIZE, 2, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(horizonLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(mp2Label)
-                    .addComponent(mp2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(u10Label)
@@ -783,6 +1052,29 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		setNPC(entryBox.getSelectedIndex());
     }//GEN-LAST:event_mdlStateChanged
 
+    private void motActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_motActionPerformed
+		if (loaded && (Integer) mot.getValue() < motDropdown.getItemCount()) {
+			motDropdown.setSelectedIndex((Integer) mot.getValue());
+		}
+    }//GEN-LAST:event_motActionPerformed
+
+    private void motDropdownActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_motDropdownActionPerformed
+		if (loaded && motDropdown.getSelectedIndex() != -1) {
+			mot.setValue(motDropdown.getSelectedIndex());
+		}
+    }//GEN-LAST:event_motDropdownActionPerformed
+
+    private void mot2DropdownActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mot2DropdownActionPerformed
+		if (loaded && mot2Dropdown.getSelectedIndex() != -1) {
+			mp2.setValue(getMot2Raw(mot2Dropdown.getSelectedIndex()));
+		}
+    }//GEN-LAST:event_mot2DropdownActionPerformed
+
+    private void mp2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mp2ActionPerformed
+		if (loaded && (Integer) mp2.getValue() < mot2Dropdown.getItemCount()) {
+			mot2Dropdown.setSelectedIndex(getMot2Index((Integer) mp2.getValue()));
+		}
+    }//GEN-LAST:event_mp2ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel aiLabel;
@@ -815,6 +1107,8 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
     private javax.swing.JSpinner mdl;
     private javax.swing.JLabel mdlLabel;
     private javax.swing.JFormattedTextField mot;
+    private javax.swing.JComboBox<String> mot2Dropdown;
+    private javax.swing.JComboBox<String> motDropdown;
     private javax.swing.JLabel motLabel;
     private javax.swing.JFormattedTextField mp2;
     private javax.swing.JLabel mp2Label;
@@ -844,4 +1138,51 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
     private javax.swing.JLabel zlLabel;
     private javax.swing.JSeparator zlSep;
     // End of variables declaration//GEN-END:variables
+
+	@Override
+	public void doSelectionLoop(MouseEvent evt, Component parent, float[] mvMatrix, float[] projMatrix, int[] view, Vec3f cameraVec) {
+		if (!(CtrmapMainframe.tool instanceof NPCTool)){
+			return;
+		}
+		double closestDist = Float.MAX_VALUE;
+		int closestIdx = -1;
+		GLUgl2 glu = new GLUgl2();
+		for (int i = 0; i < models.size(); i++) {
+			if (models.get(i) == null) {
+				continue;
+			}
+			ZoneEntities.NPC testNpc = e.npcs.get(i);
+			float[][] box = models.get(i).boxVectors;
+			if (Utils.isBoxSelected(box, evt, parent, new Vec3f(testNpc.getX(), testNpc.getY(), testNpc.getZ()), new Vec3f(1f, 1f, 1f), new Vec3f(0f, get3DOrientation(testNpc.faceDirection), 0f), mvMatrix, projMatrix, view)) {
+				H3DModel m = models.get(i);
+				boolean allow = false;
+				for (int mesh = 0; mesh < m.meshes.size(); mesh++) {
+					for (int vertex = 0; vertex < m.meshes.get(mesh).vertices.size(); vertex++) {
+						H3DVertex v = m.meshes.get(mesh).vertices.get(vertex);
+						float[] test = new float[3];
+						glu.gluProject(v.position.x + testNpc.getX(), v.position.y + testNpc.getY(), v.position.z + testNpc.getZ(), mvMatrix, 0, projMatrix, 0, view, 0, test, 0);
+						if (test[0] > 0 && test[0] < parent.getWidth() && test[1] > 0 && test[1] < parent.getHeight()) {
+							allow = true;
+							break;
+						}
+					}
+					if (allow) {
+						break;
+					}
+				}
+				if (!allow) {
+					continue;
+				}
+				Vec3f dummyCenterVector = new Vec3f(testNpc.getX(), testNpc.getY(), testNpc.getZ());
+				double dist = Utils.getDistanceFromVector(dummyCenterVector, cameraVec);
+				if (Math.abs(dist) < closestDist && i != npcIndex) {
+					closestDist = Math.abs(dist);
+					closestIdx = i;
+				}
+			}
+		}
+		if (closestIdx != -1) {
+			setNPC(closestIdx);
+		}
+	}
 }

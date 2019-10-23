@@ -1,18 +1,24 @@
 package ctrmap.humaninterface;
 
 import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.glu.gl2.GLUgl2;
+import ctrmap.CtrmapMainframe;
 import ctrmap.Utils;
 import ctrmap.formats.propdata.GRProp;
 import ctrmap.formats.propdata.GRPropData;
-import static ctrmap.CtrmapMainframe.*;
 import ctrmap.Workspace;
 import ctrmap.formats.containers.BM;
+import ctrmap.formats.containers.GR;
 import ctrmap.formats.h3d.BCHFile;
 import ctrmap.formats.h3d.model.H3DModel;
+import ctrmap.formats.h3d.model.H3DVertex;
 import ctrmap.formats.h3d.texturing.H3DTexture;
 import ctrmap.formats.propdata.ADPropRegistry;
+import ctrmap.formats.vectors.Vec3f;
 import ctrmap.humaninterface.tools.PropTool;
+import java.awt.Component;
 import java.awt.Point;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +36,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 	/**
 	 * Creates new form PropEditForm
 	 */
+	public GR gr;
 	public GRPropData props;
 	public ArrayList<H3DModel> models = new ArrayList<>();
 	public GRProp prop;
@@ -51,7 +58,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 					prop.x = Utils.getFloatFromDocument(x);
 					updateH3D(props.props.indexOf(prop));
 				}
-				frame.repaint();
+				firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
 			}
 
 			@Override
@@ -60,7 +67,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 					prop.x = Utils.getFloatFromDocument(x);
 					updateH3D(props.props.indexOf(prop));
 				}
-				frame.repaint();
+				firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
 			}
 
 			@Override
@@ -74,7 +81,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 					prop.y = Utils.getFloatFromDocument(y);
 					updateH3D(props.props.indexOf(prop));
 				}
-				frame.repaint();
+				firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
 			}
 
 			@Override
@@ -83,7 +90,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 					prop.y = Utils.getFloatFromDocument(y);
 					updateH3D(props.props.indexOf(prop));
 				}
-				frame.repaint();
+				firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
 			}
 
 			@Override
@@ -97,7 +104,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 					prop.z = Utils.getFloatFromDocument(z);
 					updateH3D(props.props.indexOf(prop));
 				}
-				frame.repaint();
+				firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
 			}
 
 			@Override
@@ -106,7 +113,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 					prop.z = Utils.getFloatFromDocument(z);
 					updateH3D(props.props.indexOf(prop));
 				}
-				frame.repaint();
+				firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
 			}
 
 			@Override
@@ -120,16 +127,17 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 			((NumberFormatter) fields[i].getFormatter()).setValueClass(Float.class);
 		}
 	}
-
-	public void loadDataFile(GRPropData f, List<H3DTexture> propTextures) {
+	
+	public void loadDataFile(GR f, List<H3DTexture> propTextures){
+		gr = f;
+		props = new GRPropData(gr);
+		loadDataFile(props, null, propTextures);
+	}
+	
+	public void loadDataFile(GRPropData f, ADPropRegistry reg, List<H3DTexture> propTextures) {
 		this.propTextures = propTextures;
 		models.clear();
-		reg = null;
-		if (mWorkspace.valid && mZonePnl.zone != null) {
-			if (mZonePnl.zone.header.areadata != null) {
-				reg = new ADPropRegistry(mZonePnl.zone.header.areadata, propTextures);
-			}
-		}
+		this.reg = reg;
 		prop = null;
 		loaded = false;
 		props = f;
@@ -150,8 +158,8 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 			showProp(0);
 		}
 	}
-	
-	public void unload(){
+
+	public void unload() {
 		loaded = false;
 		propIndex = -1;
 		prop = null;
@@ -209,7 +217,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 			props.props.set(idx, prop);
 			props.modified = true;
 			updateH3D(idx);
-			frame.repaint();
+			firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
 		}
 	}
 
@@ -221,9 +229,9 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 					int rsl = Utils.showSaveConfirmationDialog("Prop data");
 					switch (rsl) {
 						case JOptionPane.YES_OPTION:
-							if (mTileMapPanel.mm != null) {
-								props.write(mTileMapPanel.mm);
-							} else if (mainGR != null) {
+							if (CtrmapMainframe.mTileMapPanel.mm != null) {
+								props.write(CtrmapMainframe.mTileMapPanel.mm);
+							} else if (gr != null) {
 								props.write();
 							}
 							break; //continue to save
@@ -233,9 +241,9 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 							return false;
 					}
 				} else {
-					if (mTileMapPanel.mm != null) {
-						props.write(mTileMapPanel.mm);
-					} else if (mainGR != null) {
+					if (CtrmapMainframe.mTileMapPanel.mm != null) {
+						props.write(CtrmapMainframe.mTileMapPanel.mm);
+					} else if (gr != null) {
 						props.write();
 					}
 				}
@@ -277,7 +285,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		if (reg != null) {
 			for (int i = 0; i < models.size(); i++) {
 				if (models.size() > i && models.get(i) != null) {
-					if (i == propIndex && mTileEditForm.tool instanceof PropTool) {
+					if (i == propIndex && CtrmapMainframe.tool instanceof PropTool) {
 						updateH3D(i);
 						models.get(i).renderBox(gl);
 					}
@@ -303,7 +311,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 			}
 		}
 	}
-	
+
 	public boolean equalsData(GRProp p1, GRProp p2) {
 		if (p1.uid != p2.uid) {
 			return false;
@@ -362,7 +370,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		sy.setValue(prop.scaleY);
 		sz.setValue(prop.scaleZ);
 		updateModel(index);
-		m3DDebugPanel.bindNavi(props.props.get(entryBox.getSelectedIndex()));
+		CtrmapMainframe.m3DDebugPanel.bindNavi(props.props.get(entryBox.getSelectedIndex()));
 		loaded = true;
 	}
 
@@ -375,7 +383,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		}
 		if (models.get(index) == null) {
 			//failsafe
-			File f = mWorkspace.getWorkspaceFile(Workspace.ArchiveType.BUILDING_MODELS, props.props.get(index).uid);
+			File f = Workspace.getWorkspaceFile(Workspace.ArchiveType.BUILDING_MODELS, props.props.get(index).uid);
 			if (f.exists()) {
 				BCHFile bch = new BCHFile(new BM(f).getFile(0));
 				bch.models.get(0).setMaterialTextures(bch.textures);
@@ -397,7 +405,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 			if (reg != null) {
 				regentry = reg.entries.get(prop.uid);
 				if (regentry == null) {
-					int createEntry = JOptionPane.showConfirmDialog(frame,
+					int createEntry = JOptionPane.showConfirmDialog(this,
 							"The model and animation data needed for this prop\n"
 							+ "was not found in this area's registry under the model UID.\n\n"
 							+ "CTRMap can create dummy registry data for you, but keep in mind that:\n\n"
@@ -722,7 +730,9 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		if (regentry == null) {
 			return;
 		}
-		new ADPropRegistryEditor().showEntry(reg, regentry.reference);
+		ADPropRegistryEditor pre = new ADPropRegistryEditor(this);
+		pre.loadRegistry(reg, propTextures);
+		pre.setEntry(regentry.reference);
     }//GEN-LAST:event_btnRegEditActionPerformed
 
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
@@ -744,7 +754,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
     private void btnNewEntryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewEntryActionPerformed
 		GRProp newProp = new GRProp();
 		newProp.uid = (prop != null) ? prop.uid : 0;
-		Point defaultPos = mTileMapPanel.getWorldLocAtViewportCentre();
+		Point defaultPos = CtrmapMainframe.mTileMapPanel.getWorldLocAtViewportCentre();
 		newProp.x = defaultPos.x;
 		newProp.z = defaultPos.y;
 		newProp.updateName(reg);
@@ -795,4 +805,52 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
     private javax.swing.JFormattedTextField y;
     private javax.swing.JFormattedTextField z;
     // End of variables declaration//GEN-END:variables
+
+	@Override
+	public void doSelectionLoop(MouseEvent e, Component parent, float[] mvMatrix, float[] projMatrix, int[] view, Vec3f cameraVec) {
+		if (!(CtrmapMainframe.tool instanceof PropTool)){
+			return;
+		}
+		GLUgl2 glu = new GLUgl2();
+		double closestDist = Float.MAX_VALUE;
+		int closestIdx = -1;
+		for (int i = 0; i < models.size(); i++) {
+			if (models.get(i) == null) {
+				continue;
+			}
+			GRProp p = props.props.get(i);
+			float[][] box = models.get(i).boxVectors;
+			boolean sysout = (p.name.equals("t101_bm_trees"));
+			if (Utils.isBoxSelected(box, e, parent, new Vec3f(p.x, p.y, p.z), new Vec3f(p.scaleX, p.scaleY, p.scaleZ), new Vec3f(p.rotateX, p.rotateY, p.rotateZ), mvMatrix, projMatrix, view)) {
+				H3DModel m = models.get(i);
+				//GLU is buggy and sometimes completely fucks up the maths in certain camera angles. We can work around this by checking if the actual object is seen by the camera.
+				boolean allow = false;
+				for (int mesh = 0; mesh < m.meshes.size(); mesh++) {
+					for (int vertex = 0; vertex < m.meshes.get(mesh).vertices.size(); vertex++) {
+						H3DVertex v = m.meshes.get(mesh).vertices.get(vertex);
+						float[] test = new float[3];
+						glu.gluProject(v.position.x + p.x, v.position.y + p.y, v.position.z + p.z, mvMatrix, 0, projMatrix, 0, view, 0, test, 0);
+						if (test[0] > 0 && test[0] < parent.getWidth() && test[1] > 0 && test[1] < parent.getHeight()) {
+							allow = true;
+							break;
+						}
+					}
+					if (allow) {
+						break;
+					}
+				}
+				if (!allow) {
+					continue;
+				}
+				double dist = Utils.getDistanceFromVector(new Vec3f(p.x, p.y, p.z), cameraVec);
+				if (Math.abs(dist) < closestDist && i != propIndex) {
+					closestDist = Math.abs(dist);
+					closestIdx = i;
+				}
+			}
+		}
+		if (closestIdx != -1) {
+			setProp(closestIdx);
+		}
+	}
 }

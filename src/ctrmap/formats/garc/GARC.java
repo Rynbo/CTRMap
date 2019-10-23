@@ -2,6 +2,7 @@ package ctrmap.formats.garc;
 
 import ctrmap.CtrmapMainframe;
 import ctrmap.LittleEndianDataInputStream;
+import ctrmap.Workspace;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -112,7 +113,7 @@ public class GARC {
 			ArrayList<File> files = new ArrayList<>();
 			files.addAll(Arrays.asList(dir.listFiles()));
 			for (int i = 0; i < files.size(); i++){
-				if (!CtrmapMainframe.mWorkspace.persist_paths.contains(files.get(i).getAbsolutePath())){
+				if (!Workspace.persist_paths.contains(files.get(i).getAbsolutePath())){
 					files.remove(i);
 					i--;
 				}
@@ -129,7 +130,7 @@ public class GARC {
 			for (int i = 0; i < files.size(); i++){
 				changedIndices[i] = Integer.valueOf(files.get(i).getName());
 			}	
-			File newGARC = new File(CtrmapMainframe.mWorkspace.WORKSPACE_PATH + "/" + file.getName() + "_new");
+			File newGARC = new File(Workspace.WORKSPACE_PATH + "/" + file.getName() + "_new");
 			//compress all custom files
 			byte[][] compressedData = new byte[files.size()][];
 			for (int i = 0; i < files.size(); i++){

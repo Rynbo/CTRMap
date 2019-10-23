@@ -13,25 +13,25 @@ public class LoadingDialog extends javax.swing.JPanel {
 	 * Creates new form LoadingDialog
 	 */
 	private JDialog dlg;
-	
+
 	public LoadingDialog() {
 		initComponents();
 	}
 
-	public void setDescription(String text){
+	public void setDescription(String text) {
 		desc.setText(text);
 	}
 
-	public void setBarPercent(int val){
+	public void setBarPercent(int val) {
 		bar.setValue(val);
 	}
-	
-	public void close(){
+
+	public void close() {
 		dlg.dispose();
 		dlg.setVisible(false);
 	}
-	
-	public static LoadingDialog makeDialog(String desc){
+
+	public static LoadingDialog makeDialog(String desc) {
 		LoadingDialog ret = new LoadingDialog();
 		ret.dlg = new JDialog();
 		ret.dlg.add(ret);
@@ -43,12 +43,14 @@ public class LoadingDialog extends javax.swing.JPanel {
 		ret.dlg.pack();
 		return ret;
 	}
-	
-	public void showDialog(){
-		dlg.setLocationRelativeTo(CtrmapMainframe.frame);
+
+	public void showDialog() {
+		if (CtrmapMainframe.frame != null) {
+			dlg.setLocationRelativeTo(CtrmapMainframe.frame);
+		}
 		dlg.setVisible(true);
 	}
-	
+
 	/**
 	 * This method is called from within the constructor to initialize the form.
 	 * WARNING: Do NOT modify this code. The content of this method is always

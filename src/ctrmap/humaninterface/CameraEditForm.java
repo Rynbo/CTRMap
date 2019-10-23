@@ -1,6 +1,5 @@
 package ctrmap.humaninterface;
 
-import static ctrmap.CtrmapMainframe.*;
 import ctrmap.Utils;
 import ctrmap.formats.cameradata.CameraData;
 import ctrmap.formats.cameradata.CameraDataFile;
@@ -56,9 +55,6 @@ public class CameraEditForm extends javax.swing.JPanel {
 		if (cdf.numEntries > 0) {
 			entryBox.setSelectedIndex(0);
 		}
-		if (mTileMapPanel.loaded) {
-			mTileMapPanel.verifyCompat();
-		}
 	}
 
 	public void showCamera(int entryNum) {
@@ -101,7 +97,6 @@ public class CameraEditForm extends javax.swing.JPanel {
 			d1default.setSelected(false);
 			d2default.setSelected(false);
 		}
-		setActiveEnabled();
 		pitchShift1.setValue(cam.coords1.pitchShift);
 		yawShift1.setValue(cam.coords1.yawShift);
 		pitchShift2.setValue(cam.coords2.pitchShift);
@@ -118,7 +113,10 @@ public class CameraEditForm extends javax.swing.JPanel {
 		plrDist2.setValue(cam.coords2.distanceFromTarget);
 		layer.setValue(cam.layer);
 		setNeutralEnabled();
-		mTileMapPanel.firePropertyChange(TileMapPanel.PROP_IMGSTATE, false, true);
+		if (!neutralCheckbox.isSelected()){
+			setActiveEnabled();
+		}
+		firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
 	}
 
 	public void commitAndSwitch(int switchNum) {

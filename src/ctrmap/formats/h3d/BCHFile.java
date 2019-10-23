@@ -171,10 +171,10 @@ public class BCHFile {
 				}
 			}
 
-			if (errorlevel > 0){
+			if (errorlevel > 0) {
 				return;
 			}
-			
+
 			in.seek(header.mainHeaderOffset);
 			contentHeader = new BCHContentHeader();
 			contentHeader.modelsPointerTableOffset = in.readInt();
@@ -244,6 +244,36 @@ public class BCHFile {
 				}
 				models.add(model);
 			}
+
+			/*System.out.println("Beginning BCH matdump for " + (models.size() > 0 ? models.get(0).name : "null"));
+			if (models.size() > 0) {
+				for (H3DMaterial m : models.get(0).materials) {
+					System.out.println("Material " + m.name);
+					System.out.println("\nMetaData:");
+					for (int i = 0; i < m.userData.size(); i++){
+						System.out.print(m.userData.get(i).name + " = ");
+						switch (m.userData.get(i).type){
+							case integer:
+								for (Object integer : m.userData.get(i).values){
+									System.out.print((Integer)integer + ", ");
+								}
+								break;
+							case single:
+								for (Object single : m.userData.get(i).values){
+									System.out.print((Float)single + ", ");
+								}
+								break;
+							case utf8String:
+							case utf16String:
+								for (Object string : m.userData.get(i).values){
+									System.out.print((String)string + ", ");
+								}
+								break;
+						}
+						System.out.print("\n");
+					}
+				}
+			}*/
 			in.close();
 		} catch (IOException ex) {
 			errorlevel++;

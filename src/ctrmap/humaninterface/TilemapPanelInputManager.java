@@ -1,5 +1,6 @@
 package ctrmap.humaninterface;
 
+import ctrmap.CtrmapMainframe;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -16,30 +17,37 @@ import ctrmap.humaninterface.tools.FillTool;
 import ctrmap.humaninterface.tools.NPCTool;
 import ctrmap.humaninterface.tools.PropTool;
 import ctrmap.humaninterface.tools.SetTool;
+import ctrmap.humaninterface.tools.WarpTool;
 
 /**
  * CM2D input listener.
  */
 public class TilemapPanelInputManager implements MouseWheelListener, MouseMotionListener, MouseInputListener, ActionListener {
-
+	
+	public TilemapPanelInputManager(TileMapPanel parent){
+		super();
+		parent.addMouseWheelListener(this);
+		parent.addMouseMotionListener(this);
+		parent.addMouseListener(this);
+	}
+	
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		mTileMapPanel.scaleImage(mTileMapPanel.tilemapScale - e.getWheelRotation() / 10f);
 	}
-
+	
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		moveSelector(e);
-		mTileEditForm.tool.onTileMouseDragged(e);
+		CtrmapMainframe.tool.onTileMouseDragged(e);
 	}
-
+	
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		moveSelector(e);
 	}
-
+	
 	private void moveSelector(MouseEvent e) {
-		int imagestartX =(mTileMapPanel.getWidth() - mTileMapPanel.tilemapScaledImage.getWidth()) / 2;
 		int xbound = (int) (mTileMapPanel.getLocationOnScreen().getX() + (mTileMapPanel.getWidth() - mTileMapPanel.tilemapScaledImage.getWidth()) / 2);
 		int ybound = (int) (mTileMapPanel.getLocationOnScreen().getY() + (mTileMapPanel.getHeight() - mTileMapPanel.tilemapScaledImage.getHeight()) / 2);
 		if (e.getXOnScreen() >= xbound && e.getXOnScreen() < xbound + mTileMapPanel.tilemapScaledImage.getWidth()
@@ -51,63 +59,67 @@ public class TilemapPanelInputManager implements MouseWheelListener, MouseMotion
 			}
 		}
 	}
-
+	
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		if (Selector.hilightTileX == -1) {
-			mTileEditForm.tool.fireCancel();
+			CtrmapMainframe.tool.fireCancel();
 		}
-		mTileEditForm.tool.onTileClick(e);
+		CtrmapMainframe.tool.onTileClick(e);
 	}
-
+	
 	@Override
 	public void mouseEntered(MouseEvent arg0) {
-
+		
 	}
-
+	
 	@Override
 	public void mouseExited(MouseEvent arg0) {
-
+		
 	}
-
+	
 	@Override
 	public void mousePressed(MouseEvent e) {
-		mTileEditForm.tool.onTileMouseDown(e);
+		CtrmapMainframe.tool.onTileMouseDown(e);
 	}
-
+	
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		mTileEditForm.tool.onTileMouseUp(e);
+		CtrmapMainframe.tool.onTileMouseUp(e);
 	}
-
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		mTileEditForm.tool.onToolShutdown();
+		CtrmapMainframe.tool.onToolShutdown();
 		boolean switchCam = false;
 		switch (e.getActionCommand()) {
 			case ("edit"):
-				mTileEditForm.tool = new EditTool();
+				CtrmapMainframe.tool = new EditTool();
 				currentTool.setText("Current tool: Edit");
 				break;
 			case ("set"):
-				mTileEditForm.tool = new SetTool();
+				CtrmapMainframe.tool = new SetTool();
 				currentTool.setText("Current tool: Set");
 				break;
 			case ("fill"):
-				mTileEditForm.tool = new FillTool();
+				CtrmapMainframe.tool = new FillTool();
 				currentTool.setText("Current tool: Fill");
 				break;
 			case ("cam"):
-				mTileEditForm.tool = new CameraTool();
+				CtrmapMainframe.tool = new CameraTool();
 				currentTool.setText("Current tool: Camera");
 				break;
 			case ("prop"):
-				mTileEditForm.tool = new PropTool();
+				CtrmapMainframe.tool = new PropTool();
 				currentTool.setText("Current tool: Prop");
 				break;
 			case ("npc"):
-				mTileEditForm.tool = new NPCTool();
+				CtrmapMainframe.tool = new NPCTool();
 				currentTool.setText("Current tool: NPC");
+				break;
+			case ("warp"):
+				CtrmapMainframe.tool = new WarpTool();
+				currentTool.setText("Current tool: Warp");
 				break;
 		}
 	}

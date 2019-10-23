@@ -29,13 +29,14 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
 	private NPCRegistry.NPCRegistryEntry e;
 	private DefaultListModel<String> model = new DefaultListModel<>();
 	private ArrayList<Integer> dict = new ArrayList<>();
+
 	public NPCRegistryEditor() {
 		initComponents();
 		setUnsignedByteValueClass(new JFormattedTextField[]{shadowType, areaW, areaH});
 		addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(WindowEvent e){
-				if (saveEntry(true)){
+			public void windowClosing(WindowEvent e) {
+				if (saveEntry(true)) {
 					dispose();
 				}
 			}
@@ -51,11 +52,12 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
 		}
 	}
 
-	public void loadRegistry(NPCRegistry reg){
+	public void loadRegistry(NPCRegistry reg) {
 		this.reg = reg;
 		entryList.removeAll();
+		model.removeAllElements();
 		entryList.setModel(model);
-		if (reg != null){
+		if (reg != null) {
 			for (Map.Entry<Integer, NPCRegistry.NPCRegistryEntry> entry : reg.entries.entrySet()) {
 				model.addElement("UID: " + entry.getValue().uid + " | Model: " + entry.getValue().model);
 				dict.add(entry.getValue().uid);
@@ -70,13 +72,13 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
 			showEntry(dict.get(entryList.getSelectedIndex()));
 		});
 	}
-	
-	public void setEntry(int id){
+
+	public void setEntry(int id) {
 		entryList.setSelectedIndex(dict.indexOf(id));
 	}
-	
+
 	public void showEntry(int id) {
-		if (reg == null || !reg.entries.containsKey(id)){
+		if (reg == null || !reg.entries.containsKey(id)) {
 			return;
 		}
 		NPCRegistry.NPCRegistryEntry entry = reg.entries.get(id);
@@ -90,42 +92,48 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
 		item.setSelected(entry.isItOb == 0);
 		dummy.setSelected(entry.isDummy == 1);
 		e = entry;
-		File bchFile = CtrmapMainframe.mWorkspace.getWorkspaceFile(Workspace.ArchiveType.MOVE_MODELS, entry.model);
-		if (bchFile.exists()){
+		File bchFile = Workspace.getWorkspaceFile(Workspace.ArchiveType.MOVE_MODELS, entry.model);
+		if (bchFile.exists()) {
 			BCHFile mdlBch = new BCHFile(new MM(bchFile).getFile(0));
 			mdlBch.models.get(0).setMaterialTextures(mdlBch.textures);
 			customH3DPreview1.loadModel(mdlBch.models.get(0));
-		}
-		else{
+		} else {
 			customH3DPreview1.loadModel(null);
 		}
 	}
-	
+
 	public boolean saveEntry(boolean dialog) {
+		if (reg.entries.containsKey((Integer)uid.getValue()) && !reg.entries.get((Integer)uid.getValue()).equals(e)) {
+			JOptionPane.showMessageDialog(this, "The specified UID is already registered. Please use another one.", "UID not unique", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
 		if (e != null) {
 			NPCRegistry.NPCRegistryEntry e2 = new NPCRegistry.NPCRegistryEntry();
 			e2.uid = (Integer) uid.getValue();
 			e2.model = (Integer) mdl.getValue();
-			if (render.isSelected()){
-				if (e.renderEnabled != 0) e2.renderEnabled = e.renderEnabled; else e2.renderEnabled = 2;
-			}
-			else{
+			if (render.isSelected()) {
+				if (e.renderEnabled != 0) {
+					e2.renderEnabled = e.renderEnabled;
+				} else {
+					e2.renderEnabled = 2;
+				}
+			} else {
 				e2.renderEnabled = 0;
 			}
-			e2.shadowEnabled = (Integer)shadowType.getValue();
+			e2.shadowEnabled = (Integer) shadowType.getValue();
 			e2.isItOb = item.isSelected() ? 0 : 1;
 			e2.isDummy = dummy.isSelected() ? 1 : 0;
-			e2.collW = (Integer)areaW.getValue();
-			e2.collH = (Integer)areaH.getValue();
+			e2.collW = (Integer) areaW.getValue();
+			e2.collH = (Integer) areaH.getValue();
 			e2.u1 = e.u1;
 			e2.u4 = e.u4;
 			e2.u8 = e.u8;
 			e2.u9 = e.u9;
 			e2.uC = e.uC;
 			e2.u11 = e.u11;
-			if (!e2.equals(e)){
-				if (dialog){
-					switch (Utils.showSaveConfirmationDialog("NPC registry")){
+			if (!e2.equals(e)) {
+				if (dialog) {
+					switch (Utils.showSaveConfirmationDialog("NPC registry")) {
 						case JOptionPane.YES_OPTION:
 							break;
 						case JOptionPane.NO_OPTION:
@@ -142,11 +150,12 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
 				reg.entries.put(e.uid, e);
 				reg.mapModel(e.uid, e.model);
 				reg.modified = true;
+				showEntry(e.uid);
 			}
 		}
 		return true;
 	}
-	
+
 	/**
 	 * This method is called from within the constructor to initialize the form.
 	 * WARNING: Do NOT modify this code. The content of this method is always
@@ -364,16 +373,21 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
     }//GEN-LAST:event_btnSaveActionPerformed
 
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
-		NPCRegistry.NPCRegistryEntry e2 = new NPCRegistry.NPCRegistryEntry();
-		reg.entries.put(-1, e2);
-		model.addElement("UID: " + e2.uid + " | Model: " + e2.model);
-		dict.add(e2.uid);
-		setEntry(e2.uid);
-		reg.modified = true;
+		if (reg.entries.size() < 31) {
+			NPCRegistry.NPCRegistryEntry e2 = new NPCRegistry.NPCRegistryEntry();
+			reg.entries.put(e2.uid, e2);
+			model.addElement("UID: " + e2.uid + " | Model: " + e2.model);
+			dict.add(e2.uid);
+			setEntry(e2.uid);
+			reg.modified = true;
+		} else {
+			JOptionPane.showMessageDialog(this, "An area can hold a maximum of 31 NPCs.\n"
+					+ "Reassign duplicates, free some space and try again.", "Registry limit error", JOptionPane.ERROR_MESSAGE);
+		}
     }//GEN-LAST:event_btnAddActionPerformed
 
     private void btnRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveActionPerformed
-        int index = entryList.getSelectedIndex();
+		int index = entryList.getSelectedIndex();
 		reg.entries.remove(dict.get(index));
 		model.removeElementAt(index);
 		dict.remove(index);
@@ -386,15 +400,13 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
     }//GEN-LAST:event_btnRemoveActionPerformed
 
     private void shadowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shadowActionPerformed
-		if (shadow.isSelected()){
-			if (e.shadowEnabled != 0){
+		if (shadow.isSelected()) {
+			if (e.shadowEnabled != 0) {
 				shadowType.setValue(e.shadowEnabled);
-			}
-			else {
+			} else {
 				shadowType.setValue(1);
 			}
-		}
-		else {
+		} else {
 			shadowType.setValue(0);
 		}
     }//GEN-LAST:event_shadowActionPerformed
@@ -419,7 +431,7 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
 			java.util.logging.Logger.getLogger(NPCRegistryEditor.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
 		}
 		//</editor-fold>
-		
+
 		//</editor-fold>
 
 		/* Create and display the form */

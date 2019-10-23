@@ -1,8 +1,8 @@
 package ctrmap.formats;
 
 import com.jogamp.opengl.GL2;
-import com.sun.javafx.geom.Vec3f;
 import ctrmap.formats.h3d.model.OhanaMeshUtils;
+import ctrmap.formats.vectors.Vec3f;
 import java.awt.Color;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -105,6 +105,7 @@ public class CMVD {
 		gl.glPushMatrix();
 		gl.glTranslatef(worldLocX, worldLocY, worldLocZ);
 		gl.glScalef(scale, scale, scale);
+		gl.glDisable(GL2.GL_TEXTURE_2D);
 		gl.glBegin(GL2.GL_TRIANGLES);
 		for (int i = 0; i < faces.size(); i++) {
 			int[] face = faces.get(i);

@@ -77,11 +77,7 @@ public class GRPropData {
 			for (int j = 0; j < mm.width; j++){
 				if (mm.regions[j][i] != null){
 					byte[] data = newData[j][i].assemblePropData();
-					byte[] padding = Utils.getPadding(mm.regions[j][i].getOffset(3), data.length);
-					byte[] output = new byte[data.length + padding.length];
-					System.arraycopy(data, 0, output, 0, data.length);
-					System.arraycopy(padding, 0, output, data.length, padding.length);
-					mm.regions[j][i].storeFile(3, output);
+					mm.regions[j][i].storeFile(3, data);
 				}
 			}
 		}

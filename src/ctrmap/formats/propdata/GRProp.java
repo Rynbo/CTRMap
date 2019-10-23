@@ -64,10 +64,10 @@ public class GRProp implements MapObject{
 	public void updateName(ADPropRegistry reg) {
 		File f;
 		if (reg != null && reg.entries.containsKey(uid)) {
-			f = CtrmapMainframe.mWorkspace.getWorkspaceFile(Workspace.ArchiveType.BUILDING_MODELS, reg.entries.get(uid).model);
+			f = Workspace.getWorkspaceFile(Workspace.ArchiveType.BUILDING_MODELS, reg.entries.get(uid).model);
 		} //not in registry, try the fallback method with UID only
 		else {
-			f = CtrmapMainframe.mWorkspace.getWorkspaceFile(Workspace.ArchiveType.BUILDING_MODELS, uid);
+			f = Workspace.getWorkspaceFile(Workspace.ArchiveType.BUILDING_MODELS, uid);
 		}
 		if (f == null || !f.exists()) {
 			name = "Model not found";

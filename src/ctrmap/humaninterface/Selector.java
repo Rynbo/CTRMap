@@ -12,13 +12,22 @@ public class Selector {
 	public static int selTileX = -1;
 	public static int selTileY = -1;
 	
+	public static boolean selecting = false;
+	
 	public static void select(int xOnImage, int yOnImage) {
 		if (mTileMapPanel.loaded) {
+			selecting = true;
 			hilightTileX = (int)(Math.floor(((float)xOnImage/mTileMapPanel.tilemapScaledImage.getWidth())*(double)(mTileMapPanel.width)));
             hilightTileY = (int)(Math.floor(((float)yOnImage/mTileMapPanel.tilemapScaledImage.getHeight())*(double)(mTileMapPanel.height)));
 			mTileEditForm.showTile(hilightTileX, hilightTileY, false);
-			mTileMapPanel.firePropertyChange(TileMapPanel.PROP_IMGSTATE, false, true);
+			mTileMapPanel.firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
 		}
+	}
+	
+	public static boolean getSelectorCM2DRenderOptimizationFlag(){
+		boolean out = selecting;
+		selecting = false;
+		return out;
 	}
 	
 	public static void acqCurTile() {
@@ -44,17 +53,17 @@ public class Selector {
 			selTileY = -1;
 			mTileEditForm.lockTile(false);
 		}
-		mTileMapPanel.firePropertyChange(TileMapPanel.PROP_IMGSTATE, false, true);
+		mTileMapPanel.firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
 	}
 	
 	public static void deselect() {
 		hilightTileX = -1;
 		hilightTileY = -1;
-		mTileMapPanel.firePropertyChange(TileMapPanel.PROP_IMGSTATE, false, true);
+		mTileMapPanel.firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
 	}
 	public static void unfocus() {
 		selTileX = -1;
 		selTileY = -1;
-		mTileMapPanel.firePropertyChange(TileMapPanel.PROP_IMGSTATE, false, true);
+		mTileMapPanel.firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
 	}
 }

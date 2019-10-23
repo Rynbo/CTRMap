@@ -1,5 +1,6 @@
 package ctrmap.humaninterface.tools;
 
+import ctrmap.CtrmapMainframe;
 import static ctrmap.CtrmapMainframe.*;
 import ctrmap.Utils;
 import ctrmap.humaninterface.Selector;
@@ -44,21 +45,20 @@ public class FillTool extends AbstractTool {
 
 	@Override
 	public void drawOverlay(Graphics g, int imgstartx, int imgstarty, double globimgdim) {
-		FillTool tool = (FillTool) mTileEditForm.tool;
-		if ((tool.dragging || tool.locked) && tool.originX != -1) {
+		if ((dragging || locked) && originX != -1) {
 			int dX;
 			int dY;
-			if (Selector.hilightTileX == -1 || tool.locked) {
-				dX = tool.lastX;
-				dY = tool.lastY;
+			if (Selector.hilightTileX == -1 || locked) {
+				dX = lastX;
+				dY = lastY;
 			} else {
 				dX = Selector.hilightTileX;
 				dY = Selector.hilightTileY;
-				tool.lastX = dX;
-				tool.lastY = dY;
+				lastX = dX;
+				lastY = dY;
 			}
-			int oX = tool.originX;
-			int oY = tool.originY;
+			int oX = originX;
+			int oY = originY;
 			int x = Math.min(oX, dX);
 			int y = Math.min(oY, dY);
 			int w = Math.abs(dX - oX);
@@ -85,6 +85,7 @@ public class FillTool extends AbstractTool {
 			originX = Selector.hilightTileX;
 			originY = Selector.hilightTileY;
 			dragging = true;
+			CM2DNoUpdate = true;
 		}
 	}
 
@@ -93,6 +94,7 @@ public class FillTool extends AbstractTool {
 		if (SwingUtilities.isLeftMouseButton(e)) {
 			locked = true;
 			dragging = false;
+			CM2DNoUpdate = false;
 		}
 	}
 

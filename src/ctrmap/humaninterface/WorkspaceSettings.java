@@ -1,6 +1,7 @@
 package ctrmap.humaninterface;
 
 import static ctrmap.CtrmapMainframe.*;
+import ctrmap.Workspace;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -14,6 +15,7 @@ public class WorkspaceSettings extends javax.swing.JFrame {
 
 	private String originWSPath;
 	private String originGamePath;
+	private String originSpicaPath;
 	private String originTilesetPath;
 
 	/**
@@ -24,8 +26,8 @@ public class WorkspaceSettings extends javax.swing.JFrame {
 		this.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				if (wsPathField.getText().equals(originWSPath) && gameField.getText().equals(originGamePath)) {
-					if (originTilesetPath.equals(btnTilesetDefault.isSelected() ? "Default" : tilesetPath.getText())){
+				if (wsPathField.getText().equals(originWSPath) && gameField.getText().equals(originGamePath) && spicaField.getText().equals(originSpicaPath)) {
+					if (originTilesetPath.equals(btnTilesetDefault.isSelected() ? "Default" : tilesetPath.getText())) {
 						return;
 					}
 				}
@@ -34,40 +36,44 @@ public class WorkspaceSettings extends javax.swing.JFrame {
 				}
 			}
 		});
-		wsPathField.setText(mWorkspace.WORKSPACE_PATH);
-		gameField.setText(mWorkspace.GAMEDIR_PATH);
-		tilesetPath.setText(mWorkspace.TILESET_PATH);
-		tilesetPath.setEnabled(!mWorkspace.TILESET_DEFAULT);
-		btnTilesetDefault.setSelected(mWorkspace.TILESET_DEFAULT);
-		btnTilesetCustom.setSelected(!mWorkspace.TILESET_DEFAULT); //otherwise both remain unselected if custom
+		wsPathField.setText(Workspace.WORKSPACE_PATH);
+		gameField.setText(Workspace.GAMEDIR_PATH);
+		spicaField.setText(Workspace.ESPICA_PATH);
+		tilesetPath.setText(Workspace.TILESET_PATH);
+		tilesetPath.setEnabled(!Workspace.TILESET_DEFAULT);
+		btnTilesetDefault.setSelected(Workspace.TILESET_DEFAULT);
+		btnTilesetCustom.setSelected(!Workspace.TILESET_DEFAULT); //otherwise both remain unselected if custom
 		originWSPath = wsPathField.getText();
 		originGamePath = gameField.getText();
+		originSpicaPath = spicaField.getText();
 		originTilesetPath = (btnTilesetDefault.isSelected() ? "Default" : tilesetPath.getText());
 	}
 
 	public void save() {
-		mWorkspace.WORKSPACE_PATH = wsPathField.getText();
-		mWorkspace.TILESET_DEFAULT = btnTilesetDefault.isSelected();
-		mWorkspace.TILESET_PATH = tilesetPath.getText();
-		if (!gameField.getText().equals(originGamePath)){ //may have switched from XY to AlphaOmega etc., so it's better to clean up to prevent injecting wrong game files
-			int res = JOptionPane.showConfirmDialog(null, "Game path has been changed. To prevent cross-injecting, the workspace will be cleaned.\n" 
+		Workspace.WORKSPACE_PATH = wsPathField.getText();
+		Workspace.ESPICA_PATH = spicaField.getText();
+		Workspace.TILESET_DEFAULT = btnTilesetDefault.isSelected();
+		Workspace.TILESET_PATH = tilesetPath.getText();
+		if (!gameField.getText().equals(originGamePath)) { //may have switched from XY to AlphaOmega etc., so it's better to clean up to prevent injecting wrong game files
+			int res = JOptionPane.showConfirmDialog(null, "Game path has been changed. To prevent cross-injecting, the workspace will be cleaned.\n"
 					+ "Do you wish to commit your changes to the game data beforehand? \nUncommited data will be lost on cleanup.", "State change warning", JOptionPane.YES_NO_CANCEL_OPTION);
-			switch (res){
+			switch (res) {
 				case JOptionPane.YES_OPTION:
-					mWorkspace.packWorkspace();
+					Workspace.packWorkspace();
 				case JOptionPane.NO_OPTION:
-					mWorkspace.GAMEDIR_PATH = gameField.getText();
-					mWorkspace.cleanAndReload();
+					Workspace.GAMEDIR_PATH = gameField.getText();
+					Workspace.cleanAndReload();
 					break;
 				case JOptionPane.CANCEL_OPTION:
 					return; //interrupt the saving process
 			}
 		}
-		mWorkspace.validate(this);
+		Workspace.validate(this);
 		originWSPath = wsPathField.getText();
 		originGamePath = gameField.getText();
+		originSpicaPath = spicaField.getText();
 		originTilesetPath = (btnTilesetDefault.isSelected() ? "Default" : tilesetPath.getText());
-		mTileEditForm.tileset = mWorkspace.getTileset();
+		mTileEditForm.tileset = Workspace.getTileset();
 		mTileMapPanel.updateAll();
 	}
 
@@ -93,6 +99,9 @@ public class WorkspaceSettings extends javax.swing.JFrame {
         btnTilesetCustom = new javax.swing.JRadioButton();
         btnSetTileset = new javax.swing.JButton();
         tilesetPath = new javax.swing.JTextField();
+        spicaLabel = new javax.swing.JLabel();
+        spicaField = new javax.swing.JTextField();
+        btnSetSpica = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Workspace settings");
@@ -148,6 +157,15 @@ public class WorkspaceSettings extends javax.swing.JFrame {
             }
         });
 
+        spicaLabel.setText("ESPICA path:");
+
+        btnSetSpica.setText("Browse");
+        btnSetSpica.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSetSpicaActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -157,28 +175,37 @@ public class WorkspaceSettings extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(gameLabel)
-                            .addComponent(wsLabel)
-                            .addComponent(tilesetLabel))
-                        .addGap(10, 10, 10)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(tilesetPath)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnSetTileset))
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(wsPathField, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnSetWS))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(gameField, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnSetGame))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(btnTilesetDefault)
-                                .addGap(27, 27, 27)
-                                .addComponent(btnTilesetCustom))))
-                    .addComponent(btnSave, javax.swing.GroupLayout.Alignment.TRAILING))
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(gameLabel)
+                                    .addComponent(wsLabel)
+                                    .addComponent(tilesetLabel))
+                                .addGap(10, 10, 10)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                        .addComponent(tilesetPath)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(btnSetTileset))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(wsPathField, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(btnSetWS))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(gameField, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(btnSetGame))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(btnTilesetDefault)
+                                        .addGap(27, 27, 27)
+                                        .addComponent(btnTilesetCustom))))
+                            .addComponent(btnSave, javax.swing.GroupLayout.Alignment.TRAILING))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(spicaLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(spicaField, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnSetSpica)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -196,6 +223,11 @@ public class WorkspaceSettings extends javax.swing.JFrame {
                     .addComponent(btnSetGame))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(spicaField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(spicaLabel)
+                    .addComponent(btnSetSpica))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnTilesetDefault)
                     .addComponent(btnTilesetCustom)
                     .addComponent(tilesetLabel))
@@ -203,7 +235,7 @@ public class WorkspaceSettings extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(tilesetPath, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnSetTileset))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 14, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(btnSave)
                 .addContainerGap())
         );
@@ -250,19 +282,28 @@ public class WorkspaceSettings extends javax.swing.JFrame {
 		setCustom(true);
     }//GEN-LAST:event_btnSetTilesetActionPerformed
 
-	public void setCustom(boolean forceDialog){
-		if (btnTilesetDefault.isSelected()){
-			tilesetPath.setEnabled(false);
+    private void btnSetSpicaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSetSpicaActionPerformed
+		JFileChooser jfc = new JFileChooser(tilesetPath.getText());
+		jfc.setMultiSelectionEnabled(false);
+		jfc.setDialogTitle("Locate ESPICA executable");
+		jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		jfc.showOpenDialog(this);
+		if (jfc.getSelectedFile() != null) {
+			spicaField.setText(jfc.getSelectedFile().getAbsolutePath());
 		}
-		else {
+    }//GEN-LAST:event_btnSetSpicaActionPerformed
+
+	public void setCustom(boolean forceDialog) {
+		if (btnTilesetDefault.isSelected()) {
+			tilesetPath.setEnabled(false);
+		} else {
 			tilesetPath.setEnabled(true);
 			File f = new File(tilesetPath.getText());
-			if (!f.exists() || forceDialog){
+			if (!f.exists() || forceDialog) {
 				File newFile = openTilesetFileDialog();
-				if (newFile != null){
+				if (newFile != null) {
 					tilesetPath.setText(newFile.getPath());
-				}
-				else {
+				} else {
 					btnTilesetDefault.setSelected(true);
 					tilesetPath.setEnabled(false);
 					btnSetTileset.setEnabled(true);
@@ -270,8 +311,8 @@ public class WorkspaceSettings extends javax.swing.JFrame {
 			}
 		}
 	}
-	
-	public File openTilesetFileDialog(){
+
+	public File openTilesetFileDialog() {
 		JFileChooser jfc = new JFileChooser(tilesetPath.getText());
 		jfc.setMultiSelectionEnabled(false);
 		jfc.setDialogTitle("Select a tileset file");
@@ -279,7 +320,7 @@ public class WorkspaceSettings extends javax.swing.JFrame {
 		jfc.showOpenDialog(this);
 		return jfc.getSelectedFile();
 	}
-	
+
 	/**
 	 * @param args the command line arguments
 	 */
@@ -300,7 +341,7 @@ public class WorkspaceSettings extends javax.swing.JFrame {
 			java.util.logging.Logger.getLogger(WorkspaceSettings.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
 		}
 		//</editor-fold>
-		
+
 		//</editor-fold>
 
 		/* Create and display the form */
@@ -312,12 +353,15 @@ public class WorkspaceSettings extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnSave;
     private javax.swing.JButton btnSetGame;
+    private javax.swing.JButton btnSetSpica;
     private javax.swing.JButton btnSetTileset;
     private javax.swing.JButton btnSetWS;
     private javax.swing.JRadioButton btnTilesetCustom;
     private javax.swing.JRadioButton btnTilesetDefault;
     private javax.swing.JTextField gameField;
     private javax.swing.JLabel gameLabel;
+    private javax.swing.JTextField spicaField;
+    private javax.swing.JLabel spicaLabel;
     private javax.swing.ButtonGroup tilesetBtnGroup;
     private javax.swing.JLabel tilesetLabel;
     private javax.swing.JTextField tilesetPath;

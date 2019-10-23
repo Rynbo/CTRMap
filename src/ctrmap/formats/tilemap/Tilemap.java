@@ -60,8 +60,6 @@ public class Tilemap {
 					dos.write(getTileData(x, y));
 				}
 			}
-			int written = dos.size();
-			dos.write(Utils.getPadding(startingOffset, written));
 			dos.flush();
 			dos.close();
 			return baos.toByteArray();

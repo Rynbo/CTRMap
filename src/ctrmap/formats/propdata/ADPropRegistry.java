@@ -1,9 +1,7 @@
 package ctrmap.formats.propdata;
 
-import ctrmap.CtrmapMainframe;
 import ctrmap.LittleEndianDataInputStream;
 import ctrmap.LittleEndianDataOutputStream;
-import ctrmap.Utils;
 import ctrmap.Workspace;
 import ctrmap.formats.containers.AD;
 import ctrmap.formats.containers.BM;
@@ -38,13 +36,13 @@ public class ADPropRegistry {
 			for (int i = 0; i < numEntries; i++) {
 				ADPropRegistryEntry entry = new ADPropRegistryEntry(dis);
 				entries.put(entry.reference, entry);
-				BCHFile bch = new BCHFile(new BM(CtrmapMainframe.mWorkspace.getWorkspaceFile(Workspace.ArchiveType.BUILDING_MODELS, entry.model)).getFile(0));
+				BCHFile bch = new BCHFile(new BM(Workspace.getWorkspaceFile(Workspace.ArchiveType.BUILDING_MODELS, entry.model)).getFile(0));
 				if (!bch.models.isEmpty()){
 					bch.models.get(0).setMaterialTextures(bch.textures);
-					//bch.models.get(0).adjustBoneVerticesToMatrix();
 					if (textures != null){
 						bch.models.get(0).setMaterialTextures(textures);
 					}
+					bch.models.get(0).makeAllBOs();
 					models.put(entry.reference, bch.models.get(0));
 				}
 			}
@@ -69,7 +67,6 @@ public class ADPropRegistry {
 			for (Map.Entry<Integer, ADPropRegistryEntry> e : entries.entrySet()){
 				e.getValue().write(dos);
 			}
-			dos.write(Utils.getPadding(f.getOffset(0), dos.size()));
 			dos.close();
 			f.storeFile(0, baos.toByteArray());
 		} catch (IOException ex) {
@@ -114,7 +111,7 @@ public class ADPropRegistry {
 		}
 		
 		public ADPropRegistryEntry(){
-			reference = 0;
+			reference = -1;
 			model = 0;
 			eventScr1 = 0;
 			eventScr2 = 0;

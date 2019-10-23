@@ -27,7 +27,7 @@ public class CameraTool extends AbstractTool {
 
 	@Override
 	public void drawOverlay(Graphics g, int imgstartx, int imgstarty, double globimgdim) {
-		if (mTileMapPanel.isVerified) {
+		if (mTileMapPanel.loaded) {
 			ArrayList<Byte> layers = new ArrayList<>();
 			for (int i = 0; i < mCamEditForm.f.camData.size(); i++) {
 				byte layer = (byte) mCamEditForm.f.camData.get(i).layer;

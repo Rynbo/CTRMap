@@ -47,7 +47,6 @@ public class CameraDataFile {
 			for (CameraData d : camData){
 				d.write(dos);
 			}
-			dos.write(Utils.getPadding(file.getOffset(3), dos.size()));
 			file.storeFile(3, out.toByteArray());
 		} catch (IOException ex) {
 			Logger.getLogger(CameraDataFile.class.getName()).log(Level.SEVERE, null, ex);

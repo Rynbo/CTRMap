@@ -187,9 +187,6 @@ public class H3DMaterial {
 			MatMetaData metaData = new MatMetaData();
 
 			metaData.name = StringUtils.readString(input.readInt(), data);
-			if (metaData.name.startsWith("$")) {
-				metaData.name = metaData.name.substring(1);
-			}
 			metaData.type = MatMetaData.MetaDataValueType.values()[input.readShort()];
 			short entries = input.readShort();
 			int dataOffset = input.readInt();

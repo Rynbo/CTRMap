@@ -52,7 +52,8 @@ public class CustomH3DPreview extends GLJPanel implements GLEventListener {
 		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 		gl.glLoadIdentity();
 		if (model != null) {
-			gl.glTranslatef(0f, -model.maxVector.y / 2f, -Math.max(model.maxVector.y, model.maxVector.x) * 2f + 5f);
+			float maxTransl0 = Math.max(0.5f * model.maxVector.x - model.minVector.x, 0.5f * model.maxVector.y - model.minVector.y);
+			gl.glTranslatef((model.minVector.x + model.maxVector.x)/-2f, -model.maxVector.y / 2f, -maxTransl0 * 3f - 5f);
 //			gl.glRotatef(90f, 0.0f, 1.0f, 0.0f);
 
 			for (int i = 0; i < model.meshes.size(); i++) { //direct rendering to bypass translation

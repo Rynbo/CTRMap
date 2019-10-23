@@ -11,7 +11,6 @@ import java.awt.event.MouseEvent;
 
 public class NPCTool extends AbstractTool {
 	
-	private boolean dragging = false;
 	private boolean isDownOnNPC = false;
 	
 	@Override
@@ -69,7 +68,6 @@ public class NPCTool extends AbstractTool {
 	
 	@Override
 	public void onTileMouseUp(MouseEvent e) {
-		dragging = false;
 		isDownOnNPC = false;
 		frame.repaint();
 	}
@@ -79,9 +77,9 @@ public class NPCTool extends AbstractTool {
 		if (mNPCEditForm.npc == null || !mNPCEditForm.loaded || !isDownOnNPC || Selector.hilightTileX == -1) {
 			return;
 		}
-		dragging = true;
 		mNPCEditForm.npc.xTile = Selector.hilightTileX;
 		mNPCEditForm.npc.yTile = Selector.hilightTileY;
+		mNPCEditForm.npc.z3DCoordinate = mTileMapPanel.getHeightAtWorldLoc(mNPCEditForm.npc.xTile * 18f, mNPCEditForm.npc.yTile * 18f);
 		mNPCEditForm.e.modified = true;
 		mNPCEditForm.refresh();
 	}
