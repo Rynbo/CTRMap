@@ -1,8 +1,9 @@
 package ctrmap.humaninterface;
 
 import ctrmap.resources.ResourceAccess;
-import static ctrmap.CtrmapMainframe.*;
 import ctrmap.Workspace;
+import ctrmap.formats.containers.AD;
+import ctrmap.formats.zone.Zone;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -17,8 +18,11 @@ public class ExtrasPanel extends javax.swing.JPanel {
 	/**
 	 * Creates new form ExtrasPanel
 	 */
-	public ExtrasPanel() {
+	private ZoneLoadingPanel parent;
+
+	public ExtrasPanel(ZoneLoadingPanel zoneContainer) {
 		initComponents();
+		parent = zoneContainer;
 	}
 
 	/**
@@ -33,6 +37,7 @@ public class ExtrasPanel extends javax.swing.JPanel {
         freecam = new javax.swing.JButton();
         freecamReg = new javax.swing.JButton();
         freecamTitleLabel = new javax.swing.JLabel();
+        btn3d = new javax.swing.JButton();
 
         freecam.setText("Inject dummy camera collisions");
         freecam.addActionListener(new java.awt.event.ActionListener() {
@@ -50,6 +55,13 @@ public class ExtrasPanel extends javax.swing.JPanel {
 
         freecamTitleLabel.setText("Free camera mod (DANGER)");
 
+        btn3d.setText("Enable stereoscopic 3D");
+        btn3d.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn3dActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -59,7 +71,9 @@ public class ExtrasPanel extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(freecamTitleLabel)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(freecam)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(btn3d, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(freecam, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(freecamReg)))
                 .addContainerGap(12, Short.MAX_VALUE))
@@ -73,61 +87,80 @@ public class ExtrasPanel extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(freecam)
                     .addComponent(freecamReg))
-                .addContainerGap(246, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btn3d)
+                .addContainerGap(217, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
     private void freecamActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_freecamActionPerformed
-        if (mZonePnl.zones != null){
-            byte[] ad7 = ResourceAccess.getByteArray("DummyLumioseCollision.bin");
-            for (int i = 0; i < mZonePnl.zones.length; i++){
-                mZonePnl.zones[i].header.fetchArchives();
-                mZonePnl.zones[i].header.areadata.storeFile(7, ad7);
-                mZonePnl.zones[i].header.freeArchives();
-            }
-        }
+		byte[] ad7 = ResourceAccess.getByteArray("DummyLumioseCollision.bin");
+		for (int i = 0; i < Workspace.getArchive(Workspace.ArchiveType.AREA_DATA).length - (Workspace.isOA() ? 2 : 1); i++) {
+			AD ad = new AD(Workspace.getWorkspaceFile(Workspace.ArchiveType.AREA_DATA, i));
+			ad.storeFile(7, ad7);
+		}
     }//GEN-LAST:event_freecamActionPerformed
 
     private void freecamRegActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_freecamRegActionPerformed
-        //ORAS has longer AD file 536 (44 byte entry instead of 36) so we ban it idk if it even works, will try sometime
-        //well apparently ORAS doesn't have Lumiose Camera programmed in
-        /*if (mWorkspace.game == Workspace.GameType.ORAS){
-            JOptionPane.showMessageDialog(frame, "ORAS is not supported", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }*/
+		Zone[] zones = parent.zones;
+		if (zones != null) {
+			for (int i = 0; i < zones.length; i++) {
+				zones[i].header.enableRollerSkates = true;
+				zones[i].header.enableEscapeRope = true;
+				zones[i].header.enableFlyFrom = true;
+				zones[i].header.enableRunning = true;
+				zones[i].header.enableCycling = Workspace.isXY(); //Cycling softlocks the game even on emulators
+				zones[i].store(false);
+			}
+		}
 
-        if (mZonePnl.zones != null){
-            for (int i = 0; i < mZonePnl.zones.length; i++){
-                mZonePnl.zones[i].header.enableRollerSkates = true;
-                mZonePnl.zones[i].header.enableEscapeRope = true;
-                mZonePnl.zones[i].header.enableFlyFrom = true;
-                mZonePnl.zones[i].header.enableRunning = true;
-                if (mWorkspace.game == Workspace.GameType.ORAS){
-                    mZonePnl.zones[i].header.enableCycling = false; //Cycling softlocks the game even on emulators
-                }
-                mZonePnl.zones[i].store(false);
-            }
-        }
-
-        File f170 = mWorkspace.game == Workspace.GameType.XY ? mWorkspace.getWorkspaceFile(Workspace.ArchiveType.AREA_DATA, 170)
-        : mWorkspace.getWorkspaceFile(Workspace.ArchiveType.AREA_DATA, 228);
-        try {
-            RandomAccessFile raf = new RandomAccessFile(f170, "rw");
-            int skip = mWorkspace.game == Workspace.GameType.XY ? 0x14 : 0x1c;
-            while (raf.getFilePointer() + 0xf < raf.length()){
-                raf.skipBytes(0xf);
-                raf.write(1);
-                raf.skipBytes(skip);
-            }
-            raf.close();
-            mWorkspace.addPersist(f170);
-        } catch (IOException ex) {
-            Logger.getLogger(ZoneLoadingPanel.class.getName()).log(Level.SEVERE, null, ex);
-        }
+		File f170 = Workspace.isXY() ? Workspace.getWorkspaceFile(Workspace.ArchiveType.AREA_DATA, 170)
+				: Workspace.getWorkspaceFile(Workspace.ArchiveType.AREA_DATA, 228);
+		try {
+			RandomAccessFile raf = new RandomAccessFile(f170, "rw");
+			int skip = Workspace.isXY() ? 0x14 : 0x1c;
+			while (raf.getFilePointer() + 0xf < raf.length()) {
+				raf.skipBytes(0xf);
+				raf.write(1);
+				raf.skipBytes(skip);
+			}
+			raf.close();
+			Workspace.addPersist(f170);
+		} catch (IOException ex) {
+			Logger.getLogger(ZoneLoadingPanel.class.getName()).log(Level.SEVERE, null, ex);
+		}
     }//GEN-LAST:event_freecamRegActionPerformed
+
+    private void btn3dActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn3dActionPerformed
+		Zone[] zones = parent.zones;
+
+		if (zones != null) {
+			for (int i = 0; i < zones.length; i++) {
+				zones[i].header.enable3D = true;
+				zones[i].store(false);
+			}
+		}
+
+		File f170 = Workspace.isXY() ? Workspace.getWorkspaceFile(Workspace.ArchiveType.AREA_DATA, 170)
+				: Workspace.getWorkspaceFile(Workspace.ArchiveType.AREA_DATA, 228);
+		try {
+			RandomAccessFile raf = new RandomAccessFile(f170, "rw");
+			int skip = Workspace.isXY() ? 0x19 : 0x21;
+			while (raf.getFilePointer() + 0xa < raf.length()) {
+				raf.skipBytes(0xa);
+				raf.write(0x2c);
+				raf.skipBytes(skip);
+			}
+			raf.close();
+			Workspace.addPersist(f170);
+		} catch (IOException ex) {
+			Logger.getLogger(ZoneLoadingPanel.class.getName()).log(Level.SEVERE, null, ex);
+		}
+    }//GEN-LAST:event_btn3dActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btn3d;
     private javax.swing.JButton freecam;
     private javax.swing.JButton freecamReg;
     private javax.swing.JLabel freecamTitleLabel;

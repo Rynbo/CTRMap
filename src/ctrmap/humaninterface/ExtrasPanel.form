@@ -16,12 +16,15 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Group type="102" alignment="0" attributes="0">
+          <Group type="102" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="freecamTitleLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                   <Group type="102" alignment="0" attributes="0">
-                      <Component id="freecam" min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                          <Component id="btn3d" alignment="0" max="32767" attributes="0"/>
+                          <Component id="freecam" alignment="0" max="32767" attributes="0"/>
+                      </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="freecamReg" min="-2" max="-2" attributes="0"/>
                   </Group>
@@ -40,7 +43,9 @@
                   <Component id="freecam" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="freecamReg" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace pref="246" max="32767" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="btn3d" min="-2" max="-2" attributes="0"/>
+              <EmptySpace pref="217" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -66,6 +71,14 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="Free camera mod (DANGER)"/>
       </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="btn3d">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Enable stereoscopic 3D"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btn3dActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>
