@@ -3,9 +3,6 @@ package ctrmap.formats.h3d.model;
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.math.Matrix4;
-import com.sun.javafx.geom.Vec2d;
-import com.sun.javafx.geom.Vec3f;
-import com.sun.javafx.geom.Vec4f;
 import ctrmap.formats.h3d.BCHHeader;
 import ctrmap.formats.h3d.PICACommand;
 import ctrmap.formats.h3d.PICACommandReader;
@@ -13,6 +10,9 @@ import ctrmap.formats.h3d.RandomAccessBAIS;
 import ctrmap.formats.h3d.StringUtils;
 import ctrmap.formats.h3d.texturing.H3DMaterial;
 import ctrmap.formats.h3d.texturing.H3DTexture;
+import ctrmap.formats.vectors.Vec2d;
+import ctrmap.formats.vectors.Vec3f;
+import ctrmap.formats.vectors.Vec4f;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -568,6 +568,7 @@ public class H3DModel {
 		gl.glRotatef(rotationX, 1f, 0f, 0f);
 		gl.glRotatef(rotationY, 0f, 1f, 0f);
 		gl.glScalef(scaleX, scaleY, scaleZ);
+		gl.glDisable(GL2.GL_TEXTURE_2D);
 		gl.glBegin(GL2.GL_LINES);
 
 		gl.glColor3f(1f, 0f, 0f);
@@ -611,10 +612,16 @@ public class H3DModel {
 		public ByteBuffer vcbo;
 		public DoubleBuffer[] tcbo;
 
+		public int texindex;
+		public int textureWidth;
+		public int textureHeight;
+		public byte[] textureData;
+
 		public boolean doVBOUpdate = true;
 		public boolean useVBO = false;
 
 		public Map<GL2, int[]> glBufPtrs = new HashMap<>();
+		public Map<GL2, int[]> glTexturePtrs = new HashMap<>();
 
 		public void makeBOs(H3DMaterial mat) { //maybe someday?
 			vbo = FloatBuffer.allocate(vertices.size() * 3);
@@ -637,6 +644,24 @@ public class H3DModel {
 				}
 				if (H3DMaterial.TextureMapper.getGlTextureWrap(mat.mappers[2].wrapU) == GL2.GL_MIRRORED_REPEAT) {
 					mirrorx2 = true;
+				}
+				if (!(mat.texture0 == null && mat.texture1 == null && mat.texture2 == null)) {
+					if (mat.texture0 != null) {
+						texindex = 0;
+						textureWidth = mat.texture0.textureSize.width;
+						textureHeight = mat.texture0.textureSize.height;
+						textureData = mat.texture0.textureData;
+					} else if (mat.texture1 != null) {
+						texindex = 1;
+						textureWidth = mat.texture1.textureSize.width;
+						textureHeight = mat.texture1.textureSize.height;
+						textureData = mat.texture1.textureData;
+					} else {
+						texindex = 2;
+						textureWidth = mat.texture2.textureSize.width;
+						textureHeight = mat.texture2.textureSize.height;
+						textureData = mat.texture2.textureData;
+					}
 				}
 			}
 			for (int i = 0; i < vertices.size(); i++) {
@@ -667,7 +692,9 @@ public class H3DModel {
 		public void destroyGl(GL2 gl) {
 			if (glBufPtrs.get(gl) != null) {
 				gl.glDeleteBuffers(1, glBufPtrs.get(gl), 0);
+				gl.glDeleteTextures(1, glTexturePtrs.get(gl), 0);
 				glBufPtrs.remove(gl);
+				glTexturePtrs.remove(gl);
 			}
 		}
 
@@ -681,7 +708,14 @@ public class H3DModel {
 				gl.glGenBuffers(1, ptr, 0);
 				glBufPtrs.put(gl, ptr);
 			}
+			if (!glTexturePtrs.containsKey(gl)) {
+				int[] textureptr = new int[1];
+				gl.glGenTextures(1, textureptr, 0);
+				glTexturePtrs.put(gl, textureptr);
+			}
 			int[] vboPtr = glBufPtrs.get(gl);
+			int[] texturePtr = glTexturePtrs.get(gl);
+			gl.glDeleteTextures(1, texturePtr, 0);
 			gl.glDeleteBuffers(1, vboPtr, 0);
 			vbo.rewind();
 			vcbo.rewind();
@@ -699,55 +733,49 @@ public class H3DModel {
 			if (tcbo[0] != null) {
 				gl.glBufferSubData(GL2.GL_ARRAY_BUFFER, vbo.capacity() * Float.BYTES + vcbo.capacity(), tcbo[0].capacity() * Double.BYTES, tcbo[0]);
 			}
+			gl.glBindTexture(GL2.GL_TEXTURE_2D, glTexturePtrs.get(gl)[0]);
+			if (textureData != null) {
+				gl.glTexImage2D(GL2.GL_TEXTURE_2D, 0, GL2.GL_RGBA, textureWidth, textureHeight, 0, GL2.GL_RGBA, GL2.GL_UNSIGNED_BYTE, ByteBuffer.wrap(textureData));
+			}
 		}
 
 		public void render(GL2 gl, H3DMaterial mat) {
 			/*
 			Stuff involving checking for "blc" in material name is a workaround for tall grass rendering, which uses weird vertex coloring and alpha testing
 			 */
-			int[] textureIDs = new int[1];
-			int texindex;
-			gl.glGenTextures(1, textureIDs, 0);
-			gl.glBindTexture(GL2.GL_TEXTURE_2D, textureIDs[0]);
 			boolean mirrorx = false;
-			if (mat != null) {
-				if (!(mat.texture0 == null && mat.texture1 == null && mat.texture2 == null)) {
-					if (mat.texture0 != null) {
-						texindex = 0;
-						gl.glTexImage2D(GL2.GL_TEXTURE_2D, 0, GL2.GL_RGBA, mat.texture0.textureSize.width, mat.texture0.textureSize.height, 0, GL2.GL_RGBA, GL2.GL_UNSIGNED_BYTE, ByteBuffer.wrap(mat.texture0.textureData));
-					} else if (mat.texture1 != null) {
-						texindex = 1;
-						gl.glTexImage2D(GL2.GL_TEXTURE_2D, 0, GL2.GL_RGBA, mat.texture1.textureSize.width, mat.texture1.textureSize.height, 0, GL2.GL_RGBA, GL2.GL_UNSIGNED_BYTE, ByteBuffer.wrap(mat.texture1.textureData));
-					} else {
-						texindex = 2;
-						gl.glTexImage2D(GL2.GL_TEXTURE_2D, 0, GL2.GL_RGBA, mat.texture2.textureSize.width, mat.texture2.textureSize.height, 0, GL2.GL_RGBA, GL2.GL_UNSIGNED_BYTE, ByteBuffer.wrap(mat.texture2.textureData));
-					}
-					int twX = H3DMaterial.TextureMapper.getGlTextureWrap(mat.mappers[texindex].wrapU);
-					if (twX == GL2.GL_MIRRORED_REPEAT) {
-						mirrorx = true;
-					}
-					int twY = H3DMaterial.TextureMapper.getGlTextureWrap(mat.mappers[texindex].wrapV);
-					gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_WRAP_S, twX);
-					gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_WRAP_T, twY);
-					gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_NEAREST);
-					gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_NEAREST);
-					if (mat.params.blendop.mode == H3DMaterial.BlendOperation.BlendMode.blend) {
-						gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA); //forces to 1-a to prevent drunk framebuffer. renders fine.
-						gl.glBlendEquation(H3DMaterial.BlendOperation.getGlBlendEqt(mat.params.blendop.alphaBlendEquation));
-						gl.glDisable(GL2.GL_ALPHA_TEST);
-						gl.glEnable(GL2.GL_BLEND);
-					} else {
-						gl.glDisable(GL2.GL_BLEND);
-						if (mat.params.alphaTest.isTestEnabled && !mat.name.contains("blc")) {
-							gl.glAlphaFunc(mat.params.alphaTest.getGlTestFunc(), 0); //forcing to 0 prevents some meshes not appearing, with references like 58 etc. no glitches afaik caused by this.
-							gl.glEnable(GL2.GL_ALPHA_TEST);
-						} else {
-							gl.glDisable(GL2.GL_ALPHA_TEST);
+			if (glTexturePtrs.containsKey(gl)) {
+				if (mat != null) {
+					if (!(mat.texture0 == null && mat.texture1 == null && mat.texture2 == null)) {
+						gl.glEnable(GL2.GL_TEXTURE_2D);
+						gl.glBindTexture(GL2.GL_TEXTURE_2D, glTexturePtrs.get(gl)[0]);
+						int twX = H3DMaterial.TextureMapper.getGlTextureWrap(mat.mappers[texindex].wrapU);
+						if (twX == GL2.GL_MIRRORED_REPEAT) {
+							mirrorx = true;
 						}
-					}
-					if (mat.name.contains("blc") || mat.name0.equals("enc_grass")) {
-						gl.glAlphaFunc(GL.GL_NOTEQUAL, 0);
-						gl.glEnable(GL2.GL_ALPHA_TEST);
+						int twY = H3DMaterial.TextureMapper.getGlTextureWrap(mat.mappers[texindex].wrapV);
+						gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_WRAP_S, twX);
+						gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_WRAP_T, twY);
+						gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_NEAREST);
+						gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_NEAREST);
+						if (mat.params.blendop.mode == H3DMaterial.BlendOperation.BlendMode.blend) {
+							gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA); //forces to 1-a to prevent drunk framebuffer. renders fine.
+							gl.glBlendEquation(H3DMaterial.BlendOperation.getGlBlendEqt(mat.params.blendop.alphaBlendEquation));
+							gl.glDisable(GL2.GL_ALPHA_TEST);
+							gl.glEnable(GL2.GL_BLEND);
+						} else {
+							gl.glDisable(GL2.GL_BLEND);
+							if (mat.params.alphaTest.isTestEnabled && !mat.name.contains("blc")) {
+								gl.glAlphaFunc(mat.params.alphaTest.getGlTestFunc(), 0); //forcing to 0 prevents some meshes not appearing, with references like 58 etc. no glitches afaik caused by this.
+								gl.glEnable(GL2.GL_ALPHA_TEST);
+							} else {
+								gl.glDisable(GL2.GL_ALPHA_TEST);
+							}
+						}
+						if (mat.name.contains("blc") || mat.name0.equals("enc_grass")) {
+							gl.glAlphaFunc(GL.GL_NOTEQUAL, 0);
+							gl.glEnable(GL2.GL_ALPHA_TEST);
+						}
 					}
 				}
 			}
@@ -778,13 +806,12 @@ public class H3DModel {
 						gl.glColor3f(1f, 1f, 1f);
 					}
 					if (mat != null) {
-						gl.glTexCoord2d(((mirrorx) ? 1 : 0) - v.texture0.x, v.texture0.y);
+						gl.glTexCoord2d((mirrorx ? 1 : 0) - v.texture0.x, v.texture0.y);
 					}
 					gl.glVertex3f(v.position.x, v.position.y, v.position.z);
 				}
 				gl.glEnd();
 			}
-			gl.glDeleteTextures(1, textureIDs, 0);
 		}
 	}
 }
