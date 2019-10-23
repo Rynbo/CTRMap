@@ -20,7 +20,22 @@ import java.io.File;
  * 11 - World textures
  */
 public class AD extends AbstractGamefreakContainer{
-
+	
+	public ContentType[] contents = {
+		ContentType.PROP_REGISTRY,
+		ContentType.H3D_TEXTURE_PACK,
+		ContentType.H3D_OTHER,
+		ContentType.CAMERA_DATA,
+		ContentType.UNKNOWN,
+		ContentType.H3D_OTHER,
+		ContentType.CAMERA_DATA,
+		ContentType.COLLISION,
+		ContentType.SUB_CONTAINER,
+		ContentType.SUB_CONTAINER,
+		ContentType.UNKNOWN,
+		ContentType.H3D_TEXTURE_PACK
+	};
+	
 	public AD(File f) {
 		super(f);
 	}
@@ -30,4 +45,13 @@ public class AD extends AbstractGamefreakContainer{
 		return 0x4144;
 	}
 
+	@Override
+	public ContentType getDefaultContentType(int index) {
+		return contents[index];
+	}
+
+	@Override
+	public boolean getIsPadded() {
+		return true;
+	}
 }

@@ -16,7 +16,15 @@ import java.io.File;
  * but was scrapped early and is not-000000 only in the intro truck, where zeroing it changes nothing.
  */
 public class GR extends AbstractGamefreakContainer{
-
+	public ContentType[] contents = new ContentType[]{
+		ContentType.TILEMAP,
+		ContentType.H3D_MODEL,
+		ContentType.COLLISION,
+		ContentType.PROP_DATA,
+		ContentType.UNKNOWN,
+		ContentType.H3D_MODEL
+	};
+	
 	public GR(File f) {
 		super(f);
 	}
@@ -26,4 +34,20 @@ public class GR extends AbstractGamefreakContainer{
 		return 0x4752;
 	}
 
+	@Override
+	public ContentType getDefaultContentType(int index) {
+		if (index > 5){
+			//multi layer GR
+			//can be tilemap or coll
+			return ContentType.UNKNOWN;
+		}
+		else {
+			return contents[index];
+		}
+	}
+
+	@Override
+	public boolean getIsPadded() {
+		return true;
+	}
 }

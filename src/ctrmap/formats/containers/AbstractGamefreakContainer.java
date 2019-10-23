@@ -1,6 +1,5 @@
 package ctrmap.formats.containers;
 
-import ctrmap.CtrmapMainframe;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -8,7 +7,12 @@ import java.io.IOException;
 
 import ctrmap.LittleEndianDataInputStream;
 import ctrmap.LittleEndianDataOutputStream;
+import ctrmap.Utils;
+import ctrmap.Workspace;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,7 +26,7 @@ public abstract class AbstractGamefreakContainer {
 	private File f;
 	public int len;
 	private int[] offsets;
-
+	
 	public abstract short getHeader();
 
 	public AbstractGamefreakContainer(File f) {
@@ -76,13 +80,40 @@ public abstract class AbstractGamefreakContainer {
 			return null;
 		}
 	}
+	
+	public File getIOFile(int fileNum){
+		try {
+			byte[] b = getFile(fileNum);
+			File out = new File(Workspace.temp + "/agfc_extract_" + UUID.randomUUID().toString());
+			OutputStream os = new FileOutputStream(out);
+			os.write(b);
+			os.close();
+			return out;
+		} catch (IOException ex) {
+			return null;
+		}
+	}
 
 	public boolean checkStoreStatus(int num, byte[] data) {
 		return !Arrays.equals(data, getFile(num));
 	}
-
+	
+	public abstract ContentType getDefaultContentType(int index);
+	
+	public abstract boolean getIsPadded();
+	
 	public void storeFile(int num, byte[] data) {
-		if (!checkStoreStatus(num, data)){
+		byte[] paddedData;
+		if (getIsPadded()){
+			byte[] padding = Utils.getPadding(getOffset(num), data.length);
+			paddedData = new byte[data.length + padding.length];
+			System.arraycopy(data, 0, paddedData, 0, data.length);
+			System.arraycopy(padding, 0, paddedData, data.length, padding.length);
+		}
+		else {
+			paddedData = data;
+		}
+		if (!checkStoreStatus(num, paddedData)){
 			return;
 		}
 		try {
@@ -92,7 +123,7 @@ public abstract class AbstractGamefreakContainer {
 			dis.read(b);
 			dis.close();
 			//calculate new offsets
-			int change = data.length - (offsets[num + 1] - offsets[num]);
+			int change = paddedData.length - (offsets[num + 1] - offsets[num]);
 			for (int i = num + 1; i < len + 1; i++) {
 				offsets[i] += change;
 			}
@@ -114,7 +145,7 @@ public abstract class AbstractGamefreakContainer {
 				System.arraycopy(b, offsets[0], bytesbefore, 0, firstlen);
 				out.write(bytesbefore);
 			}
-			out.write(data);
+			out.write(paddedData);
 			int secondlen = offsets[len] - offsets[num + 1];
 			if (secondlen > 0) {
 				byte[] bytesafter = new byte[secondlen];
@@ -123,10 +154,22 @@ public abstract class AbstractGamefreakContainer {
 			}
 			out.flush();
 			out.close();
-			CtrmapMainframe.mWorkspace.addPersist(getOriginFile());
+			Workspace.addPersist(getOriginFile());
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("An IOException occured while reading " + f.getName());
+		}
+	}
+	
+	public void storeFile(int num, File f){
+		try {
+			InputStream in = new FileInputStream(f);
+			byte[] b = new byte[in.available()];
+			in.read(b);
+			storeFile(num, b);
+			in.close();
+		} catch (IOException ex) {
+			Logger.getLogger(AbstractGamefreakContainer.class.getName()).log(Level.SEVERE, null, ex);
 		}
 	}
 }

@@ -15,6 +15,14 @@ import java.io.File;
  */
 public class ZO extends AbstractGamefreakContainer{
 
+	public ContentType[] contents = {
+		ContentType.ZONE_HEADER,
+		ContentType.ZONE_ENTITIES,
+		ContentType.UNKNOWN,
+		ContentType.UNKNOWN,
+		ContentType.UNKNOWN
+	};
+	
 	public ZO(File f) {
 		super(f);
 	}
@@ -22,5 +30,15 @@ public class ZO extends AbstractGamefreakContainer{
 	@Override
 	public short getHeader() {
 		return 0x5a4f;
+	}
+
+	@Override
+	public ContentType getDefaultContentType(int index) {
+		return contents[index];
+	}
+
+	@Override
+	public boolean getIsPadded() {
+		return false;
 	}
 }
