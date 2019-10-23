@@ -1,5 +1,6 @@
 package ctrmap.formats.zone;
 
+import ctrmap.formats.scripts.GFLPawnScript;
 import ctrmap.CtrmapMainframe;
 import ctrmap.LittleEndianDataInputStream;
 import ctrmap.LittleEndianDataOutputStream;
@@ -12,7 +13,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * ZoneEntities implementation for Furniture and NPCs, Based on OWSE source (from PK3DS)
+ * ZoneEntities implementation for Furniture and NPCs, Based on OWSE source
+ * (from PK3DS)
  */
 public class ZoneEntities {
 
@@ -25,6 +27,8 @@ public class ZoneEntities {
 
 	public ArrayList<Prop> furniture = new ArrayList<>();
 	public ArrayList<NPC> npcs = new ArrayList<>();
+	public ArrayList<Warp> warps = new ArrayList<>();
+	public GFLPawnScript scripts;
 
 	public byte[] rest_unprogrammed;
 
@@ -46,8 +50,13 @@ public class ZoneEntities {
 			for (int i = 0; i < NPCCount; i++) {
 				npcs.add(new NPC(dis));
 			}
-			rest_unprogrammed = new byte[dis.available()];
+			for (int i = 0; i < warpCount; i++) {
+				warps.add(new Warp(dis));
+			}
+			int restLength = trigger1Count * 0x18 + trigger2Count * 0x18;
+			rest_unprogrammed = new byte[restLength];
 			dis.read(rest_unprogrammed);
+			scripts = new GFLPawnScript(dis);
 			dis.close();
 		} catch (IOException ex) {
 			Logger.getLogger(ZoneEntities.class.getName()).log(Level.SEVERE, null, ex);
@@ -73,7 +82,11 @@ public class ZoneEntities {
 			for (int i = 0; i < npcs.size(); i++) {
 				npcs.get(i).write(dos);
 			}
+			for (int i = 0; i < warps.size(); i++) {
+				warps.get(i).write(dos);
+			}
 			dos.write(rest_unprogrammed);
+			scripts.write(dos);
 			dos.close();
 			return baos.toByteArray();
 		} catch (IOException ex) {
@@ -141,8 +154,8 @@ public class ZoneEntities {
 		public int u12 = 0;
 		public int areaStartX = 0;
 		public int areaStartY = 0;
-		public int areaWidth = 0;
-		public int areaHeight = 0;
+		public int areaWidth = 1;
+		public int areaHeight = 1;
 
 		public int multiZoneLinkOriginZone = -1;
 		public int multiZoneLinkTargetZone = -1;
@@ -303,7 +316,7 @@ public class ZoneEntities {
 
 		public void setYFromColl(float x, float y) {
 			float newz3DCoordinate = CtrmapMainframe.mTileMapPanel.getHeightAtWorldLoc(x, y);
-			if (newz3DCoordinate != Float.NaN){
+			if (newz3DCoordinate != Float.NaN) {
 				z3DCoordinate = newz3DCoordinate;
 			}
 		}
@@ -337,6 +350,109 @@ public class ZoneEntities {
 				}
 			}
 			setYFromColl(xTile * 18f + 9f, yTile * 18f + 9f);
+		}
+	}
+
+	public static class Warp {
+
+		public int targetZone;
+		public int targetWarpId;
+		public int directionality;
+
+		public int faceDirection;
+		public int transitionType;
+
+		public int coordinateType;
+
+		public int x;
+		public int w;
+		public int y;
+		public int h;
+		public int z;
+
+		public short u14;
+		public short u16;
+
+		public Warp() {
+			targetZone = 0;
+			targetWarpId = 0;
+			directionality = 0;
+			faceDirection = 1;
+			transitionType = 3;
+			coordinateType = 0;
+			x = 0;
+			y = 0;
+			z = 0;
+			w = 1;
+			h = 1;
+			u14 = 0;
+			u16 = 0;
+		}
+
+		public Warp(LittleEndianDataInputStream dis) throws IOException {
+			targetZone = dis.readUnsignedShort();
+			targetWarpId = dis.readUnsignedShort();
+			faceDirection = dis.read();
+			transitionType = dis.read();
+
+			coordinateType = dis.readUnsignedShort();
+
+			x = dis.readShort();
+			if (coordinateType == 0) {
+				z = dis.readShort();
+				y = dis.readShort();
+			} else {
+				y = dis.readShort();
+				z = dis.readShort();
+			}
+
+			w = dis.readShort();
+			h = dis.readShort();
+
+			directionality = dis.readUnsignedShort();
+
+			u14 = dis.readShort();
+			u16 = dis.readShort();
+		}
+
+		public void write(LittleEndianDataOutputStream dos) throws IOException {
+			dos.writeShort((short) targetZone);
+			dos.writeShort((short) targetWarpId);
+			dos.write(faceDirection);
+			dos.write(transitionType);
+
+			dos.writeShort((short) coordinateType);
+
+			dos.writeShort((short) x);
+			if (coordinateType == 0) {
+				dos.writeShort((short) z);
+				dos.writeShort((short) y);
+			}
+			else {
+				dos.writeShort((short)y);
+				dos.writeShort((short)z);
+			}
+
+			dos.writeShort((short) w);
+			dos.writeShort((short) h);
+
+			dos.writeShort((short) directionality);
+
+			dos.writeShort(u14);
+			dos.writeShort(u16);
+		}
+		
+		@Override
+		public boolean equals(Object o){
+			if (o != null && o instanceof Warp){
+				Warp w = (Warp)o;
+				return w.targetZone == targetZone && w.targetWarpId == targetWarpId
+						&& w.faceDirection == faceDirection && w.transitionType == transitionType
+						&& w.coordinateType == coordinateType && w.x == x && w.y == y && w.z == z
+						&& w.w == this.w && w.h == h && w.directionality == directionality
+						&& w.u14 == u14 && w.u16 == u16;
+			}
+			return false;
 		}
 	}
 }
