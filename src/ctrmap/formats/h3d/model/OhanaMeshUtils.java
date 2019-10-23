@@ -1,7 +1,7 @@
 package ctrmap.formats.h3d.model;
 
-import com.sun.javafx.geom.Vec3f;
 import ctrmap.formats.h3d.RandomAccessBAIS;
+import ctrmap.formats.vectors.Vec3f;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;

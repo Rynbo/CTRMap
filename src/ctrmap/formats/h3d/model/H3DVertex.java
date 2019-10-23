@@ -1,7 +1,7 @@
 package ctrmap.formats.h3d.model;
 
-import com.sun.javafx.geom.Vec2d;
-import com.sun.javafx.geom.Vec3f;
+import ctrmap.formats.vectors.Vec2d;
+import ctrmap.formats.vectors.Vec3f;
 import java.util.ArrayList;
 
 public class H3DVertex {
