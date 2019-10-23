@@ -1,7 +1,6 @@
 package ctrmap;
 
 import static ctrmap.CtrmapMainframe.*;
-import ctrmap.formats.csar.BCSArStringLoader;
 import ctrmap.formats.tilemap.EditorTileset;
 import ctrmap.formats.garc.GARC;
 import ctrmap.formats.text.LocationNames;
@@ -27,47 +26,58 @@ import javax.swing.SwingWorker;
  */
 public class Workspace {
 
-	Preferences prefs;
-	public String WORKSPACE_PATH;
-	public String GAMEDIR_PATH;
-	public boolean TILESET_DEFAULT;
-	public String TILESET_PATH;
+	static Preferences prefs;
+	public static String WORKSPACE_PATH;
+	public static String GAMEDIR_PATH;
+	public static String ESPICA_PATH;
+	public static boolean TILESET_DEFAULT;
+	public static String TILESET_PATH;
 
-	public File areadata;
-	public File fielddata;
-	public File mapmatrix;
-	public File gametext;
-	public File zonedata;
-	public File buildingmodels;
-	public File npcregistries;
-	public File movemodels;
+	public static File areadata;
+	public static File fielddata;
+	public static File mapmatrix;
+	public static File gametext;
+	public static File zonedata;
+	public static File buildingmodels;
+	public static File npcregistries;
+	public static File movemodels;
+	public static File temp;
 
-	public File persist_config;
-	public ArrayList<String> persist_paths = new ArrayList<>();
+	public static File persist_config;
+	public static ArrayList<String> persist_paths = new ArrayList<>();
 
-	public GARC ad;
-	public GARC gr;
-	public GARC mm;
-	public GARC texts;
-	public GARC zo;
-	public GARC bm;
-	public GARC npcreg;
-	public GARC npcmm;
+	public static GARC ad;
+	public static GARC gr;
+	public static GARC mm;
+	public static GARC texts;
+	public static GARC zo;
+	public static GARC bm;
+	public static GARC npcreg;
+	public static GARC npcmm;
 
-	public String[] musicNames;
+	public static String[] musicNames;
 	
-	public GameType game;
-	public boolean valid = false;
+	public static GameType game;
+	public static boolean valid = false;
 
-	public Workspace() {
-		prefs = Preferences.userRoot().node(getClass().getName());
+	public static void loadWorkspace() {
+		prefs = Preferences.userRoot().node(Workspace.class.getName());
 		WORKSPACE_PATH = prefs.get("WORKSPACE_PATH", "");
 		GAMEDIR_PATH = prefs.get("GAMEDIR_PATH", "");
+		ESPICA_PATH = prefs.get("ESPICA_PATH", "");
 		TILESET_DEFAULT = prefs.getBoolean("TILESET_DEFAULT", true);
 		TILESET_PATH = prefs.get("TILESET_PATH", "");
 	}
+	
+	public static void createWorkspace(String wspath, String gamepath, String espicapath, boolean tilesetDefault, String customTilesetPath){
+		WORKSPACE_PATH = wspath;
+		GAMEDIR_PATH = gamepath;
+		ESPICA_PATH = espicapath;
+		TILESET_DEFAULT = tilesetDefault;
+		TILESET_PATH = customTilesetPath;
+	}
 
-	public EditorTileset getTileset() {
+	public static EditorTileset getTileset() {
 		if (!TILESET_DEFAULT) {
 			if (TILESET_PATH != null) {
 				File f = new File(TILESET_PATH);
@@ -86,7 +96,7 @@ public class Workspace {
 		return new EditorTileset(ResourceAccess.getStream("DefaultTileset.mets"));
 	}
 
-	public void validate(Component parent) {
+	public static void validate(Component parent) {
 		ArrayList<String> errors = new ArrayList<>();
 		if (WORKSPACE_PATH == null) {
 			errors.add("Workspace path not set");
@@ -103,8 +113,10 @@ public class Workspace {
 					"zonedata",
 					"buildingmodels",
 					"npcregistries",
-					"movemodels"
+					"movemodels",
+					"temp"
 				});
+				temp = new File(ws + "/temp");
 				persist_config = new File(WORKSPACE_PATH + "/ctrmap_persist.txt");
 				persist_paths.clear();
 				if (persist_config.exists()) {
@@ -148,7 +160,7 @@ public class Workspace {
 					buildingmodels = new File(basepath + getArchivePath(ArchiveType.BUILDING_MODELS, game));
 					npcregistries = new File(basepath + getArchivePath(ArchiveType.NPC_REGISTRIES, game));
 					movemodels = new File(basepath + getArchivePath(ArchiveType.MOVE_MODELS, game));
-					musicNames = BCSArStringLoader.getStrings(new File(basepath + getArchivePath(ArchiveType.SOUND_BCSAR, game)));
+//					musicNames = BCSArStringLoader.getStrings(new File(basepath + getArchivePath(ArchiveType.SOUND_BCSAR, game)));
 					if (!areadata.exists()) {
 						errors.add("AreaData GARC not found");
 					}
@@ -179,7 +191,8 @@ public class Workspace {
 		if (errors.isEmpty()) {
 			valid = true;
 			loadArchives();
-			LocationNames.loadFromGarc(game);
+			LocationNames.loadFromGarc();
+			CtrmapMainframe.mBuilder.loadGARCs();
 			CtrmapMainframe.mZonePnl.loadEverything();
 		} else {
 			valid = false;
@@ -192,13 +205,13 @@ public class Workspace {
 		}
 	}
 
-	public void addPersist(File f) {
+	public static void addPersist(File f) {
 		if (!persist_paths.contains(f.getAbsolutePath())) {
 			persist_paths.add(f.getAbsolutePath());
 		}
 	}
 
-	public String getArchivePath(ArchiveType archiveType, GameType gameType) {
+	public static String getArchivePath(ArchiveType archiveType, GameType gameType) {
 		if (gameType == GameType.XY) {
 			switch (archiveType) {
 				case AREA_DATA:
@@ -245,13 +258,13 @@ public class Workspace {
 		return null;
 	}
 
-	public void cleanAll() {
+	public static void cleanAll() {
 		multiClean(true);
 		persist_paths.clear();
 		saveWorkspace();
 	}
 
-	public void cleanAndReload() {
+	public static void cleanAndReload() {
 		mTileMapPanel.unload();
 		mCollEditPanel.unload();
 		mCamEditForm.unload();
@@ -260,11 +273,11 @@ public class Workspace {
 		cleanAll();
 	}
 
-	public void cleanUnchanged() {
+	public static void cleanUnchanged() {
 		multiClean(false);
 	}
 
-	private void multiClean(boolean deletePersistent) {
+	private static void multiClean(boolean deletePersistent) {
 		cleanDirectory(WORKSPACE_PATH + "/areadata", deletePersistent);
 		cleanDirectory(WORKSPACE_PATH + "/fielddata", deletePersistent);
 		cleanDirectory(WORKSPACE_PATH + "/gametext", deletePersistent);
@@ -273,9 +286,10 @@ public class Workspace {
 		cleanDirectory(WORKSPACE_PATH + "/buildingmodels", deletePersistent);
 		cleanDirectory(WORKSPACE_PATH + "/npcregistries", deletePersistent);
 		cleanDirectory(WORKSPACE_PATH + "/movemodels", deletePersistent);
+		cleanDirectory(WORKSPACE_PATH + "/temp", true);
 	}
 
-	public void cleanDirectory(String dir, boolean deletePersistent) {
+	public static void cleanDirectory(String dir, boolean deletePersistent) {
 		File[] files = new File(dir).listFiles();
 		if (files == null || files.length == 0) {
 			return;
@@ -290,7 +304,7 @@ public class Workspace {
 		}
 	}
 
-	public GARC getArchive(ArchiveType type) {
+	public static GARC getArchive(ArchiveType type) {
 		switch (type) {
 			case AREA_DATA:
 				return ad;
@@ -312,7 +326,7 @@ public class Workspace {
 		return null;
 	}
 
-	public File getExtractionDirectory(ArchiveType type) {
+	public static File getExtractionDirectory(ArchiveType type) {
 		StringBuilder sb = new StringBuilder(WORKSPACE_PATH + "/");
 		switch (type) {
 			case AREA_DATA:
@@ -346,7 +360,7 @@ public class Workspace {
 		return new File(sb.toString());
 	}
 
-	public void loadArchives() {
+	public static void loadArchives() {
 		if (valid) {
 			ad = new GARC(areadata);
 			gr = new GARC(fielddata);
@@ -359,7 +373,7 @@ public class Workspace {
 		}
 	}
 
-	public File getWorkspaceFile(ArchiveType arc, int fileNum) {
+	public static File getWorkspaceFile(ArchiveType arc, int fileNum) {
 		File wsFile;
 		wsFile = new File(getExtractionDirectory(arc).getAbsolutePath() + "/" + fileNum);
 		if (!wsFile.exists() && getArchive(arc).length > fileNum) {
@@ -380,7 +394,7 @@ public class Workspace {
 		return wsFile;
 	}
 
-	public void packWorkspace() {
+	public static void packWorkspace() {
 		if (valid) {
 			LoadingDialog progress = LoadingDialog.makeDialog("Packing");
 			SwingWorker worker = new SwingWorker() {
@@ -399,6 +413,9 @@ public class Workspace {
 					progress.setBarPercent(60);
 					progress.setDescription("Packing - zonedata");
 					zo.packDirectory(getExtractionDirectory(ArchiveType.ZONE_DATA));
+					progress.setBarPercent(65);
+					progress.setDescription("Packing - mapmatrix");
+					mm.packDirectory(getExtractionDirectory(ArchiveType.MAP_MATRIX));
 					progress.setBarPercent(70);
 					progress.setDescription("Packing - buildingmodels");
 					bm.packDirectory(getExtractionDirectory(ArchiveType.BUILDING_MODELS));
@@ -412,6 +429,7 @@ public class Workspace {
 					ad = new GARC(ad.file);
 					zo = new GARC(zo.file);
 					bm = new GARC(bm.file);
+					mm = new GARC(mm.file);
 					npcreg = new GARC(npcreg.file);
 					npcmm = new GARC(npcmm.file);
 					return null;
@@ -422,16 +440,28 @@ public class Workspace {
 		}
 	}
 	
-	public String getMusicName(int id){
+	public static String getMusicName(int id){
 		return musicNames[id - 65536];
 	}
 
-	public enum GameType {
+	public static enum GameType {
 		XY,
 		ORAS
 	}
+	
+	public static boolean isOA(){
+		return game == GameType.ORAS;
+	}
+	
+	public static boolean isOADemo(){
+		return new File(GAMEDIR_PATH + "/a/3/0/0").exists();
+	}
+	
+	public static boolean isXY(){
+		return game == GameType.XY;
+	}
 
-	public enum ArchiveType {
+	public static enum ArchiveType {
 		AREA_DATA,
 		FIELD_DATA,
 		MAP_MATRIX,
@@ -443,11 +473,18 @@ public class Workspace {
 		SOUND_BCSAR
 	}
 
-	public void saveWorkspace() {
-		prefs.put("WORKSPACE_PATH", WORKSPACE_PATH);
-		prefs.put("GAMEDIR_PATH", GAMEDIR_PATH);
+	public static void prefsPutNonNull(String key, String value){
+		if (value != null && key != null){
+			prefs.put(key, value);
+		}
+	}
+	
+	public static void saveWorkspace() {
+		prefsPutNonNull("WORKSPACE_PATH", WORKSPACE_PATH);
+		prefsPutNonNull("GAMEDIR_PATH", GAMEDIR_PATH);
+		prefsPutNonNull("ESPICA_PATH", ESPICA_PATH);
 		prefs.putBoolean("TILESET_DEFAULT", TILESET_DEFAULT);
-		prefs.put("TILESET_PATH", TILESET_PATH);
+		prefsPutNonNull("TILESET_PATH", TILESET_PATH);
 		try {
 			persist_config.delete();
 			persist_config.createNewFile();

@@ -6,7 +6,6 @@ import ctrmap.resources.ResourceAccess;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static ctrmap.CtrmapMainframe.*;
 
 /**
  * Used to move models around the world visually.
@@ -20,10 +19,12 @@ public class CM3DNavigator {
 	public float scale = 1f;
 
 	public MapObject target;
+	private H3DRenderingPanel parent;
 	public double distFromTarget = 0;
 	public TargetAxis targetAxis = TargetAxis.NULL;
 
-	public CM3DNavigator() {
+	public CM3DNavigator(H3DRenderingPanel parent) {
+		this.parent = parent;
 		try {
 			ax = new CMVD(ResourceAccess.getStream("MoveArrowX.cmvd"));
 			ay = new CMVD(ResourceAccess.getStream("MoveArrowY.cmvd"));
@@ -67,7 +68,7 @@ public class CM3DNavigator {
 		if (target == null) {
 			return;
 		}
-		float[] cameraVec = new float[]{-m3DDebugPanel.translateX, -m3DDebugPanel.translateY, -m3DDebugPanel.translateZ};
+		float[] cameraVec = new float[]{-parent.translateX, -parent.translateY, -parent.translateZ};
 		float[] mdlVec = new float[]{target.getX(), target.getY(), target.getZ()};
 		distFromTarget = Math.pow((Math.pow(Math.abs(mdlVec[0]) - Math.abs(cameraVec[0]), 2)
 				+ Math.pow(Math.abs(mdlVec[1]) - Math.abs(cameraVec[1]), 2)

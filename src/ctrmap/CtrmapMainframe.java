@@ -31,7 +31,6 @@ import ctrmap.formats.containers.GR;
 import ctrmap.formats.containers.MM;
 import ctrmap.formats.WavefrontOBJ;
 import ctrmap.formats.containers.ZO;
-import ctrmap.formats.h3d.BCHFile;
 import ctrmap.formats.mapmatrix.MapMatrix;
 import ctrmap.formats.zone.Zone;
 import ctrmap.humaninterface.AboutDialog;
@@ -46,19 +45,21 @@ import ctrmap.humaninterface.GLPanel;
 import ctrmap.humaninterface.H3DRenderingPanel;
 import ctrmap.humaninterface.NPCEditForm;
 import ctrmap.humaninterface.PropEditForm;
+import ctrmap.humaninterface.ScriptEditor;
 import ctrmap.humaninterface.TileEditForm;
 import ctrmap.humaninterface.TilemapPanelInputManager;
 import ctrmap.humaninterface.TileMapPanel;
+import ctrmap.humaninterface.WarpEditForm;
 import ctrmap.humaninterface.WorkspaceSettings;
 import ctrmap.humaninterface.ZoneLoadingPanel;
-import ctrmap.humaninterface.tools.EditTool;
+import ctrmap.humaninterface.builder.Builder;
+import ctrmap.humaninterface.tools.AbstractTool;
+import ctrmap.humaninterface.tools.SetTool;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -72,7 +73,8 @@ import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileFilter;
 
 /**
- * The launcher class for CTRMap which nests all of its GUI elements and provides access to them with static imports, similar to a C++ namespace.
+ * The launcher class for CTRMap which nests all of its GUI elements and
+ * provides access to them with static imports, similar to a C++ namespace.
  */
 public class CtrmapMainframe {
 
@@ -85,7 +87,6 @@ public class CtrmapMainframe {
 	public static JMenu optionsmenu;
 	public static JMenu helpmenu;
 	public static JMenuItem opengr;
-	public static JMenuItem opencam;
 	public static JMenuItem openmm;
 	public static JMenuItem openzo;
 	public static JMenuItem save;
@@ -104,10 +105,8 @@ public class CtrmapMainframe {
 	public static JRadioButton btnCamTool;
 	public static JRadioButton btnPropTool;
 	public static JRadioButton btnNPCTool;
+	public static JRadioButton btnWarpTool;
 	public static JLabel currentTool;
-	public static TilemapPanelInputManager mTilemapInputManager = new TilemapPanelInputManager();
-	public static CollInputManager mCollInputManager = new CollInputManager();
-	public static CM3DInputManager mCM3DInputManager = new CM3DInputManager();
 
 	public static JScrollPane mTilemapScrollPane;
 	public static TileMapPanel mTileMapPanel;
@@ -116,13 +115,16 @@ public class CtrmapMainframe {
 	public static CameraEditForm mCamEditForm;
 	public static PropEditForm mPropEditForm;
 	public static NPCEditForm mNPCEditForm;
+	public static WarpEditForm mWarpEditForm;
 
 	public static GLPanel mGLPanel;
 	public static H3DRenderingPanel m3DDebugPanel;
 	public static CollEditPanel mCollEditPanel;
 
 	public static ZoneLoadingPanel mZonePnl;
+	public static ScriptEditor mScriptPnl;
 	public static ExtrasPanel mExtrasPnl;
+	public static Builder mBuilder;
 
 	public static JPanel tileEditMasterPnl;
 	public static JSplitPane jsp;
@@ -130,10 +132,12 @@ public class CtrmapMainframe {
 	public static JSplitPane jsp2;
 	public static CameraDebugPanel camDebugPnl;
 
-	public static GR mainGR;
+	public static TilemapPanelInputManager mTilemapInputManager;
+	public static CollInputManager mCollInputManager;
+	public static CM3DInputManager mCM3DInputManager;
 
-	public static Workspace mWorkspace;
-	
+	public static AbstractTool tool;
+
 	public static List<CM3DRenderable> CM3DComponents = new ArrayList<>();
 
 	public static void main(String[] args) {
@@ -147,7 +151,7 @@ public class CtrmapMainframe {
 	}
 
 	private static void createAndShowGUI() {
-		mWorkspace = new Workspace();
+		Workspace.loadWorkspace();
 		frame = new JFrame("CTRMap Editor");
 		tabs = new JTabbedPane();
 		menubar = new JMenuBar();
@@ -156,7 +160,6 @@ public class CtrmapMainframe {
 		optionsmenu = new JMenu("Options");
 		helpmenu = new JMenu("Help");
 		opengr = new JMenuItem("Open GR Mapfile");
-		opencam = new JMenuItem("Open camera data from AreaData file");
 		openmm = new JMenuItem("Open MapMatrix");
 		openzo = new JMenuItem("Open Zone");
 		save = new JMenuItem("Save");
@@ -174,42 +177,35 @@ public class CtrmapMainframe {
 		btnCamTool = Utils.createGraphicalButton("_tool_cam");
 		btnPropTool = Utils.createGraphicalButton("_tool_prop");
 		btnNPCTool = Utils.createGraphicalButton("_tool_npc");
+		btnWarpTool = Utils.createGraphicalButton("_tool_warp");
 		toolBtnGroup = new ButtonGroup();
 		btnEditTool.setSelected(true);
 		currentTool = new JLabel("Current tool: Edit");
 
-		btnEditTool.setActionCommand("edit");
-		btnEditTool.addActionListener(mTilemapInputManager);
-		btnSetTool.setActionCommand("set");
-		btnSetTool.addActionListener(mTilemapInputManager);
-		btnFillTool.setActionCommand("fill");
-		btnFillTool.addActionListener(mTilemapInputManager);
-		btnCamTool.setActionCommand("cam");
-		btnCamTool.addActionListener(mTilemapInputManager);
-		btnPropTool.setActionCommand("prop");
-		btnPropTool.addActionListener(mTilemapInputManager);
-		btnNPCTool.setActionCommand("npc");
-		btnNPCTool.addActionListener(mTilemapInputManager);
 		toolBtnGroup.add(btnEditTool);
 		toolBtnGroup.add(btnSetTool);
 		toolBtnGroup.add(btnFillTool);
 		toolBtnGroup.add(btnCamTool);
 		toolBtnGroup.add(btnPropTool);
 		toolBtnGroup.add(btnNPCTool);
+		toolBtnGroup.add(btnWarpTool);
 		toolbar.add(btnEditTool);
 		toolbar.add(btnSetTool);
 		toolbar.add(btnFillTool);
 		toolbar.add(btnCamTool);
 		toolbar.add(btnPropTool);
 		toolbar.add(btnNPCTool);
+		toolbar.add(btnWarpTool);
 		toolbar.add(currentTool);
-
+		
 		tileEditMasterPnl = new JPanel(new BorderLayout());
 		collEditMasterPnl = new JPanel(new BorderLayout());
 		camDebugPnl = new CameraDebugPanel();
 		camDebugPnl.setLayout(new BoxLayout(camDebugPnl, BoxLayout.PAGE_AXIS));
 		mZonePnl = new ZoneLoadingPanel();
-		mExtrasPnl = new ExtrasPanel();
+		mScriptPnl = new ScriptEditor();
+		mExtrasPnl = new ExtrasPanel(mZonePnl);
+		mBuilder = new Builder();
 
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frame.setLocationByPlatform(true);
@@ -220,9 +216,10 @@ public class CtrmapMainframe {
 		mCamEditForm = new CameraEditForm();
 		mPropEditForm = new PropEditForm();
 		mNPCEditForm = new NPCEditForm();
-		mGLPanel = new GLPanel();
-		m3DDebugPanel = new H3DRenderingPanel();
+		mWarpEditForm = new WarpEditForm();
 		mCollEditPanel = new CollEditPanel();
+		mGLPanel = new GLPanel(mCollEditPanel);
+		m3DDebugPanel = new H3DRenderingPanel(CM3DComponents);
 		jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		mTilemapScrollPane.setViewportView(mTileMapPanel);
 		mCamScrollPane.setViewportView(mCamEditForm);
@@ -231,6 +228,10 @@ public class CtrmapMainframe {
 		mCamScrollPane.getVerticalScrollBar().setUnitIncrement(16);
 		jsp.setLeftComponent(mTilemapScrollPane);
 		jsp.setRightComponent(mTileEditForm);
+		
+		mTilemapInputManager = new TilemapPanelInputManager(mTileMapPanel);
+		mCM3DInputManager = new CM3DInputManager(m3DDebugPanel);
+		mCollInputManager = new CollInputManager(mGLPanel);
 
 		jsp2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		jsp2.setLeftComponent(mGLPanel);
@@ -244,7 +245,24 @@ public class CtrmapMainframe {
 		tabs.add("Tilemap Editor", tileEditMasterPnl);
 		tabs.add("Collision Editor", collEditMasterPnl);
 		tabs.add("Zone Loader", mZonePnl);
+		tabs.add("Script Editor (experimental)", mScriptPnl);
 		tabs.add("Extras", mExtrasPnl);
+		tabs.add("Builder", mBuilder);
+
+		btnEditTool.setActionCommand("edit");
+		btnEditTool.addActionListener(mTilemapInputManager);
+		btnSetTool.setActionCommand("set");
+		btnSetTool.addActionListener(mTilemapInputManager);
+		btnFillTool.setActionCommand("fill");
+		btnFillTool.addActionListener(mTilemapInputManager);
+		btnCamTool.setActionCommand("cam");
+		btnCamTool.addActionListener(mTilemapInputManager);
+		btnPropTool.setActionCommand("prop");
+		btnPropTool.addActionListener(mTilemapInputManager);
+		btnNPCTool.setActionCommand("npc");
+		btnNPCTool.addActionListener(mTilemapInputManager);
+		btnWarpTool.setActionCommand("warp");
+		btnWarpTool.addActionListener(mTilemapInputManager);
 
 		frame.getContentPane().add(tabs);
 
@@ -261,38 +279,12 @@ public class CtrmapMainframe {
 				jfc.showOpenDialog(frame);
 				if (jfc.getSelectedFile() != null) {
 					prefs.put("LAST_DIR", jfc.getSelectedFile().getParent());
-					mainGR = new GR(jfc.getSelectedFile());
+					GR mainGR = new GR(jfc.getSelectedFile());
 					CtrmapMainframe.frame.setTitle("GfMap Editor - " + mainGR.getOriginFile().getName());
 					mTileMapPanel.loadTileMap(mainGR);
 					mCollEditPanel.unload();
 					mCollEditPanel.loadCollision(mainGR);
 					mTileMapPanel.scaleImage(1);
-				}
-			}
-		});
-		opencam.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Preferences prefs = Preferences.userRoot().node(getClass().getName());
-				JFileChooser jfc = new JFileChooser(prefs.get("LAST_DIR",
-						new File(".").getAbsolutePath()));
-				jfc.setDialogTitle("Open camera data");
-				jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				jfc.setMultiSelectionEnabled(false);
-				jfc.showOpenDialog(frame);
-				if (jfc.getSelectedFile() != null) {
-					try {
-						prefs.put("LAST_DIR", jfc.getSelectedFile().getParent());
-						/*CameraDataFile cdf = new CameraDataFile(new AD(jfc.getSelectedFile()));
-						mCamEditForm.loadDataFile(cdf);*/
-						InputStream in = new FileInputStream(jfc.getSelectedFile());
-						byte[] b = new byte[in.available()];
-						in.read(b);
-						in.close();
-						m3DDebugPanel.loadH3D(new BCHFile(b));
-					} catch (IOException ex) {
-						Logger.getLogger(CtrmapMainframe.class.getName()).log(Level.SEVERE, null, ex);
-					}
 				}
 			}
 		});
@@ -343,6 +335,7 @@ public class CtrmapMainframe {
 					WavefrontOBJ obj = new WavefrontOBJ(jfc.getSelectedFile());
 					if (mCollEditPanel.coll != null) {
 						mCollEditPanel.coll.meshes = obj.getGfCollision();
+						mCollEditPanel.coll.modified = true;
 						mCollEditPanel.buildTree();
 					}
 				}
@@ -360,7 +353,7 @@ public class CtrmapMainframe {
 				jfc.showOpenDialog(frame);
 				if (jfc.getSelectedFile() != null) {
 					prefs.put("LAST_DIR", jfc.getSelectedFile().getParent());
-					mTileMapPanel.loadMatrix(new MapMatrix(new MM(jfc.getSelectedFile())), null, null);
+					mTileMapPanel.loadMatrix(new MapMatrix(new MM(jfc.getSelectedFile())), null, null, null);
 					mTileMapPanel.scaleImage(1);
 				}
 			}
@@ -368,19 +361,15 @@ public class CtrmapMainframe {
 		wssettings.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (mWorkspace != null) {
-					WorkspaceSettings form = new WorkspaceSettings();
-					form.setLocationByPlatform(true);
-					form.setVisible(true);
-				}
+				WorkspaceSettings form = new WorkspaceSettings();
+				form.setLocationByPlatform(true);
+				form.setVisible(true);
 			}
 		});
 		packworkspace.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (mWorkspace != null) {
-					mWorkspace.packWorkspace();
-				}
+				Workspace.packWorkspace();
 			}
 		});
 		openzo.addActionListener(new ActionListener() {
@@ -395,7 +384,7 @@ public class CtrmapMainframe {
 				jfc.showOpenDialog(frame);
 				if (jfc.getSelectedFile() != null) {
 					prefs.put("LAST_DIR", jfc.getSelectedFile().getParent());
-					mZonePnl.loadZone(new Zone(new ZO(jfc.getSelectedFile())));
+					mZonePnl.loadZone(new Zone(new ZO(jfc.getSelectedFile()), (Workspace.valid) ? Workspace.game : Workspace.GameType.ORAS));
 				}
 			}
 		});
@@ -424,12 +413,11 @@ public class CtrmapMainframe {
 		wsclean.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				mWorkspace.cleanAndReload();
+				Workspace.cleanAndReload();
 				mZonePnl.loadEverything();
 			}
 		});
 		filemenu.add(opengr);
-		filemenu.add(opencam);
 		filemenu.add(openmm);
 		filemenu.add(openzo);
 		filemenu.add(save);
@@ -444,7 +432,7 @@ public class CtrmapMainframe {
 		menubar.add(toolsmenu);
 		menubar.add(optionsmenu);
 		menubar.add(helpmenu);
-		
+
 		CM3DComponents.add(mTileMapPanel);
 		CM3DComponents.add(mPropEditForm);
 		CM3DComponents.add(mNPCEditForm);
@@ -474,8 +462,8 @@ public class CtrmapMainframe {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				if (mCamEditForm.store(true) && mTileMapPanel.saveTileMap(true) && mPropEditForm.store(true) && mNPCEditForm.saveRegistry(true) && mZonePnl.store(true)) {
-					mWorkspace.cleanUnchanged();
-					mWorkspace.saveWorkspace();
+					Workspace.cleanUnchanged();
+					Workspace.saveWorkspace();
 					System.exit(0);
 				}
 			}
@@ -494,10 +482,10 @@ public class CtrmapMainframe {
 				Utils.setGraphicUI(m3DDebugPanel);
 			}
 		});
+		tool = new SetTool();
 		frame.getRootPane().setFocusable(true);
-		mTileEditForm.tool = new EditTool();
 		adjustSplitPanes();
-		mWorkspace.validate(frame);
+		Workspace.validate(frame);
 	}
 
 	public static void adjustSplitPanes() {

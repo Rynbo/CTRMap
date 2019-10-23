@@ -8,7 +8,6 @@ import java.awt.event.MouseWheelListener;
 import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputListener;
 
-import static ctrmap.CtrmapMainframe.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
@@ -23,6 +22,17 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 	private float originRotateX;
 	private float originRotateY;
 	private float originRotateZ;
+	
+	private GLPanel parent;
+	
+	public CollInputManager(GLPanel parent){
+		this.parent = parent;
+		parent.addMouseWheelListener(this);
+		parent.addMouseMotionListener(this);
+		parent.addMouseListener(this);
+		parent.addKeyListener(this);
+	}
+	
 	@Override
 	public void mouseClicked(MouseEvent arg0) {
 		
@@ -45,11 +55,11 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 	public void setOrigins(MouseEvent e) {
 		originMouseX = e.getX();
 		originMouseY = e.getY();
-		originScaleX = mGLPanel.scaleX;
-		originScaleY = mGLPanel.scaleY;
-		originRotateX = mGLPanel.rotateX;
-		originRotateY = mGLPanel.rotateY;
-		originRotateZ = mGLPanel.rotateZ;
+		originScaleX = parent.scaleX;
+		originScaleY = parent.scaleY;
+		originRotateX = parent.rotateX;
+		originRotateY = parent.rotateY;
+		originRotateZ = parent.rotateZ;
 	}
 
 	@Override
@@ -60,19 +70,19 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		if (SwingUtilities.isRightMouseButton(e)) {
-			mGLPanel.scaleX = originScaleX + (e.getX() - originMouseX);
-			mGLPanel.scaleY = originScaleY - (e.getY() - originMouseY);
+			parent.scaleX = originScaleX + (e.getX() - originMouseX);
+			parent.scaleY = originScaleY - (e.getY() - originMouseY);
 		}
 		else if (SwingUtilities.isLeftMouseButton(e)) {
-			mGLPanel.rotateY = originRotateY + (e.getX() - originMouseX)/2f;
-			float rotateX = mGLPanel.rotateY;
+			parent.rotateY = originRotateY + (e.getX() - originMouseX)/2f;
+			float rotateX = parent.rotateY;
 			float rotateX180multi = (float)Math.floor(rotateX/180f);
 			float rotateXmed = (rotateX - rotateX180multi*180f)/180f;
 			float backwardsMultiplier1 = ((Math.round(rotateX/180f) & 1) == 0) ? 1 : -1;
 			float backwardsMultiplier2 = ((Math.round((rotateX + 90f)/180f) & 1) == 0) ? -1 : 1;
 			if (rotateXmed > 0.5f) rotateXmed = 1f - rotateXmed;
-			mGLPanel.rotateZ = originRotateZ + backwardsMultiplier2*rotateXmed*(e.getY() - originMouseY)/2f;
-			mGLPanel.rotateX = originRotateX + backwardsMultiplier1*(0.5f - rotateXmed)*(e.getY() - originMouseY)/2f;
+			parent.rotateZ = originRotateZ + backwardsMultiplier2*rotateXmed*(e.getY() - originMouseY)/2f;
+			parent.rotateX = originRotateX + backwardsMultiplier1*(0.5f - rotateXmed)*(e.getY() - originMouseY)/2f;
 			setOrigins(e);
 		}
 	}
@@ -84,8 +94,7 @@ public class CollInputManager implements MouseWheelListener, MouseMotionListener
 
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
-		mGLPanel.scale -= e.getWheelRotation()*20f;
-		m3DDebugPanel.translateZ -= e.getWheelRotation()*20f;
+		parent.scale -= e.getWheelRotation()*20f;
 	}
 
 	@Override

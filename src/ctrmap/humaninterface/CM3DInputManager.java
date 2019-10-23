@@ -1,5 +1,6 @@
 package ctrmap.humaninterface;
 
+import ctrmap.CtrmapMainframe;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
@@ -8,7 +9,6 @@ import java.awt.event.MouseWheelListener;
 import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputListener;
 
-import static ctrmap.CtrmapMainframe.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
@@ -28,7 +28,18 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 	private float speed = 10f;
 	private ArrayList<Integer> keycodes = new ArrayList<>();
 	private boolean navi = false;
+	
+	private H3DRenderingPanel m3DDebugPanel;
 
+	public CM3DInputManager(H3DRenderingPanel parent){
+		super();
+		m3DDebugPanel = parent;
+		parent.addMouseWheelListener(this);
+		parent.addMouseMotionListener(this);
+		parent.addMouseListener(this);
+		parent.addKeyListener(this);
+	}
+	
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		m3DDebugPanel.cycleSelection(e);
@@ -74,7 +85,7 @@ public class CM3DInputManager implements MouseWheelListener, MouseMotionListener
 			m3DDebugPanel.translateX = originScaleX + (e.getX() - originMouseX);
 			m3DDebugPanel.translateY = originScaleY - (e.getY() - originMouseY);
 		} else if (SwingUtilities.isLeftMouseButton(e)) {
-			if (!navi) {
+			if (!CtrmapMainframe.tool.getNaviEnabled() || !navi) {
 				m3DDebugPanel.rotateY = (originRotateY + (e.getX() - originMouseX) / 2f) % 360f;
 				m3DDebugPanel.rotateX = Math.max(-90f, Math.min(90f, originRotateX + (e.getY() - originMouseY) / 2f)) % 360f;
 			}
