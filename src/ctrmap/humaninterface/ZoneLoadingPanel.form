@@ -23,157 +23,171 @@
                   <Component id="plrFlagsSep" max="32767" attributes="0"/>
                   <Component id="unknownSep" max="32767" attributes="0"/>
                   <Component id="mainSep" alignment="0" max="32767" attributes="0"/>
-                  <Group type="102" alignment="0" attributes="0">
+                  <Group type="102" attributes="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="103" alignment="0" groupAlignment="0" max="-2" attributes="0">
-                              <Component id="engDataLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                              <Group type="102" alignment="0" attributes="0">
-                                  <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="moveLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                                      <Component id="typeLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  </Group>
-                                  <EmptySpace min="-2" pref="31" max="-2" attributes="0"/>
-                                  <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="move" min="-2" pref="70" max="-2" attributes="0"/>
-                                      <Component id="type" min="-2" pref="110" max="-2" attributes="0"/>
-                                  </Group>
-                              </Group>
-                              <Group type="102" alignment="0" attributes="0">
-                                  <Component id="adLabel" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace min="-2" pref="9" max="-2" attributes="0"/>
-                                  <Component id="ad" max="32767" attributes="0"/>
-                                  <EmptySpace min="-2" pref="40" max="-2" attributes="0"/>
-                              </Group>
-                          </Group>
-                          <Component id="scriptLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
-                              <Group type="102" alignment="0" attributes="0">
-                                  <Component id="matrixLabel" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="matrix" min="-2" pref="70" max="-2" attributes="0"/>
-                              </Group>
-                              <Group type="102" alignment="1" attributes="0">
-                                  <Component id="textLabel" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace max="32767" attributes="0"/>
-                                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                      <Component id="script" alignment="1" pref="70" max="32767" attributes="0"/>
-                                      <Component id="textFile" alignment="1" max="32767" attributes="0"/>
-                                  </Group>
-                              </Group>
-                          </Group>
-                      </Group>
-                      <EmptySpace type="separate" max="-2" attributes="0"/>
-                      <Component id="engDataSep" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace type="separate" max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="worldPropLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Group type="102" alignment="0" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="isParentMap" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="run" alignment="0" min="-2" pref="108" max="-2" attributes="0"/>
+                                  <Component id="skate" alignment="0" min="-2" pref="130" max="-2" attributes="0"/>
+                                  <Component id="cycling" alignment="0" min="-2" pref="107" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="45" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="escrope" alignment="0" min="-2" pref="168" max="-2" attributes="0"/>
+                                  <Component id="fly" alignment="0" min="-2" pref="170" max="-2" attributes="0"/>
+                                  <Component id="dowsing" alignment="0" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="45" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="coldbreath" min="-2" max="-2" attributes="0"/>
                                   <Group type="102" alignment="0" attributes="0">
                                       <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="tmgLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                                          <Component id="mapChangeLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                                          <Component id="parentMapLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Component id="specWalk" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Component id="ghosting" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                      <EmptySpace min="-2" pref="45" max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Component id="enable3d" min="-2" max="-2" attributes="0"/>
+                                          <Component id="flash" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                  </Group>
+                              </Group>
+                          </Group>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="103" alignment="0" groupAlignment="0" max="-2" attributes="0">
+                                      <Component id="engDataLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      <Group type="102" alignment="0" attributes="0">
+                                          <Group type="103" groupAlignment="0" attributes="0">
+                                              <Component id="moveLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                              <Component id="typeLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          </Group>
+                                          <EmptySpace min="-2" pref="31" max="-2" attributes="0"/>
+                                          <Group type="103" groupAlignment="0" attributes="0">
+                                              <Component id="move" min="-2" pref="70" max="-2" attributes="0"/>
+                                              <Component id="type" min="-2" pref="110" max="-2" attributes="0"/>
+                                          </Group>
+                                      </Group>
+                                      <Group type="102" alignment="0" attributes="0">
+                                          <Component id="adLabel" min="-2" max="-2" attributes="0"/>
+                                          <EmptySpace min="-2" pref="9" max="-2" attributes="0"/>
+                                          <Component id="ad" max="32767" attributes="0"/>
+                                          <EmptySpace min="-2" pref="40" max="-2" attributes="0"/>
+                                      </Group>
+                                  </Group>
+                                  <Component id="scriptLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
+                                      <Group type="102" alignment="0" attributes="0">
+                                          <Component id="matrixLabel" min="-2" max="-2" attributes="0"/>
+                                          <EmptySpace max="-2" attributes="0"/>
+                                          <Component id="matrix" min="-2" pref="70" max="-2" attributes="0"/>
+                                      </Group>
+                                      <Group type="102" alignment="1" attributes="0">
+                                          <Component id="textLabel" min="-2" max="-2" attributes="0"/>
+                                          <EmptySpace max="32767" attributes="0"/>
+                                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                              <Component id="script" alignment="1" pref="70" max="32767" attributes="0"/>
+                                              <Component id="textFile" alignment="1" max="32767" attributes="0"/>
+                                          </Group>
+                                      </Group>
+                                  </Group>
+                              </Group>
+                              <EmptySpace type="separate" max="-2" attributes="0"/>
+                              <Component id="engDataSep" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace type="separate" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="worldPropLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Component id="isParentMap" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Group type="102" alignment="0" attributes="0">
+                                              <Group type="103" groupAlignment="0" attributes="0">
+                                                  <Component id="tmgLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                                  <Component id="mapChangeLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                                  <Component id="parentMapLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                              </Group>
+                                              <EmptySpace max="-2" attributes="0"/>
+                                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                                  <Component id="parentMap" min="-2" pref="50" max="-2" attributes="0"/>
+                                                  <Component id="tmg" alignment="0" max="32767" attributes="0"/>
+                                                  <Component id="mapTransition" alignment="0" max="32767" attributes="0"/>
+                                              </Group>
+                                          </Group>
+                                      </Group>
+                                      <EmptySpace min="-2" pref="26" max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Component id="battleBGLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Component id="weatherLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Component id="BGMTitleLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Component id="bgmCyclingEnable" alignment="0" min="-2" max="-2" attributes="0"/>
                                       </Group>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="mapChange" alignment="0" min="-2" pref="50" max="-2" attributes="0"/>
-                                          <Component id="parentMap" min="-2" pref="50" max="-2" attributes="0"/>
-                                          <Component id="tmg" alignment="0" min="-2" pref="180" max="-2" attributes="0"/>
+                                          <Component id="weather" alignment="0" min="-2" pref="127" max="-2" attributes="0"/>
+                                          <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
+                                              <Component id="bgmSpring" alignment="0" max="32767" attributes="0"/>
+                                              <Component id="battleBG" alignment="0" min="-2" pref="50" max="-2" attributes="0"/>
+                                          </Group>
                                       </Group>
                                   </Group>
                               </Group>
-                              <EmptySpace min="-2" pref="26" max="-2" attributes="0"/>
+                          </Group>
+                          <Component id="plrFlagsTitleLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="loadZoneLabel" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="zoneList" min="-2" pref="350" max="-2" attributes="0"/>
+                          </Group>
+                          <Component id="skybox" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="x2Label" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                              <Component id="x2" min="-2" pref="79" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="y2Label" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                              <Component id="y2" min="-2" pref="79" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="z2Label" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                              <Component id="z2" min="-2" pref="79" max="-2" attributes="0"/>
+                          </Group>
+                          <Component id="spawnPointLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="unknownTitleLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="x1Label" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                              <Component id="x1" min="-2" pref="79" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="y1Label" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                              <Component id="y1" min="-2" pref="79" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="z1Label" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                              <Component id="z1" min="-2" pref="79" max="-2" attributes="0"/>
+                          </Group>
+                          <Component id="btnSave" alignment="0" min="-2" pref="82" max="-2" attributes="0"/>
+                          <Group type="102" alignment="0" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="battleBGLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  <Component id="weatherLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  <Component id="BGMTitleLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  <Component id="bgmCyclingEnable" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="camFlagsLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="cam2label" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="cam1label" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="uFlabel" alignment="0" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="weather" alignment="0" min="-2" pref="127" max="-2" attributes="0"/>
-                                  <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
-                                      <Component id="bgmSpring" alignment="0" max="32767" attributes="0"/>
-                                      <Component id="battleBG" alignment="0" min="-2" pref="50" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                  <Component id="camFlags" alignment="0" min="-2" pref="79" max="-2" attributes="0"/>
+                                  <Group type="103" alignment="1" groupAlignment="0" max="-2" attributes="0">
+                                      <Component id="cam1" min="-2" pref="79" max="-2" attributes="0"/>
+                                      <Component id="cam2" min="-2" pref="79" max="-2" attributes="0"/>
                                   </Group>
+                                  <Component id="unknownFlags" alignment="0" min="-2" pref="79" max="-2" attributes="0"/>
                               </Group>
                           </Group>
+                          <Component id="unknownFlag" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
-                  </Group>
-                  <Component id="plrFlagsTitleLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                  <Group type="102" alignment="0" attributes="0">
-                      <Component id="loadZoneLabel" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="zoneList" min="-2" pref="350" max="-2" attributes="0"/>
-                  </Group>
-                  <Component id="skybox" alignment="0" min="-2" max="-2" attributes="0"/>
-                  <Group type="102" alignment="0" attributes="0">
-                      <Component id="x2Label" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="x2" min="-2" pref="79" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="y2Label" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="y2" min="-2" pref="79" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="z2Label" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="z2" min="-2" pref="79" max="-2" attributes="0"/>
-                  </Group>
-                  <Component id="spawnPointLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                  <Component id="unknownTitleLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                  <Group type="102" alignment="0" attributes="0">
-                      <Component id="x1Label" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="x1" min="-2" pref="79" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="y1Label" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="y1" min="-2" pref="79" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="z1Label" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="z1" min="-2" pref="79" max="-2" attributes="0"/>
-                  </Group>
-                  <Component id="btnSave" alignment="0" min="-2" pref="82" max="-2" attributes="0"/>
-                  <Group type="102" alignment="0" attributes="0">
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="camFlagsLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="cam2label" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="cam1label" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="uFlabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                      </Group>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                          <Component id="camFlags" alignment="0" min="-2" pref="79" max="-2" attributes="0"/>
-                          <Group type="103" alignment="1" groupAlignment="0" max="-2" attributes="0">
-                              <Component id="cam1" min="-2" pref="79" max="-2" attributes="0"/>
-                              <Component id="cam2" min="-2" pref="79" max="-2" attributes="0"/>
-                          </Group>
-                          <Component id="unknownFlags" alignment="0" min="-2" pref="79" max="-2" attributes="0"/>
-                      </Group>
-                  </Group>
-                  <Component id="unknownFlag" alignment="0" min="-2" max="-2" attributes="0"/>
-                  <Group type="102" alignment="0" attributes="0">
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="run" alignment="0" min="-2" pref="108" max="-2" attributes="0"/>
-                          <Component id="skate" alignment="0" min="-2" pref="130" max="-2" attributes="0"/>
-                          <Component id="cycling" alignment="0" min="-2" pref="107" max="-2" attributes="0"/>
-                      </Group>
-                      <EmptySpace min="-2" pref="58" max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="escrope" alignment="0" min="-2" pref="168" max="-2" attributes="0"/>
-                          <Component id="fly" alignment="0" min="-2" pref="170" max="-2" attributes="0"/>
-                          <Component id="dowsing" alignment="0" min="-2" max="-2" attributes="0"/>
-                      </Group>
-                      <EmptySpace min="-2" pref="56" max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="specWalk" min="-2" max="-2" attributes="0"/>
-                          <Component id="ghosting" min="-2" max="-2" attributes="0"/>
-                          <Component id="coldbreath" min="-2" max="-2" attributes="0"/>
-                      </Group>
+                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -204,9 +218,9 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="mapChangeLabel" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="mapChange" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="battleBGLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="battleBG" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="mapTransition" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
@@ -276,12 +290,14 @@
                   <Component id="skate" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="fly" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="ghosting" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="enable3d" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="cycling" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="dowsing" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="specWalk" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="flash" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace type="separate" max="-2" attributes="0"/>
               <Component id="skybox" min="-2" max="-2" attributes="0"/>
@@ -588,13 +604,6 @@
         <Property name="text" type="java.lang.String" value="MapChange:"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JFormattedTextField" name="mapChange">
-      <Properties>
-        <Property name="formatterFactory" type="javax.swing.JFormattedTextField$AbstractFormatterFactory" editor="org.netbeans.modules.form.editors.AbstractFormatterFactoryEditor">
-          <Format format="#0" subtype="-1" type="0"/>
-        </Property>
-      </Properties>
-    </Component>
     <Component class="javax.swing.JLabel" name="plrFlagsTitleLabel">
       <Properties>
         <Property name="text" type="java.lang.String" value="Player flags:"/>
@@ -733,12 +742,12 @@
     </Component>
     <Component class="javax.swing.JCheckBox" name="dowsing">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Allow Dowsing machine (XY)"/>
+        <Property name="text" type="java.lang.String" value="Allow Dowsing machine"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JCheckBox" name="specWalk">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Special walking animation"/>
+        <Property name="text" type="java.lang.String" value="Special walking animation (XY)"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JComboBox" name="tmg">
@@ -750,6 +759,35 @@
       <AuxValues>
         <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
       </AuxValues>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="flash">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Flash-able darkness (OA)"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JComboBox" name="mapTransition">
+      <Properties>
+        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+          <StringArray count="8">
+            <StringItem index="0" value="In - Fade/Opening rhombus; Out - Fade/Pokemon logo"/>
+            <StringItem index="1" value="Directional swipe"/>
+            <StringItem index="2" value="In - Closing circle/Fade; Out - Fade/Opening circle"/>
+            <StringItem index="3" value="In - Pokemon logo/Fade; Out - Fade/Pokemon logo"/>
+            <StringItem index="4" value="In - Closing rhombus/Fade; Out - Fade/Opening rhombus"/>
+            <StringItem index="5" value="In - Swipe/Fade; Out - Fade/Swipe"/>
+            <StringItem index="6" value="In - Closing circle/Fade; Out - White fade"/>
+            <StringItem index="7" value="All fade"/>
+          </StringArray>
+        </Property>
+      </Properties>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
+      </AuxValues>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="enable3d">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Enable 3D"/>
+      </Properties>
     </Component>
   </SubComponents>
 </Form>

@@ -5,6 +5,7 @@ import ctrmap.Workspace;
 import ctrmap.formats.containers.ZO;
 import ctrmap.formats.cameradata.CameraDataFile;
 import ctrmap.formats.mapmatrix.MapMatrix;
+import ctrmap.formats.propdata.ADPropRegistry;
 import ctrmap.formats.text.LocationNames;
 import ctrmap.formats.zone.Zone;
 import java.io.File;
@@ -35,54 +36,63 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 	public ZoneLoadingPanel() {
 		initComponents();
 		setIntValueClass(new JFormattedTextField[]{cam1, cam2, camFlags, unknownFlags, battleBG, ad, bgmSpring,
-			mapChange, matrix, textFile, script, move, parentMap, x1, y1, z1, x2, y2, z2});
+			matrix, textFile, script, move, parentMap, x1, y1, z1, x2, y2, z2});
 	}
 
 	public void loadZone(Zone z) {
-		loaded = false;
-		if (zone != null) {
-			zone.header.freeArchives();
-			System.gc();
+		try {
+			loaded = false;
+			if (zone != null) {
+				zone.header.freeArchives();
+				System.gc();
+			}
+			zone = z;
+
+			isParentMap.setSelected(z.header.OLvalue == 1);
+			cam1.setValue(z.header.camera1);
+			cam2.setValue(z.header.camera2);
+			camFlags.setValue(z.header.cameraFlags);
+			x1.setValue(z.header.X);
+			x2.setValue(z.header.X2);
+			unknownFlags.setValue(z.header.unknownFlags);
+			coldbreath.setSelected(z.header.enableBreathFX);
+			ghosting.setSelected(z.header.enableGhosting);
+			dowsing.setSelected(z.header.enableDowsingMachine);
+			enable3d.setSelected(z.header.enable3D);
+			unknownFlag.setSelected(z.header.unknownFlag);
+			ad.setValue(z.header.areadataID);
+			battleBG.setValue(z.header.battleBG);
+			bgmSpring.setValue(z.header.BGMSpring);
+			run.setSelected(z.header.enableRunning);
+			skate.setSelected(z.header.enableRollerSkates);
+			cycling.setSelected(z.header.enableCycling);
+			escrope.setSelected(z.header.enableEscapeRope);
+			fly.setSelected(z.header.enableFlyFrom);
+			skybox.setSelected(z.header.enableSkybox);
+			bgmCyclingEnable.setSelected(z.header.enableCyclingBGM);
+			mapTransition.setSelectedIndex(z.header.mapChange);
+			matrix.setValue(z.header.mapmatrixID);
+			move.setValue(z.header.mapMove);
+			parentMap.setValue(z.header.parentMap);
+			script.setValue(z.header.script);
+			textFile.setValue(z.header.textID);
+			tmg.setSelectedIndex(z.header.townMapGroup);
+			type.setSelectedIndex(getTypeIndex(z.header.mapType));
+			weather.setSelectedIndex(getWeatherIndex(z.header.weather));
+			y1.setValue(z.header.Y);
+			z1.setValue(z.header.Z);
+			y2.setValue(z.header.Y2);
+			z2.setValue(z.header.Z2);
+
+			specWalk.setSelected(z.header.enableSpecialWalking);
+			flash.setSelected(z.header.enableFlashableDarkness);
+			flash.setEnabled(Workspace.game == Workspace.GameType.ORAS);
+			specWalk.setEnabled(Workspace.game == Workspace.GameType.XY);
+
+			loaded = true;
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		zone = z;
-
-		isParentMap.setSelected(z.header.OLvalue == 1);
-		cam1.setValue(z.header.camera1);
-		cam2.setValue(z.header.camera2);
-		camFlags.setValue(z.header.cameraFlags);
-		x1.setValue(z.header.X);
-		x2.setValue(z.header.X2);
-		unknownFlags.setValue(z.header.unknownFlags);
-		coldbreath.setSelected(z.header.enableBreathFX);
-		ghosting.setSelected(z.header.enableGhosting);
-		specWalk.setSelected(z.header.enableSpecialWalking);
-		dowsing.setSelected(z.header.enableDowsingMachine);
-		unknownFlag.setSelected(z.header.unknownFlag);
-		ad.setValue(z.header.areadataID);
-		battleBG.setValue(z.header.battleBG);
-		bgmSpring.setValue(z.header.BGMSpring);
-		run.setSelected(z.header.enableRunning);
-		skate.setSelected(z.header.enableRollerSkates);
-		cycling.setSelected(z.header.enableCycling);
-		escrope.setSelected(z.header.enableEscapeRope);
-		fly.setSelected(z.header.enableFlyFrom);
-		skybox.setSelected(z.header.enableSkybox);
-		bgmCyclingEnable.setSelected(z.header.enableCyclingBGM);
-		mapChange.setValue(z.header.mapChange);
-		matrix.setValue(z.header.mapmatrixID);
-		move.setValue(z.header.mapMove);
-		parentMap.setValue(z.header.parentMap);
-		script.setValue(z.header.script);
-		textFile.setValue(z.header.textID);
-		tmg.setSelectedIndex(z.header.townMapGroup);
-		type.setSelectedIndex(getTypeIndex(z.header.mapType));
-		weather.setSelectedIndex(getWeatherIndex(z.header.weather));
-		y1.setValue(z.header.Y);
-		z1.setValue(z.header.Z);
-		y2.setValue(z.header.Y2);
-		z2.setValue(z.header.Z2);
-
-		loaded = true;
 	}
 
 	public void loadEverything() {
@@ -96,7 +106,7 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 			@Override
 			protected Object doInBackground() {
 				loaded = false;
-				if (zone != null){
+				if (zone != null) {
 					zone.header.freeArchives();
 				}
 				System.gc();
@@ -105,19 +115,28 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 				zoneList.removeAllItems();
 				tmg.setSelectedIndex(-1);
 				tmg.removeAllItems();
-				int totalZones = mWorkspace.getArchive(Workspace.ArchiveType.ZONE_DATA).length;
-				totalZones -= (mWorkspace.game == Workspace.GameType.XY) ? 1 : 2;
+				int totalZones = Workspace.getArchive(Workspace.ArchiveType.ZONE_DATA).length;
+				totalZones -= (Workspace.game == Workspace.GameType.XY) ? 1 : 2;
 				zones = new Zone[totalZones]; //last file is not a ZO
 				for (int i = 0; i < totalZones; i++) {
-					ZO zo = new ZO(mWorkspace.getWorkspaceFile(Workspace.ArchiveType.ZONE_DATA, i));
-					zones[i] = new Zone(zo);
+					ZO zo = new ZO(Workspace.getWorkspaceFile(Workspace.ArchiveType.ZONE_DATA, i));
+					zones[i] = new Zone(zo, Workspace.game);
 					//unknown flags 1024 == 8192 ???, 4096, 16384 always 0, >> 20 lumi warp zone?,
 					String name = LocationNames.getLocName(zones[i].header.parentMap) + " - " + i;
+					if (zones[i].s.publics.size() > 3) {
+						System.out.println(i + "/" + name);
+					}
+					/*for (int j = 0; j < zones[i].entities.NPCCount; j++){
+						ZoneEntities.NPC npc = zones[i].entities.npcs.get(j);
+						if (npc.movePerm2 != 1 && npc.movePerm2 != 0 && npc.movePerm2 != 4 && npc.movePerm2 != 9){
+							System.out.println(name + "/NPC " + j + " - " + npc.movePerm2);
+						}
+					}*/
 					zoneList.addItem(name);
 					tmg.addItem(name);
 					progress.setBarPercent((int) ((float) i / totalZones * 100));
 				}
-				if (mWorkspace.game == Workspace.GameType.XY) {
+				if (Workspace.game == Workspace.GameType.XY) {
 					type.setModel(new DefaultComboBoxModel<>(new String[]{
 						"Small generic",
 						"Outside generic",
@@ -190,12 +209,12 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 		zone.header.mapmatrixID = (Integer) matrix.getValue();
 		zone.header.textID = (Integer) textFile.getValue();
 		zone.header.script = (Integer) script.getValue();
-		
+
 		zone.header.townMapGroup = (Integer) tmg.getSelectedIndex();
-		zone.header.mapChange = (Integer) mapChange.getValue();
+		zone.header.mapChange = mapTransition.getSelectedIndex();
 		zone.header.parentMap = (Integer) parentMap.getValue();
 		zone.header.OLvalue = isParentMap.isSelected() ? 1 : 0;
-		
+
 		zone.header.weather = getWeatherRaw(weather.getSelectedIndex());
 		zone.header.battleBG = (Integer) battleBG.getValue();
 		zone.header.BGMSpring = (Integer) bgmSpring.getValue();
@@ -204,47 +223,49 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 		zone.header.enableRunning = run.isSelected();
 		zone.header.enableRollerSkates = skate.isSelected();
 		zone.header.enableCycling = cycling.isSelected();
-		
+
 		zone.header.enableEscapeRope = escrope.isSelected();
 		zone.header.enableFlyFrom = fly.isSelected();
 		zone.header.enableDowsingMachine = dowsing.isSelected();
-		
+
 		zone.header.enableBreathFX = coldbreath.isSelected();
 		zone.header.enableGhosting = ghosting.isSelected();
 		zone.header.enableSpecialWalking = specWalk.isSelected();
-		
+		zone.header.enable3D = enable3d.isSelected();
+
 		zone.header.enableSkybox = skybox.isSelected();
-		
+
 		zone.header.camera1 = (Integer) cam1.getValue();
 		zone.header.camera2 = (Integer) cam2.getValue();
 		zone.header.cameraFlags = (Integer) camFlags.getValue();
 		zone.header.unknownFlags = (Integer) unknownFlags.getValue();
 		zone.header.unknownFlag = unknownFlag.isSelected();
 		zone.header.unknownFlags = (Integer) unknownFlags.getValue();
-		
+		zone.header.calculateFlags();
+
 		zone.header.X = (Integer) x1.getValue();
 		zone.header.Y = (Integer) y1.getValue();
 		zone.header.Z = (Integer) z1.getValue();
-		
+
 		zone.header.X2 = (Integer) x2.getValue();
 		zone.header.Y2 = (Integer) y2.getValue();
 		zone.header.Z2 = (Integer) z2.getValue();
-		
+
 		mNPCEditForm.saveEntry();
-		if (zone.store(dialog)){
+		if (zone.store(dialog)) {
 			try {
 				//save to master table
-				File master = mWorkspace.getWorkspaceFile(Workspace.ArchiveType.ZONE_DATA, mWorkspace.getArchive(Workspace.ArchiveType.ZONE_DATA).length -
-						((mWorkspace.game == Workspace.GameType.XY) ? 1 : 2));
+				File master = Workspace.getWorkspaceFile(Workspace.ArchiveType.ZONE_DATA, Workspace.getArchive(Workspace.ArchiveType.ZONE_DATA).length
+						- ((Workspace.game == Workspace.GameType.XY) ? 1 : 2));
 				RandomAccessFile dos = new RandomAccessFile(master, "rw");
 				dos.skipBytes(zoneIndex * 0x38);
 				byte[] test = new byte[0x38];
 				dos.read(test);
 				byte[] replace = zone.file.getFile(0);
-				if (!Arrays.equals(replace, test)){
+				if (!Arrays.equals(replace, test)) {
 					dos.seek(zoneIndex * 0x38);
 					dos.write(replace);
-					mWorkspace.addPersist(master);
+					Workspace.addPersist(master);
 				}
 				dos.close();
 			} catch (IOException ex) {
@@ -252,8 +273,7 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 			}
 			loadZone(zone);
 			return true;
-		}
-		else {
+		} else {
 			return false;
 		}
 	}
@@ -264,12 +284,11 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 		}
 	}
 
-	public int getWeatherRaw(int index){
-		if (mWorkspace.game == Workspace.GameType.ORAS){
+	public int getWeatherRaw(int index) {
+		if (Workspace.game == Workspace.GameType.ORAS) {
 			return index;
-		}
-		else {
-			switch (index){
+		} else {
+			switch (index) {
 				case 0:
 					return 29;
 				case 1:
@@ -315,17 +334,15 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 		}
 		return 29;
 	}
-	
-	public int getWeatherIndex(int raw){
-		if (mWorkspace.game == Workspace.GameType.ORAS){
+
+	public int getWeatherIndex(int raw) {
+		if (Workspace.game == Workspace.GameType.ORAS) {
 			return raw;
-		}
-		else {
-			if (raw < 5){
+		} else {
+			if (raw < 5) {
 				return raw + 1;
-			}
-			else {
-				switch (raw){
+			} else {
+				switch (raw) {
 					case 29:
 						return 0;
 					case 5:
@@ -369,7 +386,7 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 		}
 		return -1;
 	}
-	
+
 	public int getTypeIndex(int raw) {
 		switch (raw) {
 			case 0:
@@ -379,7 +396,7 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 			case 2:
 				return 2;
 			case 3:
-				if (mWorkspace.game == Workspace.GameType.XY) {
+				if (Workspace.game == Workspace.GameType.XY) {
 					return 3;
 				} else {
 					return 1;
@@ -402,7 +419,7 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 			case 0:
 				return 0;
 			case 1:
-				if (mWorkspace.game == Workspace.GameType.XY) {
+				if (Workspace.game == Workspace.GameType.XY) {
 					return 1;
 				} else {
 					return 3;
@@ -474,7 +491,6 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
         battleBGLabel = new javax.swing.JLabel();
         battleBG = new javax.swing.JFormattedTextField();
         mapChangeLabel = new javax.swing.JLabel();
-        mapChange = new javax.swing.JFormattedTextField();
         plrFlagsTitleLabel = new javax.swing.JLabel();
         run = new javax.swing.JCheckBox();
         skate = new javax.swing.JCheckBox();
@@ -503,6 +519,9 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
         dowsing = new javax.swing.JCheckBox();
         specWalk = new javax.swing.JCheckBox();
         tmg = new javax.swing.JComboBox<>();
+        flash = new javax.swing.JCheckBox();
+        mapTransition = new javax.swing.JComboBox<>();
+        enable3d = new javax.swing.JCheckBox();
 
         camFlags.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
 
@@ -592,8 +611,6 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 
         mapChangeLabel.setText("MapChange:");
 
-        mapChange.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
-
         plrFlagsTitleLabel.setText("Player flags:");
 
         run.setText("Allow running");
@@ -640,9 +657,15 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 
         ghosting.setText("Ghosting blur shader");
 
-        dowsing.setText("Allow Dowsing machine (XY)");
+        dowsing.setText("Allow Dowsing machine");
 
-        specWalk.setText("Special walking animation");
+        specWalk.setText("Special walking animation (XY)");
+
+        flash.setText("Flash-able darkness (OA)");
+
+        mapTransition.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "In - Fade/Opening rhombus; Out - Fade/Pokemon logo", "Directional swipe", "In - Closing circle/Fade; Out - Fade/Opening circle", "In - Pokemon logo/Fade; Out - Fade/Pokemon logo", "In - Closing rhombus/Fade; Out - Fade/Opening rhombus", "In - Swipe/Fade; Out - Fade/Swipe", "In - Closing circle/Fade; Out - White fade", "All fade" }));
+
+        enable3d.setText("Enable 3D");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -657,125 +680,134 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
                     .addComponent(mainSep)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(engDataLabel)
-                                .addGroup(layout.createSequentialGroup()
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(moveLabel)
-                                        .addComponent(typeLabel))
-                                    .addGap(31, 31, 31)
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(move, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(type, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(adLabel)
-                                    .addGap(9, 9, 9)
-                                    .addComponent(ad)
-                                    .addGap(40, 40, 40)))
-                            .addComponent(scriptLabel)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                    .addComponent(matrixLabel)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(matrix, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(textLabel)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                        .addComponent(script, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 70, Short.MAX_VALUE)
-                                        .addComponent(textFile, javax.swing.GroupLayout.Alignment.TRAILING)))))
-                        .addGap(18, 18, 18)
-                        .addComponent(engDataSep, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(worldPropLabel)
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(isParentMap)
+                                    .addComponent(run, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(skate, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(cycling, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(45, 45, 45)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(escrope, javax.swing.GroupLayout.PREFERRED_SIZE, 168, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(fly, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(dowsing))
+                                .addGap(45, 45, 45)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(coldbreath)
                                     .addGroup(layout.createSequentialGroup()
                                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(tmgLabel)
-                                            .addComponent(mapChangeLabel)
-                                            .addComponent(parentMapLabel))
+                                            .addComponent(specWalk)
+                                            .addComponent(ghosting))
+                                        .addGap(45, 45, 45)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(enable3d)
+                                            .addComponent(flash)))))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(engDataLabel)
+                                        .addGroup(layout.createSequentialGroup()
+                                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                .addComponent(moveLabel)
+                                                .addComponent(typeLabel))
+                                            .addGap(31, 31, 31)
+                                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                .addComponent(move, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addComponent(type, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                        .addGroup(layout.createSequentialGroup()
+                                            .addComponent(adLabel)
+                                            .addGap(9, 9, 9)
+                                            .addComponent(ad)
+                                            .addGap(40, 40, 40)))
+                                    .addComponent(scriptLabel)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                            .addComponent(matrixLabel)
+                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                            .addComponent(matrix, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(layout.createSequentialGroup()
+                                            .addComponent(textLabel)
+                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                .addComponent(script, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 70, Short.MAX_VALUE)
+                                                .addComponent(textFile, javax.swing.GroupLayout.Alignment.TRAILING)))))
+                                .addGap(18, 18, 18)
+                                .addComponent(engDataSep, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(worldPropLabel)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(isParentMap)
+                                            .addGroup(layout.createSequentialGroup()
+                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                    .addComponent(tmgLabel)
+                                                    .addComponent(mapChangeLabel)
+                                                    .addComponent(parentMapLabel))
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                    .addComponent(parentMap, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                    .addComponent(tmg, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                    .addComponent(mapTransition, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                        .addGap(26, 26, 26)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(battleBGLabel)
+                                            .addComponent(weatherLabel)
+                                            .addComponent(BGMTitleLabel)
+                                            .addComponent(bgmCyclingEnable))
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(mapChange, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                            .addComponent(parentMap, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                            .addComponent(tmg, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                                .addGap(26, 26, 26)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(battleBGLabel)
-                                    .addComponent(weatherLabel)
-                                    .addComponent(BGMTitleLabel)
-                                    .addComponent(bgmCyclingEnable))
+                                            .addComponent(weather, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                                .addComponent(bgmSpring, javax.swing.GroupLayout.Alignment.LEADING)
+                                                .addComponent(battleBG, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))))))
+                            .addComponent(plrFlagsTitleLabel)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(loadZoneLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(zoneList, javax.swing.GroupLayout.PREFERRED_SIZE, 350, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(skybox)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(x2Label)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(x2, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(y2Label)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(y2, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(z2Label)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(z2, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(spawnPointLabel)
+                            .addComponent(unknownTitleLabel)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(x1Label)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(x1, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(y1Label)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(y1, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(z1Label)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(z1, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(btnSave, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(weather, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                        .addComponent(bgmSpring, javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(battleBG, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))))))
-                    .addComponent(plrFlagsTitleLabel)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(loadZoneLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(zoneList, javax.swing.GroupLayout.PREFERRED_SIZE, 350, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(skybox)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(x2Label)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(x2, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(y2Label)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(y2, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(z2Label)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(z2, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(spawnPointLabel)
-                    .addComponent(unknownTitleLabel)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(x1Label)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(x1, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(y1Label)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(y1, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(z1Label)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(z1, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(btnSave, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(camFlagsLabel)
-                            .addComponent(cam2label)
-                            .addComponent(cam1label)
-                            .addComponent(uFlabel))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(camFlags, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(cam1, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(cam2, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(unknownFlags, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addComponent(unknownFlag)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(run, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(skate, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(cycling, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(58, 58, 58)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(escrope, javax.swing.GroupLayout.PREFERRED_SIZE, 168, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(fly, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(dowsing))
-                        .addGap(56, 56, 56)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(specWalk)
-                            .addComponent(ghosting)
-                            .addComponent(coldbreath))))
+                                    .addComponent(camFlagsLabel)
+                                    .addComponent(cam2label)
+                                    .addComponent(cam1label)
+                                    .addComponent(uFlabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                    .addComponent(camFlags, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(cam1, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(cam2, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addComponent(unknownFlags, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(unknownFlag))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -800,9 +832,9 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(mapChangeLabel)
-                            .addComponent(mapChange, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(battleBGLabel)
-                            .addComponent(battleBG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(battleBG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(mapTransition, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(parentMapLabel)
@@ -856,12 +888,14 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(skate)
                     .addComponent(fly)
-                    .addComponent(ghosting))
+                    .addComponent(ghosting)
+                    .addComponent(enable3d))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cycling)
                     .addComponent(dowsing)
-                    .addComponent(specWalk))
+                    .addComponent(specWalk)
+                    .addComponent(flash))
                 .addGap(18, 18, 18)
                 .addComponent(skybox)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -935,10 +969,14 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 						zoneIndex = zoneList.getSelectedIndex();
 						progress.setBarPercent(50);
 						z.header.fetchArchives();
+						z.s.decompressThis();
 						progress.setBarPercent(100);
-						mTileMapPanel.loadMatrix(new MapMatrix(z.header.mapmatrix), z.header.worldTextures, z.header.propTextures);
+						mTileMapPanel.loadMatrix(new MapMatrix(z.header.mapmatrix), new ADPropRegistry(z.header.areadata, z.header.propTextures), z.header.worldTextures, z.header.propTextures);
 						mCamEditForm.loadDataFile(new CameraDataFile(z.header.areadata));
 						mNPCEditForm.loadFromEntities(z.entities, z.header.npcreg);
+						mWarpEditForm.loadFromEntities(z.entities);
+						mScriptPnl.loadScript(z.s);
+						m3DDebugPanel.bindNavi(null);
 						System.gc();
 						m3DDebugPanel.reload = true;
 						mTileMapPanel.update = true;
@@ -970,17 +1008,19 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
     private javax.swing.JCheckBox coldbreath;
     private javax.swing.JCheckBox cycling;
     private javax.swing.JCheckBox dowsing;
+    private javax.swing.JCheckBox enable3d;
     private javax.swing.JLabel engDataLabel;
     private javax.swing.JSeparator engDataSep;
     private javax.swing.JCheckBox escrope;
+    private javax.swing.JCheckBox flash;
     private javax.swing.JCheckBox fly;
     private javax.swing.JCheckBox ghosting;
     private javax.swing.JCheckBox isParentMap;
     private javax.swing.JLabel loadZoneLabel;
     private javax.swing.JSeparator loaderSeparator;
     private javax.swing.JSeparator mainSep;
-    private javax.swing.JFormattedTextField mapChange;
     private javax.swing.JLabel mapChangeLabel;
+    private javax.swing.JComboBox<String> mapTransition;
     private javax.swing.JFormattedTextField matrix;
     private javax.swing.JLabel matrixLabel;
     private javax.swing.JFormattedTextField move;
