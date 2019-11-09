@@ -4,22 +4,14 @@ import com.jogamp.opengl.glu.gl2.GLUgl2;
 import static ctrmap.CtrmapMainframe.*;
 import ctrmap.formats.vectors.Vec3f;
 import ctrmap.resources.ResourceAccess;
-import java.awt.Color;
 import java.awt.Component;
-import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
@@ -171,6 +163,18 @@ public class Utils {
 				+ Math.pow(loc.z + comp.z, 2)
 				* 1.0), 0.5);
 		return Math.abs(dist);
+	}
+	
+	public static byte[] getTrimmedArray(byte[] in){
+		for (int i = in.length - 1; i > 0; i--){
+			if (in[i] != 0){
+				int finalIndex = i + (4 - (i % 4));
+				byte[] ret = new byte[finalIndex];
+				System.arraycopy(in, 0, ret, 0, finalIndex);
+				return ret;
+			}
+		}
+		return new byte[0];
 	}
 
 	/*

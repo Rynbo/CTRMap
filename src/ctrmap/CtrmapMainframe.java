@@ -10,7 +10,6 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.prefs.Preferences;
 
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -36,13 +35,15 @@ import ctrmap.formats.zone.Zone;
 import ctrmap.humaninterface.AboutDialog;
 import ctrmap.humaninterface.CM3DInputManager;
 import ctrmap.humaninterface.CM3DRenderable;
-import ctrmap.humaninterface.CameraDebugPanel;
 import ctrmap.humaninterface.CameraEditForm;
 import ctrmap.humaninterface.CollEditPanel;
 import ctrmap.humaninterface.CollInputManager;
 import ctrmap.humaninterface.ExtrasPanel;
 import ctrmap.humaninterface.GLPanel;
 import ctrmap.humaninterface.H3DRenderingPanel;
+import ctrmap.humaninterface.MapMatrixPanel;
+import ctrmap.humaninterface.MatrixEditForm;
+import ctrmap.humaninterface.MatrixPanelInputManager;
 import ctrmap.humaninterface.NPCEditForm;
 import ctrmap.humaninterface.PropEditForm;
 import ctrmap.humaninterface.ScriptEditor;
@@ -121,6 +122,10 @@ public class CtrmapMainframe {
 	public static H3DRenderingPanel m3DDebugPanel;
 	public static CollEditPanel mCollEditPanel;
 
+	public static JScrollPane mMtxScrollPane;
+	public static MapMatrixPanel mMtxPanel;
+	public static MatrixEditForm mMtxEditForm;
+
 	public static ZoneLoadingPanel mZonePnl;
 	public static ScriptEditor mScriptPnl;
 	public static ExtrasPanel mExtrasPnl;
@@ -130,10 +135,12 @@ public class CtrmapMainframe {
 	public static JSplitPane jsp;
 	public static JPanel collEditMasterPnl;
 	public static JSplitPane jsp2;
-	public static CameraDebugPanel camDebugPnl;
+	public static JPanel mtxEditMasterPnl;
+	public static JSplitPane jsp3;
 
 	public static TilemapPanelInputManager mTilemapInputManager;
 	public static CollInputManager mCollInputManager;
+	public static MatrixPanelInputManager mMtxPnlInputManager;
 	public static CM3DInputManager mCM3DInputManager;
 
 	public static AbstractTool tool;
@@ -197,11 +204,10 @@ public class CtrmapMainframe {
 		toolbar.add(btnNPCTool);
 		toolbar.add(btnWarpTool);
 		toolbar.add(currentTool);
-		
+
 		tileEditMasterPnl = new JPanel(new BorderLayout());
 		collEditMasterPnl = new JPanel(new BorderLayout());
-		camDebugPnl = new CameraDebugPanel();
-		camDebugPnl.setLayout(new BoxLayout(camDebugPnl, BoxLayout.PAGE_AXIS));
+		mtxEditMasterPnl = new JPanel(new BorderLayout());
 		mZonePnl = new ZoneLoadingPanel();
 		mScriptPnl = new ScriptEditor();
 		mExtrasPnl = new ExtrasPanel(mZonePnl);
@@ -211,6 +217,9 @@ public class CtrmapMainframe {
 		frame.setLocationByPlatform(true);
 		mTileMapPanel = new TileMapPanel();
 		mTilemapScrollPane = new JScrollPane();
+		mMtxPanel = new MapMatrixPanel();
+		mMtxEditForm = new MatrixEditForm();
+		mMtxScrollPane = new JScrollPane();
 		mCamScrollPane = new JScrollPane();
 		mTileEditForm = new TileEditForm();
 		mCamEditForm = new CameraEditForm();
@@ -222,28 +231,37 @@ public class CtrmapMainframe {
 		m3DDebugPanel = new H3DRenderingPanel(CM3DComponents);
 		jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		mTilemapScrollPane.setViewportView(mTileMapPanel);
+		mMtxScrollPane.setViewportView(mMtxPanel);
 		mCamScrollPane.setViewportView(mCamEditForm);
 		mCamScrollPane.setMinimumSize(mCamEditForm.getPreferredSize());
 		mCamScrollPane.setPreferredSize(mCamEditForm.getPreferredSize());
 		mCamScrollPane.getVerticalScrollBar().setUnitIncrement(16);
 		jsp.setLeftComponent(mTilemapScrollPane);
 		jsp.setRightComponent(mTileEditForm);
-		
+
 		mTilemapInputManager = new TilemapPanelInputManager(mTileMapPanel);
 		mCM3DInputManager = new CM3DInputManager(m3DDebugPanel);
 		mCollInputManager = new CollInputManager(mGLPanel);
+		mMtxPnlInputManager = new MatrixPanelInputManager(mMtxPanel);
 
 		jsp2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		jsp2.setLeftComponent(mGLPanel);
 		jsp2.setRightComponent(mCollEditPanel);
+
+		jsp3 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+		jsp3.setLeftComponent(mMtxScrollPane);
+		jsp3.setRightComponent(mMtxEditForm);
 
 		tileEditMasterPnl.add(toolbar, BorderLayout.NORTH);
 		tileEditMasterPnl.add(jsp, BorderLayout.CENTER);
 
 		collEditMasterPnl.add(jsp2);
 
-		tabs.add("Tilemap Editor", tileEditMasterPnl);
+		mtxEditMasterPnl.add(jsp3);
+
+		tabs.add("World Editor", tileEditMasterPnl);
 		tabs.add("Collision Editor", collEditMasterPnl);
+		tabs.add("Matrix Editor", mtxEditMasterPnl);
 		tabs.add("Zone Loader", mZonePnl);
 		tabs.add("Script Editor (experimental)", mScriptPnl);
 		tabs.add("Extras", mExtrasPnl);
@@ -292,6 +310,7 @@ public class CtrmapMainframe {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				mTileMapPanel.saveTileMap(false);
+				mMtxEditForm.store(false);
 				mCollEditPanel.store();
 				mCamEditForm.store(false);
 				mPropEditForm.store(false);
@@ -441,12 +460,7 @@ public class CtrmapMainframe {
 		frame.setMinimumSize(frame.getSize());
 		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		frame.setVisible(true);
-		frame.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentResized(ComponentEvent componentEvent) {
-				adjustSplitPanes();
-			}
-		});
+
 		mTileMapPanel.addPropertyChangeListener(new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent arg0) {
@@ -461,7 +475,7 @@ public class CtrmapMainframe {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				if (mCamEditForm.store(true) && mTileMapPanel.saveTileMap(true) && mPropEditForm.store(true) && mNPCEditForm.saveRegistry(true) && mZonePnl.store(true)) {
+				if (mCamEditForm.store(true) && mTileMapPanel.saveTileMap(true) && mMtxEditForm.store(true) && mPropEditForm.store(true) && mNPCEditForm.saveRegistry(true) && mZonePnl.store(true)) {
 					Workspace.cleanUnchanged();
 					Workspace.saveWorkspace();
 					System.exit(0);
@@ -484,7 +498,15 @@ public class CtrmapMainframe {
 		});
 		tool = new SetTool();
 		frame.getRootPane().setFocusable(true);
-		adjustSplitPanes();
+		frame.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent componentEvent) {
+				adjustSplitPanes();
+			}
+		});
+		SwingUtilities.invokeLater(() -> {
+			adjustSplitPanes();
+		});
 		Workspace.validate(frame);
 	}
 
@@ -502,5 +524,10 @@ public class CtrmapMainframe {
 			loc2 = 0.1d;
 		}
 		jsp2.setDividerLocation(loc2);
+		double loc3 = 1d - (double) (mMtxEditForm.getPreferredSize().width + jsp3.getDividerSize() - 3) / (double) mtxEditMasterPnl.getWidth();
+		if (loc3 < 0.1) {
+			loc3 = 0.1d;
+		}
+		jsp3.setDividerLocation(loc3);
 	}
 }

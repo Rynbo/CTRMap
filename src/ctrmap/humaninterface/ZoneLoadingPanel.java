@@ -952,7 +952,7 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 
     private void zoneListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zoneListActionPerformed
 		if (zoneList.getSelectedIndex() != -1 && loaded) {
-			if (mCamEditForm.store(true) && mTileMapPanel.saveTileMap(true) && mPropEditForm.store(true) && mNPCEditForm.saveRegistry(true) && store(true)) {
+			if (mCamEditForm.store(true) && mTileMapPanel.saveTileMap(true) && mMtxEditForm.store(true) && mPropEditForm.store(true) && mNPCEditForm.saveRegistry(true) && store(true)) {
 				LoadingDialog progress = LoadingDialog.makeDialog("Loading zone");
 				SwingWorker worker = new SwingWorker() {
 					@Override
@@ -972,6 +972,7 @@ public class ZoneLoadingPanel extends javax.swing.JPanel {
 						z.s.decompressThis();
 						progress.setBarPercent(100);
 						mTileMapPanel.loadMatrix(new MapMatrix(z.header.mapmatrix), new ADPropRegistry(z.header.areadata, z.header.propTextures), z.header.worldTextures, z.header.propTextures);
+						mMtxPanel.loadMatrix(mTileMapPanel.mm);
 						mCamEditForm.loadDataFile(new CameraDataFile(z.header.areadata));
 						mNPCEditForm.loadFromEntities(z.entities, z.header.npcreg);
 						mWarpEditForm.loadFromEntities(z.entities);

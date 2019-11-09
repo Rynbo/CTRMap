@@ -372,6 +372,25 @@ public class Workspace {
 			npcmm = new GARC(movemodels);
 		}
 	}
+	
+	public static void reloadGARC(ArchiveType arc){
+		switch (arc){
+			case AREA_DATA:
+				ad = new GARC(ad.file);
+			case BUILDING_MODELS:
+				bm = new GARC(bm.file);
+			case FIELD_DATA:
+				gr = new GARC(gr.file);
+			case MAP_MATRIX:
+				mm = new GARC(mm.file);
+			case MOVE_MODELS:
+				npcmm = new GARC(npcmm.file);
+			case NPC_REGISTRIES:
+				npcreg = new GARC(npcreg.file);
+			case ZONE_DATA:
+				zo = new GARC(zo.file);
+		}
+	}
 
 	public static File getWorkspaceFile(ArchiveType arc, int fileNum) {
 		File wsFile;
@@ -425,13 +444,12 @@ public class Workspace {
 					progress.setBarPercent(100);
 					progress.setDescription("Done, updating GARCs");
 					//the GARC indices may have changed and as such we need to reload them
-					gr = new GARC(gr.file);
-					ad = new GARC(ad.file);
-					zo = new GARC(zo.file);
-					bm = new GARC(bm.file);
-					mm = new GARC(mm.file);
-					npcreg = new GARC(npcreg.file);
-					npcmm = new GARC(npcmm.file);
+					reloadGARC(ArchiveType.AREA_DATA);
+					reloadGARC(ArchiveType.FIELD_DATA);
+					reloadGARC(ArchiveType.ZONE_DATA);
+					reloadGARC(ArchiveType.MAP_MATRIX);
+					reloadGARC(ArchiveType.BUILDING_MODELS);
+					reloadGARC(ArchiveType.NPC_REGISTRIES);
 					return null;
 				}
 			};
