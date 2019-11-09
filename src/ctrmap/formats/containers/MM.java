@@ -29,6 +29,12 @@ public class MM extends AbstractGamefreakContainer{
 			type = MM_MAP_MATRIX;
 		}
 	}
+	
+	public MM(File f, int len, int type){
+		super(f, len);
+		this.type = type;
+	}
+	
 	@Override
 	public short getHeader() {
 		return 0x4D4D;
@@ -38,7 +44,7 @@ public class MM extends AbstractGamefreakContainer{
 	public ContentType getDefaultContentType(int index) {
 		if (type == MM_MAP_MATRIX){
 			if (index == 0){
-				return ContentType.H3D_TEXTURE_PACK;
+				return ContentType.MAPMATRIX;
 			}
 			else if (index == 1){
 				return ContentType.CAMERA_DATA_MM_EXTRA;
@@ -57,6 +63,11 @@ public class MM extends AbstractGamefreakContainer{
 
 	@Override
 	public boolean getIsPadded() {
-		return true;
+		if (type == MM_MAP_MATRIX){
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 }

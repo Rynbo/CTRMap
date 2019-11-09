@@ -28,6 +28,10 @@ public class GR extends AbstractGamefreakContainer{
 	public GR(File f) {
 		super(f);
 	}
+	
+	public GR(File f, int len){
+		super(f, len);
+	}
 
 	@Override
 	public short getHeader() {

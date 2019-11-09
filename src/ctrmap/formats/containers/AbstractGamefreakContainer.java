@@ -9,6 +9,7 @@ import ctrmap.LittleEndianDataInputStream;
 import ctrmap.LittleEndianDataOutputStream;
 import ctrmap.Utils;
 import ctrmap.Workspace;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -35,6 +36,35 @@ public abstract class AbstractGamefreakContainer {
 			verify();
 		} else {
 			System.err.println("Unable to open file. Expect a crash soon.");
+		}
+	}
+	
+	public AbstractGamefreakContainer(File target, int fileCount){
+		this.f = target;
+		len = fileCount;
+		int headerLength = len * 4 + 8;
+		int startingOffset = getIsPadded() ? (int)Math.ceil(headerLength / 128f) * 0x80 : headerLength;
+		offsets = new int[len + 1];
+		for (int i = 0; i < offsets.length; i++){
+			offsets[i] = startingOffset;
+			if (getIsPadded()){
+				startingOffset += 0x80;
+			}
+		}
+		try {
+			LittleEndianDataOutputStream out = new LittleEndianDataOutputStream(new FileOutputStream(target));
+			out.write2Bytes(getHeader());
+			out.writeShort((short)(len));
+			for (int i = 0; i < len + 1; i++) {
+				out.writeInt(offsets[i]);
+			}
+			if (getIsPadded()){
+				out.write(Utils.getPadding(0, headerLength));
+				out.write(new byte[len * 0x80]);
+			}
+			out.close();
+		} catch (IOException ex) {
+			Logger.getLogger(AbstractGamefreakContainer.class.getName()).log(Level.SEVERE, null, ex);
 		}
 	}
 
