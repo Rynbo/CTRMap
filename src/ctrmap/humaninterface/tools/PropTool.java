@@ -30,7 +30,7 @@ public class PropTool extends AbstractTool {
 
 	@Override
 	public void drawOverlay(Graphics g, int imgstartx, int imgstarty, double globimgdim){
-		if (mTileMapPanel.isVerified && mPropEditForm.loaded){
+		if (mTileMapPanel.loaded && mPropEditForm.loaded){
 			for (int i = 0; i < mPropEditForm.props.props.size(); i++){
 				GRProp prop = mPropEditForm.props.props.get(i);
 				double transformFrom720Space = 400d/720d;
@@ -70,8 +70,8 @@ public class PropTool extends AbstractTool {
 				double yBase = prop.z * 400d/720d * mTileMapPanel.tilemapScale + imgstarty;
 				if (e.getX() > xBase - prop.nameWidth/2 && e.getX() < xBase + prop.nameWidth/2 && e.getY() > yBase && e.getY() < yBase + prop.nameHeight){
 					isDownOnProp = true;
-					xshift = 2*(xBase - e.getX()) / mTileMapPanel.tilemapScale; //xBase is in the center
-					yshift = (yBase - e.getY()) / mTileMapPanel.tilemapScale;
+					xshift = (xBase - e.getX()); //xBase is in the center
+					yshift = (yBase - e.getY());
 					mPropEditForm.setProp(i);
 					break;
 				}
@@ -92,8 +92,8 @@ public class PropTool extends AbstractTool {
 		dragging = true;
 		int imgstartx = (mTileMapPanel.getWidth() - mTileMapPanel.tilemapScaledImage.getWidth()) / 2;
 		int imgstarty = (mTileMapPanel.getHeight() - mTileMapPanel.tilemapScaledImage.getHeight()) / 2;
-		mPropEditForm.prop.x = (float)(xshift + e.getX() * (720f/400f) / mTileMapPanel.tilemapScale - imgstartx);
-		mPropEditForm.prop.z = (float)(yshift + e.getY() * (720f/400f) / mTileMapPanel.tilemapScale - imgstarty);
+		mPropEditForm.prop.x = (float)((e.getX() - imgstartx + xshift) * (720f/400f) / mTileMapPanel.tilemapScale);
+		mPropEditForm.prop.z = (float)((e.getY() - imgstarty + yshift) * (720f/400f) / mTileMapPanel.tilemapScale);
 		mPropEditForm.props.modified = true;
 		mPropEditForm.showProp(mPropEditForm.propIndex);
 		mTileMapPanel.renderTileMap();

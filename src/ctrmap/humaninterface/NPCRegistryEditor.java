@@ -1,6 +1,5 @@
 package ctrmap.humaninterface;
 
-import ctrmap.CtrmapMainframe;
 import ctrmap.Utils;
 import ctrmap.Workspace;
 import ctrmap.formats.containers.MM;
@@ -103,11 +102,11 @@ public class NPCRegistryEditor extends javax.swing.JFrame {
 	}
 
 	public boolean saveEntry(boolean dialog) {
-		if (reg.entries.containsKey((Integer)uid.getValue()) && !reg.entries.get((Integer)uid.getValue()).equals(e)) {
-			JOptionPane.showMessageDialog(this, "The specified UID is already registered. Please use another one.", "UID not unique", JOptionPane.ERROR_MESSAGE);
-			return false;
-		}
 		if (e != null) {
+			if (reg.entries.containsKey((Integer) uid.getValue()) && !reg.entries.get((Integer) uid.getValue()).equals(e)) {
+				JOptionPane.showMessageDialog(this, "The specified UID is already registered. Please use another one.", "UID not unique", JOptionPane.ERROR_MESSAGE);
+				return false;
+			}
 			NPCRegistry.NPCRegistryEntry e2 = new NPCRegistry.NPCRegistryEntry();
 			e2.uid = (Integer) uid.getValue();
 			e2.model = (Integer) mdl.getValue();

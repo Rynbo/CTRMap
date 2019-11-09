@@ -70,7 +70,6 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 	public double tilemapScale = 1.0d;
 	public boolean loaded = false;
 	private final JLabel placeholder = new JLabel("No map loaded");
-	public boolean isVerified = false;
 	private Graphics g;
 	public int width;
 	public int height;
@@ -163,7 +162,6 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 		scaleImage(1);
 		revalidate();
 		loaded = true;
-		isVerified = false;
 		loadProps(null, null);
 		mNPCEditForm.loadFromEntities(null, null);
 		m3DDebugPanel.translateX = 0f; //720/2 to center the camera
@@ -177,8 +175,8 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 			GRPropData comb = new GRPropData();
 			for (int i = 0; i < mm.height; i++) {
 				for (int j = 0; j < mm.width; j++) {
-					if (mm.regions[j][i] != null) {
-						comb.props.addAll(new GRPropData(mm.regions[j][i]).props);
+					if (mm.regions.get(j, i) != null) {
+						comb.props.addAll(new GRPropData(mm.regions.get(j, i)).props);
 					}
 				}
 			}
@@ -207,7 +205,7 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 			boolean broken = false;
 			for (int i = 0; i < mm.height & !broken; i++) {
 				for (int j = 0; j < mm.width; j++) {
-					if (tilemaps[j][i] == null) {
+					if (j >= tilemaps.length || i >= tilemaps[j].length || tilemaps[j][i] == null) {
 						continue;
 					}
 					if (tilemaps[j][i].modified) {
@@ -225,11 +223,11 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 									protected Object doInBackground() {
 										for (int i = 0; i < mm.height; i++) {
 											for (int j = 0; j < mm.width; j++) {
-												if (mm.regions[j][i] == null) {
+												if (mm.regions.get(j, i) == null) {
 													continue;
 												}
 												tilemaps[j][i].modified = false; //prevent save dialog popping up until changed again
-												mm.regions[j][i].storeFile(0, tilemaps[j][i].assembleTilemap());
+												mm.regions.get(j, i).storeFile(0, tilemaps[j][i].assembleTilemap());
 												progress.setBarPercent((int) (((i * mm.width + j) / (float) (mm.width * mm.height)) * 100));
 											}
 										}
@@ -249,7 +247,7 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 							case JOptionPane.NO_OPTION:
 								for (int k = 0; k < mm.height; k++) {
 									for (int l = 0; l < mm.width; l++) {
-										if (mm.regions[l][k] == null) {
+										if (mm.regions.get(l, k) == null) {
 											continue;
 										}
 										tilemaps[l][k].modified = false; //prevent save dialog popping up until changed again
@@ -287,10 +285,10 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 				mCollEditPanel.unload();
 				for (int i = 0; i < mm.height; i++) {
 					for (int j = 0; j < mm.width; j++) {
-						if (mm.ids[j][i] != -1) {
-							tilemaps[j][i] = new Tilemap(mm.regions[j][i]);
-							byte[] tg = mm.regions[j][i].getFile(5);
-							if (tg[0] == 'B' && tg[1] == 'C' && tg[2] == 'H') {
+						if (mm.ids.get(j, i) != -1) {
+							tilemaps[j][i] = new Tilemap(mm.regions.get(j, i));
+							byte[] tg = mm.regions.get(j, i).getFile(5);
+							if (tg.length > 0 && tg[0] == 'B' && tg[1] == 'C' && tg[2] == 'H') {
 								BCHFile tgbch = new BCHFile(tg);
 								if (!tgbch.models.isEmpty()) {
 									H3DModel tgmdl = tgbch.models.get(0);
@@ -302,7 +300,7 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 									tallgrass[j][i] = tgbch;
 								}
 							}
-							BCHFile bch = new BCHFile(mm.regions[j][i].getFile(1));
+							BCHFile bch = new BCHFile(mm.regions.get(j, i).getFile(1));
 							if (!bch.models.isEmpty()) {
 								H3DModel model = bch.models.get(0);
 								if (worldTextures != null) {
@@ -318,7 +316,7 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 								model.makeAllBOs();
 								models[j][i] = bch;
 							}
-							colls[j][i] = new GRCollisionFile(mm.regions[j][i]);
+							colls[j][i] = new GRCollisionFile(mm.regions.get(j, i));
 							mCollEditPanel.loadCollision(colls[j][i], bch.models.get(0).name);
 						}
 						progress.setBarPercent((int) (((i * mm.width + j) / (float) (mm.width * mm.height)) * 100));
@@ -417,10 +415,10 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 		if (mode == ViewportMode.MULTI) {
 			for (int i = 0; i < mm.height; i++) {
 				for (int j = 0; j < mm.width; j++) {
-					if (models[j][i] != null) {
+					if (j < models.length && i < models[j].length && models[j][i] != null) {
 						models[j][i].render(gl);
 					}
-					if (tallgrass[j][i] != null) {
+					if (j < tallgrass.length && i < tallgrass[j].length && tallgrass[j][i] != null) {
 						tallgrass[j][i].render(gl);
 					}
 					//useless probably? Can't really edit it in CM3D so it's better to just link it with CollEd per region.
@@ -466,10 +464,10 @@ public class TileMapPanel extends JPanel implements CM3DRenderable {
 		if (loaded && mode == ViewportMode.MULTI && mm != null) {
 			for (int i = 0; i < mm.height; i++) {
 				for (int j = 0; j < mm.width; j++) {
-					if (models[j][i] != null) {
+					if (j < models.length && i < models[j].length && models[j][i] != null) {
 						models[j][i].models.get(0).uploadAllBOs(gl);
 					}
-					if (tallgrass[j][i] != null) {
+					if (j < tallgrass.length && i < tallgrass[j].length && tallgrass[j][i] != null) {
 						tallgrass[j][i].models.get(0).uploadAllBOs(gl);
 					}
 				}

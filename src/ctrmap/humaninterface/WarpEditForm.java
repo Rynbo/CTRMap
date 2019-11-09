@@ -214,7 +214,7 @@ public class WarpEditForm extends javax.swing.JPanel {
 	}
 
 	public int getTransitionRaw(int index) {
-		switch  (index){
+		switch (index) {
 			case 0:
 				return 0;
 			case 1:
@@ -329,7 +329,7 @@ public class WarpEditForm extends javax.swing.JPanel {
 	public void setWarp(int index) {
 		entryBox.setSelectedIndex(index);
 	}
-	
+
 	public void refresh() {
 		entryBox.setSelectedIndex(entryBox.getSelectedIndex());
 	}
@@ -591,16 +591,18 @@ public class WarpEditForm extends javax.swing.JPanel {
     }//GEN-LAST:event_btnAddActionPerformed
 
     private void btnRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveActionPerformed
-		e.warps.remove(warp);
-		e.warpCount--;
-		entryBox.removeItemAt(entryBox.getSelectedIndex());
-		if (entryBox.getSelectedIndex() >= entryBox.getItemCount()) {
-			entryBox.setSelectedIndex(entryBox.getSelectedIndex() - 1);
-		} else {
-			entryBox.setSelectedIndex(entryBox.getSelectedIndex());
+		if (e != null) {
+			e.warps.remove(warp);
+			e.warpCount--;
+			entryBox.removeItemAt(entryBox.getSelectedIndex());
+			if (entryBox.getSelectedIndex() >= entryBox.getItemCount()) {
+				entryBox.setSelectedIndex(entryBox.getSelectedIndex() - 1);
+			} else {
+				entryBox.setSelectedIndex(entryBox.getSelectedIndex());
+			}
+			frame.repaint();
+			e.modified = true;
 		}
-		frame.repaint();
-		e.modified = true;
     }//GEN-LAST:event_btnRemoveActionPerformed
 
 

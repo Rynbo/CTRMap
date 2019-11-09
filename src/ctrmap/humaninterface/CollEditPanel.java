@@ -506,10 +506,12 @@ public class CollEditPanel extends javax.swing.JPanel {
 
     private void btnNewTriangleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewTriangleActionPerformed
 		if (selectedMesh != -1) {
-			coll.meshes[selectedMesh].tris.add(new Triangle(new float[3], new float[3], new float[3]));
-			int index = meshNodes.get(collIndex)[selectedMesh].getChildCount();
-			meshNodes.get(collIndex)[selectedMesh].add(new DefaultMutableTreeNode("Triangle " + index));
-			((DefaultTreeModel) meshTree.getModel()).reload(meshNodes.get(collIndex)[selectedMesh]);
+			int index = coll.meshes[selectedMesh].tris.size();
+			int originalMesh = selectedMesh; //sometimes it gets fucked up by listeners
+			coll.meshes[originalMesh].tris.add(new Triangle(new float[3], new float[3], new float[3]));
+			meshNodes.get(collIndex)[originalMesh].add(new DefaultMutableTreeNode("Triangle " + index));
+			((DefaultTreeModel) meshTree.getModel()).reload(meshNodes.get(collIndex)[originalMesh]);
+			selectedMesh = originalMesh;
 			selectTriangle(selectedMesh, index);
 		}
 		coll.modified = true;
@@ -579,22 +581,24 @@ public class CollEditPanel extends javax.swing.JPanel {
 	}
 
 	public void buildTree() {
-		root.removeAllChildren();
-		meshNodes.clear();
-		for (int file = 0; file < files.size(); file++) {
-			files.get(file).dedupe();
-			meshNodes.add(new DefaultMutableTreeNode[16]);
-			meshContainers.get(file).removeAllChildren();
-			for (int i = 0; i < 16; i++) {
-				meshNodes.get(file)[i] = new DefaultMutableTreeNode("Mesh " + String.valueOf(i));
-				for (int j = 0; j < files.get(file).meshes[i].tris.size(); j++) {
-					meshNodes.get(file)[i].add(new DefaultMutableTreeNode("Triangle " + String.valueOf(j)));
+		if (files.size() > 0) {
+			root.removeAllChildren();
+			meshNodes.clear();
+			for (int file = 0; file < files.size(); file++) {
+				files.get(file).dedupe();
+				meshNodes.add(new DefaultMutableTreeNode[16]);
+				meshContainers.get(file).removeAllChildren();
+				for (int i = 0; i < 16; i++) {
+					meshNodes.get(file)[i] = new DefaultMutableTreeNode("Mesh " + String.valueOf(i));
+					for (int j = 0; j < files.get(file).meshes[i].tris.size(); j++) {
+						meshNodes.get(file)[i].add(new DefaultMutableTreeNode("Triangle " + String.valueOf(j)));
+					}
+					meshContainers.get(file).add(meshNodes.get(file)[i]);
 				}
-				meshContainers.get(file).add(meshNodes.get(file)[i]);
+				root.add(meshContainers.get(file));
 			}
-			root.add(meshContainers.get(file));
+			((DefaultTreeModel) meshTree.getModel()).reload();
 		}
-		((DefaultTreeModel) meshTree.getModel()).reload();
 	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -54,6 +54,7 @@ public class NPCRegistry {
 		BCHFile bch = new BCHFile(new MM(Workspace.getWorkspaceFile(Workspace.ArchiveType.MOVE_MODELS, mdlnum)).getFile(0));
 		if (!bch.models.isEmpty()) {
 			bch.models.get(0).setMaterialTextures(bch.textures);
+			bch.models.get(0).makeAllBOs();
 			models.put(uid, bch.models.get(0));
 		}
 	}

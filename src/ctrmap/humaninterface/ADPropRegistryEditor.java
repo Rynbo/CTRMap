@@ -123,7 +123,7 @@ public class ADPropRegistryEditor extends javax.swing.JFrame {
 
 	public boolean saveEntry(boolean dialog) {
 		if (e != null) {
-			if (reg.entries.containsKey((Integer) uid.getValue())) {
+			if (reg.entries.containsKey((Integer) uid.getValue()) && !reg.entries.get((Integer) uid.getValue()).equals(e)) {
 				JOptionPane.showMessageDialog(this, "The specified UID is already registered. Please use another one.", "UID not unique", JOptionPane.ERROR_MESSAGE);
 				return false;
 			}

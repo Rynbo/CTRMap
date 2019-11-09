@@ -1006,6 +1006,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
     }//GEN-LAST:event_btnRegEditActionPerformed
 
     private void btnNewEntryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewEntryActionPerformed
+		loaded = false;
 		ZoneEntities.NPC newNPC = new ZoneEntities.NPC();
 		int newuid = 0;
 		for (int i = 0; i < e.npcs.size(); i++) {
@@ -1022,6 +1023,7 @@ public class NPCEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		}
 		e.NPCCount++;
 		entryBox.addItem(String.valueOf(newNPC.uid));
+		loaded = true;
 		setNPC(entryBox.getItemCount() - 1);
 		frame.repaint();
 		e.modified = true;

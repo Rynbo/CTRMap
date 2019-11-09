@@ -44,7 +44,7 @@ public class GRPropData {
 		GRPropData[][] newData = new GRPropData[mm.width][mm.height];
 		for (int i = 0; i < mm.height; i++){
 			for (int j = 0; j < mm.width; j++){
-				if (mm.regions[j][i] != null){
+				if (mm.regions.get(j, i) != null){
 					newData[j][i] = new GRPropData();
 				}
 			}
@@ -53,7 +53,7 @@ public class GRPropData {
 			GRProp prop = props.get(i);
 			int horizontalRegion = (int)prop.x/720;
 			int verticalRegion = (int)prop.z/720;
-			if (mm.regions[horizontalRegion][verticalRegion] != null){
+			if (mm.regions.get(horizontalRegion, verticalRegion) != null){
 				newData[horizontalRegion][verticalRegion].props.add(prop);
 			}
 			else {
@@ -64,7 +64,7 @@ public class GRPropData {
 						if (y < 0 || y >= mm.height)
 						for (int x = horizontalRegion - 1 - expand; x < horizontalRegion + 1 + expand; x++){
 							if (x < 0 || x >= mm.width) continue;
-							if (mm.regions[x][y] != null){
+							if (mm.regions.get(x, y) != null){
 								newData[x][y].props.add(prop);
 								break scanLoop;
 							}
@@ -75,9 +75,9 @@ public class GRPropData {
 		}
 		for (int i = 0; i < mm.height; i++){
 			for (int j = 0; j < mm.width; j++){
-				if (mm.regions[j][i] != null){
+				if (mm.regions.get(j, i) != null){
 					byte[] data = newData[j][i].assemblePropData();
-					mm.regions[j][i].storeFile(3, data);
+					mm.regions.get(j, i).storeFile(3, data);
 				}
 			}
 		}

@@ -70,6 +70,7 @@ public class CameraTool extends AbstractTool {
 			if (Selector.hilightTileX >= cam.boundX1 && Selector.hilightTileX <= cam.boundX2 && Selector.hilightTileY >= cam.boundY1 && Selector.hilightTileY <= cam.boundY2
 					&& mCamEditForm.cam != cam) {
 				mCamEditForm.commitAndSwitch(i);
+				frame.repaint();
 				break;
 			}
 		}

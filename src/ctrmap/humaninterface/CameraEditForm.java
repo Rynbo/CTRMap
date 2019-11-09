@@ -1,5 +1,6 @@
 package ctrmap.humaninterface;
 
+import ctrmap.CtrmapMainframe;
 import ctrmap.Utils;
 import ctrmap.formats.cameradata.CameraData;
 import ctrmap.formats.cameradata.CameraDataFile;
@@ -116,7 +117,7 @@ public class CameraEditForm extends javax.swing.JPanel {
 		if (!neutralCheckbox.isSelected()){
 			setActiveEnabled();
 		}
-		firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
+		CtrmapMainframe.frame.repaint();
 	}
 
 	public void commitAndSwitch(int switchNum) {

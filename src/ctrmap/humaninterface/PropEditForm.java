@@ -54,8 +54,9 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		x.getDocument().addDocumentListener(new DocumentListener() {
 			@Override
 			public void insertUpdate(DocumentEvent e) {
-				if (prop != null && prop.x != Utils.getFloatFromDocument(x)) {
+				if (loaded && prop != null && prop.x != Utils.getFloatFromDocument(x)) {
 					prop.x = Utils.getFloatFromDocument(x);
+					props.modified = true;
 					updateH3D(props.props.indexOf(prop));
 				}
 				firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
@@ -63,8 +64,9 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 
 			@Override
 			public void removeUpdate(DocumentEvent e) {
-				if (prop != null && prop.x != Utils.getFloatFromDocument(x)) {
+				if (loaded && prop != null && prop.x != Utils.getFloatFromDocument(x)) {
 					prop.x = Utils.getFloatFromDocument(x);
+					props.modified = true;
 					updateH3D(props.props.indexOf(prop));
 				}
 				firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
@@ -77,8 +79,9 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		y.getDocument().addDocumentListener(new DocumentListener() {
 			@Override
 			public void insertUpdate(DocumentEvent e) {
-				if (prop != null && prop.y != Utils.getFloatFromDocument(y)) {
+				if (loaded && prop != null && prop.y != Utils.getFloatFromDocument(y)) {
 					prop.y = Utils.getFloatFromDocument(y);
+					props.modified = true;
 					updateH3D(props.props.indexOf(prop));
 				}
 				firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
@@ -86,8 +89,9 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 
 			@Override
 			public void removeUpdate(DocumentEvent e) {
-				if (prop != null && prop.y != Utils.getFloatFromDocument(y)) {
+				if (loaded && prop != null && prop.y != Utils.getFloatFromDocument(y)) {
 					prop.y = Utils.getFloatFromDocument(y);
+					props.modified = true;
 					updateH3D(props.props.indexOf(prop));
 				}
 				firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
@@ -100,8 +104,9 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		z.getDocument().addDocumentListener(new DocumentListener() {
 			@Override
 			public void insertUpdate(DocumentEvent e) {
-				if (prop != null && prop.z != Utils.getFloatFromDocument(z)) {
+				if (loaded && prop != null && prop.z != Utils.getFloatFromDocument(z)) {
 					prop.z = Utils.getFloatFromDocument(z);
+					props.modified = true;
 					updateH3D(props.props.indexOf(prop));
 				}
 				firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
@@ -109,8 +114,9 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 
 			@Override
 			public void removeUpdate(DocumentEvent e) {
-				if (prop != null && prop.z != Utils.getFloatFromDocument(z)) {
+				if (loaded && prop != null && prop.z != Utils.getFloatFromDocument(z)) {
 					prop.z = Utils.getFloatFromDocument(z);
+					props.modified = true;
 					updateH3D(props.props.indexOf(prop));
 				}
 				firePropertyChange(TileMapPanel.PROP_REPAINT, false, true);
@@ -127,13 +133,13 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 			((NumberFormatter) fields[i].getFormatter()).setValueClass(Float.class);
 		}
 	}
-	
-	public void loadDataFile(GR f, List<H3DTexture> propTextures){
+
+	public void loadDataFile(GR f, List<H3DTexture> propTextures) {
 		gr = f;
 		props = new GRPropData(gr);
 		loadDataFile(props, null, propTextures);
 	}
-	
+
 	public void loadDataFile(GRPropData f, ADPropRegistry reg, List<H3DTexture> propTextures) {
 		this.propTextures = propTextures;
 		models.clear();
@@ -189,6 +195,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		m.rotationX = p.rotateX;
 		m.rotationY = p.rotateY;
 		m.rotationZ = p.rotateZ;
+		CtrmapMainframe.m3DDebugPanel.navi.synchronizeNavi();
 	}
 
 	public void setProp(int index) {
@@ -347,31 +354,36 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 	}
 
 	public void showProp(int index) {
-		propIndex = index;
-		if (index == -1 || index >= props.props.size()) {
-			prop = null;
-			return;
+		try {
+			propIndex = index;
+			if (index == -1 || index >= props.props.size()) {
+				prop = null;
+				return;
+			}
+			prop = props.props.get(index);
+			if (prop == null) {
+				return;
+			}
+			loaded = false;
+			mdlNum.setValue(prop.uid);
+			prop.updateName(reg);
+			mdlName.setText(prop.name);
+			x.setValue(prop.x);
+			y.setValue(prop.y);
+			z.setValue(prop.z);
+			rx.setValue(prop.rotateX);
+			ry.setValue(prop.rotateY);
+			rz.setValue(prop.rotateZ);
+			sx.setValue(prop.scaleX);
+			sy.setValue(prop.scaleY);
+			sz.setValue(prop.scaleZ);
+			updateModel(index);
+			CtrmapMainframe.m3DDebugPanel.bindNavi(props.props.get(entryBox.getSelectedIndex()));
+			CtrmapMainframe.frame.repaint();
+			loaded = true;
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		prop = props.props.get(index);
-		if (prop == null) {
-			return;
-		}
-		loaded = false;
-		mdlNum.setValue(prop.uid);
-		prop.updateName(reg);
-		mdlName.setText(prop.name);
-		x.setValue(prop.x);
-		y.setValue(prop.y);
-		z.setValue(prop.z);
-		rx.setValue(prop.rotateX);
-		ry.setValue(prop.rotateY);
-		rz.setValue(prop.rotateZ);
-		sx.setValue(prop.scaleX);
-		sy.setValue(prop.scaleY);
-		sz.setValue(prop.scaleZ);
-		updateModel(index);
-		CtrmapMainframe.m3DDebugPanel.bindNavi(props.props.get(entryBox.getSelectedIndex()));
-		loaded = true;
 	}
 
 	public void updateModel(int index) {
@@ -388,6 +400,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 				BCHFile bch = new BCHFile(new BM(f).getFile(0));
 				bch.models.get(0).setMaterialTextures(bch.textures);
 				bch.models.get(0).setMaterialTextures(propTextures);
+				bch.models.get(0).makeAllBOs();
 				models.set(index, bch.models.get(0));
 			}
 		}
@@ -397,12 +410,8 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 	public void saveAndRefresh() {
 		if (loaded) {
 			saveProp();
-			if (prop == null) {
-				showProp(-1);
-				return;
-			}
 			showProp(entryBox.getSelectedIndex());
-			if (reg != null) {
+			if (reg != null && prop != null) {
 				regentry = reg.entries.get(prop.uid);
 				if (regentry == null) {
 					int createEntry = JOptionPane.showConfirmDialog(this,
@@ -752,6 +761,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
     }//GEN-LAST:event_btnRemEntryActionPerformed
 
     private void btnNewEntryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewEntryActionPerformed
+		loaded = false;
 		GRProp newProp = new GRProp();
 		newProp.uid = (prop != null) ? prop.uid : 0;
 		Point defaultPos = CtrmapMainframe.mTileMapPanel.getWorldLocAtViewportCentre();
@@ -761,6 +771,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 		props.props.add(newProp);
 		models.add(reg.getModel(newProp.uid));
 		entryBox.addItem(String.valueOf(props.props.size() - 1));
+		loaded = true;
 		setProp(entryBox.getItemCount() - 1);
 		props.modified = true;
     }//GEN-LAST:event_btnNewEntryActionPerformed
@@ -808,7 +819,7 @@ public class PropEditForm extends javax.swing.JPanel implements CM3DRenderable {
 
 	@Override
 	public void doSelectionLoop(MouseEvent e, Component parent, float[] mvMatrix, float[] projMatrix, int[] view, Vec3f cameraVec) {
-		if (!(CtrmapMainframe.tool instanceof PropTool)){
+		if (!(CtrmapMainframe.tool instanceof PropTool)) {
 			return;
 		}
 		GLUgl2 glu = new GLUgl2();
