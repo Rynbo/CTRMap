@@ -43,6 +43,11 @@
               <EmptySpace type="separate" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
+                      <Component id="btnImportContainer" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="btnAddFileToGARC" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <Group type="102" attributes="0">
                       <Component id="garcLabel" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="garc" min="-2" pref="264" max="-2" attributes="0"/>
@@ -50,7 +55,6 @@
                   <Component id="garcActionsLabel" min="-2" max="-2" attributes="0"/>
                   <Component id="garcScrollPane" min="-2" pref="300" max="-2" attributes="0"/>
                   <Component id="btnContSaveExternal" min="-2" max="-2" attributes="0"/>
-                  <Component id="btnImportContainer" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="32767" attributes="0"/>
           </Group>
@@ -100,7 +104,10 @@
                           </Group>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="btnImportContainer" min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="btnImportContainer" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="btnAddFileToGARC" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
                   </Group>
                   <Group type="102" attributes="0">
                       <EmptySpace min="11" pref="11" max="-2" attributes="0"/>
@@ -242,6 +249,14 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="Clear"/>
       </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="btnAddFileToGARC">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Add new file"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnAddFileToGARCActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

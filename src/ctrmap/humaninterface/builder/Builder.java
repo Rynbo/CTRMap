@@ -5,9 +5,16 @@ import ctrmap.Workspace;
 import ctrmap.formats.containers.AbstractGamefreakContainer;
 import ctrmap.formats.containers.ContainerIdentifier;
 import ctrmap.formats.containers.ContentType;
+import ctrmap.formats.containers.GR;
+import ctrmap.formats.containers.MM;
+import ctrmap.formats.garc.GARC;
+import ctrmap.formats.gfcollision.GRCollisionFile;
 import ctrmap.formats.h3d.BCHFile;
 import ctrmap.formats.h3d.model.H3DModel;
+import ctrmap.formats.mapmatrix.MapMatrix;
+import ctrmap.formats.tilemap.Tilemap;
 import ctrmap.humaninterface.ESPICAControl;
+import ctrmap.humaninterface.LoadingDialog;
 import ctrmap.resources.ResourceAccess;
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,6 +31,7 @@ import java.util.prefs.Preferences;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.SwingWorker;
 import javax.swing.event.ListSelectionEvent;
 
 public class Builder extends javax.swing.JPanel {
@@ -48,12 +56,12 @@ public class Builder extends javax.swing.JPanel {
 				if (index < Workspace.getArchive(currentGARC).length) {
 					try {
 						File decFile = Workspace.getWorkspaceFile(currentGARC, index);
-						byte[] magicarr = new byte[2];
+						byte[] magicarr = new byte[3];
 						InputStream in = new FileInputStream(decFile);
-						if (in.available() > 2) {
+						if (in.available() > 3) {
 							in.read(magicarr);
 						}
-						if (Utils.isUTF8Capital(magicarr[0]) && Utils.isUTF8Capital(magicarr[1])) {
+						if (Utils.isUTF8Capital(magicarr[0]) && Utils.isUTF8Capital(magicarr[1]) && !Utils.isUTF8Capital(magicarr[2])) {
 							loadContainer(ContainerIdentifier.makeAGFC(decFile, magicarr));
 						}
 						in.close();
@@ -138,9 +146,12 @@ public class Builder extends javax.swing.JPanel {
 		public ContentType type;
 
 		public String getTypeString() {
+			if (type == null) {
+				return "";
+			}
 			switch (type) {
 				default:
-					return "";
+					return type.toString();
 				case CGFX:
 					return "CGFX";
 				case COLLISION:
@@ -157,6 +168,8 @@ public class Builder extends javax.swing.JPanel {
 					return "BCH Texture pack";
 				case TILEMAP:
 					return "Standard tilemap";
+				case MAPMATRIX:
+					return "Map matrix";
 			}
 		}
 	}
@@ -203,6 +216,7 @@ public class Builder extends javax.swing.JPanel {
         garcActionsLabel = new javax.swing.JLabel();
         btnNewContainer = new javax.swing.JButton();
         btnClearContainer = new javax.swing.JButton();
+        btnAddFileToGARC = new javax.swing.JButton();
 
         contLabel.setText("Container:");
 
@@ -257,6 +271,13 @@ public class Builder extends javax.swing.JPanel {
 
         btnClearContainer.setText("Clear");
 
+        btnAddFileToGARC.setText("Add new file");
+        btnAddFileToGARC.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddFileToGARCActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -284,13 +305,16 @@ public class Builder extends javax.swing.JPanel {
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
+                        .addComponent(btnImportContainer)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnAddFileToGARC))
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(garcLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(garc, javax.swing.GroupLayout.PREFERRED_SIZE, 264, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(garcActionsLabel)
                     .addComponent(garcScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnContSaveExternal)
-                    .addComponent(btnImportContainer))
+                    .addComponent(btnContSaveExternal))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -331,7 +355,9 @@ public class Builder extends javax.swing.JPanel {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(btnContSaveExternal)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnImportContainer))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(btnImportContainer)
+                            .addComponent(btnAddFileToGARC)))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(11, 11, 11)
                         .addComponent(cgSep)))
@@ -394,6 +420,7 @@ public class Builder extends javax.swing.JPanel {
 			try {
 				Files.copy(fNew.toPath(), fToReplace.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				currentAGFC = ContainerIdentifier.makeAGFC(fToReplace);
+				Workspace.addPersist(fToReplace);
 				reloadContainer();
 			} catch (IOException ex) {
 				Logger.getLogger(Builder.class.getName()).log(Level.SEVERE, null, ex);
@@ -412,13 +439,60 @@ public class Builder extends javax.swing.JPanel {
 		}
     }//GEN-LAST:event_btnContSaveExternalActionPerformed
 
+    private void btnAddFileToGARCActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddFileToGARCActionPerformed
+		boolean success = false;
+		GARC arc = Workspace.getArchive(currentGARC);
+		if (currentGARC == Workspace.ArchiveType.MAP_MATRIX) {
+			MM mm = new MM(Workspace.getWorkspaceFile(currentGARC, arc.length), 2, MM.MM_MAP_MATRIX);
+			currentAGFC = mm;
+			MapMatrix tmp = new MapMatrix(mm, 1, 1, 0);
+			tmp.write();
+			success = true;
+		} else if (currentGARC == Workspace.ArchiveType.FIELD_DATA) {
+			GR gr = new GR(Workspace.getWorkspaceFile(currentGARC, arc.length), Workspace.isOA() ? 7 : 6);
+			currentAGFC = gr;
+			Tilemap tm = new Tilemap(gr, 40, 40);
+			GRCollisionFile coll = new GRCollisionFile(gr, true);
+			tm.modified = true;
+			gr.storeFile(0, tm.assembleTilemap());
+			if (Workspace.isOA()){
+				gr.storeFile(6, ResourceAccess.getByteArray("DummyKAGE.bin"));
+			}
+			coll.write();
+			success = true;
+		}
+		if (success) {
+			LoadingDialog dlg = LoadingDialog.makeDialog("Packing, please wait");
+			SwingWorker worker = new SwingWorker() {
+				@Override
+				protected void done() {
+					dlg.close();
+				}
+
+				@Override
+				protected Object doInBackground() throws Exception {
+					Workspace.addPersist(currentAGFC.getOriginFile());
+					arc.packDirectory(Workspace.getExtractionDirectory(currentGARC));
+					Workspace.reloadGARC(currentGARC);
+					reloadContainer();
+					loadGARC(garc.getSelectedIndex());
+					return null;
+				}
+			};
+			worker.execute();
+			dlg.showDialog();
+		}
+    }//GEN-LAST:event_btnAddFileToGARCActionPerformed
+
 	private void reloadContainer() {
 		loadContainer(currentAGFC);
 	}
 
 	private void importGeneric(AbstractGamefreakContainer persistentContainerReference, int index) {
 		File in = openFileDialog("Select file to import");
-		persistentContainerReference.storeFile(index, in);
+		if (in != null) {
+			persistentContainerReference.storeFile(index, in);
+		}
 	}
 
 	private void runESPICA(ESPICAControl.ESPICAProcess proc, Runnable onSuccess) {
@@ -444,6 +518,7 @@ public class Builder extends javax.swing.JPanel {
 	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnAddFileToGARC;
     private javax.swing.JButton btnClearContainer;
     private javax.swing.JButton btnContSaveExternal;
     private javax.swing.JButton btnFADummy;

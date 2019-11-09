@@ -6,6 +6,7 @@
 package ctrmap.formats.mapmatrix;
 
 import ctrmap.LittleEndianDataInputStream;
+import ctrmap.LittleEndianDataOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,5 +27,21 @@ public class MatrixCameraBoundaries {
 		} catch (IOException ex) {
 			Logger.getLogger(MatrixCameraBoundaries.class.getName()).log(Level.SEVERE, null, ex);
 		}
+	}
+	
+	public MatrixCameraBoundaries(){
+		isRepeal = 1;
+		north = 0f;
+		south = 100f;
+		west = 0f;
+		east = 100f;
+	}
+	
+	public void write(LittleEndianDataOutputStream dos) throws IOException{
+		dos.writeFloat(north);
+		dos.writeFloat(south);
+		dos.writeFloat(west);
+		dos.writeFloat(east);
+		dos.writeInt(isRepeal);
 	}
 }

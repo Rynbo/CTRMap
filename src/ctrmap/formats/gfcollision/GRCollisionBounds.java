@@ -15,6 +15,12 @@ public class GRCollisionBounds {
 			structs[i] = new BoundStructure(dis);
 		}
 	}
+	
+	public GRCollisionBounds(){
+		for (int i = 0; i < 10; i++) {
+			structs[i] = new BoundStructure();
+		}
+	}
 
 	public void updateBounds(GRCollisionFile f) {
 		float[] extremes = f.getMeshExtremes();
@@ -127,6 +133,8 @@ class BoundStructure {
 			e.printStackTrace();
 		}
 	}
+	
+	public BoundStructure(){}
 
 	public void write(LittleEndianDataOutputStream dos) {
 		try {

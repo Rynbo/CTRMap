@@ -5,10 +5,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import com.jogamp.opengl.GL2;
-import static ctrmap.CtrmapMainframe.*;
 import ctrmap.LittleEndianDataInputStream;
 import ctrmap.LittleEndianDataOutputStream;
-import ctrmap.Utils;
 import ctrmap.formats.containers.GR;
 import ctrmap.formats.Triangle;
 import java.awt.Polygon;
@@ -24,8 +22,8 @@ public class GRCollisionFile {
 
 	public static final int COLL_MAGIC = 0x636F6C6C;
 	private int length;
-	private int unknown_const_0x5D8_1;
-	private int[] unknown_consts_1_3_2_1_2 = new int[5];
+	private int unknown_const_0x5D8_1 = 0x5D8;
+	private int[] unknown_consts_1_3_2_1_2 = new int[]{1, 3, 2, 1, 2};
 
 	public GRCollisionBounds bounds;
 	private int[] offsets = new int[16];
@@ -33,102 +31,116 @@ public class GRCollisionFile {
 	public GRCollisionMesh[] meshes = new GRCollisionMesh[16]; //GR is limited to exactly 16 meshes, nothing more, nothing less
 
 	public static final int TERM_MAGIC = 0x7465726D;
-	private int unknown_const_0x0;
-	private int unknown_const_0x5D8_2;
-	private int unknown_const_0x1;
-	
-	public boolean modified = false;
-	
-	public GRCollisionFile(GR mapFile) {
-		this.mapFile = mapFile;
-		LittleEndianDataInputStream dis = new LittleEndianDataInputStream(new ByteArrayInputStream(this.mapFile.getFile(2)));
-		try {
-			if (dis.read4Bytes() != COLL_MAGIC) {
-				System.err.println("Coll magic mismatch");
-			}
-			length = dis.readInt();
-			if (length > dis.available() - 24) {
-				System.err.println("Coll length exceeds EOF, will be adjusted on write.");
-			}
-			unknown_const_0x5D8_1 = dis.readInt();
-			for (int i = 0; i < 5; i++) {
-				unknown_consts_1_3_2_1_2[i] = dis.readInt();
-			}
-			bounds = new GRCollisionBounds(dis);
-			for (int i = 0; i < 16; i++) {
-				offsets[i] = dis.readInt();
-				//these bytes indicate the offsets of meshes from the start of the mesh sections, but the bytes
-				//after tell us their lengths and as we get to the end after finishing this sections, these are
-				//all we need to parse the format. GF are kinda weird. We are storing the offsets for ease of writing tho.
+	private int unknown_const_0x0 = 0;
+	private int unknown_const_0x5D8_2 = 0x5D8;
+	private int unknown_const_0x1 = 1;
 
-				lengths[i] = dis.readInt();
-			}
-			for (int i = 0; i < 16; i++) {
-				meshes[i] = new GRCollisionMesh(dis, lengths[i]);
-			}
-			dedupe();
-			if (dis.read4Bytes() != TERM_MAGIC) {
-				System.err.println("Term missing/misplaced/magic error.");
-			}
-			unknown_const_0x0 = dis.readInt();
-			unknown_const_0x5D8_2 = dis.readInt();
-			unknown_const_0x1 = dis.readInt();
-			dis.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		bounds.originalExtremes = getMeshExtremes();
+	public boolean modified = false;
+
+	public GRCollisionFile(GR mapFile) {
+		this(mapFile, false);
 	}
 
-	public float getHeightAtPoint(float x, float y){
+	public GRCollisionFile(GR mapFile, boolean fromScratch) {
+		this.mapFile = mapFile;
+		if (!fromScratch) {
+			LittleEndianDataInputStream dis = new LittleEndianDataInputStream(new ByteArrayInputStream(this.mapFile.getFile(2)));
+			try {
+				if (dis.read4Bytes() != COLL_MAGIC) {
+					System.err.println("Coll magic mismatch");
+				}
+				length = dis.readInt();
+				if (length > dis.available() - 24) {
+					System.err.println("Coll length exceeds EOF, will be adjusted on write.");
+				}
+				unknown_const_0x5D8_1 = dis.readInt();
+				for (int i = 0; i < 5; i++) {
+					unknown_consts_1_3_2_1_2[i] = dis.readInt();
+				}
+				bounds = new GRCollisionBounds(dis);
+				for (int i = 0; i < 16; i++) {
+					offsets[i] = dis.readInt();
+					//these bytes indicate the offsets of meshes from the start of the mesh sections, but the bytes
+					//after tell us their lengths and as we get to the end after finishing this sections, these are
+					//all we need to parse the format. GF are kinda weird. We are storing the offsets for ease of writing tho.
+
+					lengths[i] = dis.readInt();
+				}
+				for (int i = 0; i < 16; i++) {
+					meshes[i] = new GRCollisionMesh(dis, lengths[i]);
+				}
+				dedupe();
+				if (dis.read4Bytes() != TERM_MAGIC) {
+					System.err.println("Term missing/misplaced/magic error.");
+				}
+				unknown_const_0x0 = dis.readInt();
+				unknown_const_0x5D8_2 = dis.readInt();
+				unknown_const_0x1 = dis.readInt();
+				dis.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			bounds.originalExtremes = getMeshExtremes();
+		} else {
+			bounds = new GRCollisionBounds();
+			for (int i = 0; i < 16; i++) {
+				meshes[i] = new GRCollisionMesh();
+			}
+			meshes[0].tris.add(new Triangle(new float[]{-360f, -360f, 360f}, new float[3], new float[]{360f, -360f, -360f}));
+			meshes[0].tris.add(new Triangle(new float[]{-360f, 360f, 360f}, new float[3], new float[]{360f, -360f, 360f}));
+			modified = true;
+		}
+	}
+
+	public float getHeightAtPoint(float x, float y) {
 		//just check all the tris, if they are deduped, GF's hacks are useless
-		for (int i = 0; i < meshes.length; i++){
-			for (int j = 0; j < meshes[i].tris.size(); j++){
+		for (int i = 0; i < meshes.length; i++) {
+			for (int j = 0; j < meshes[i].tris.size(); j++) {
 				Polygon triPoly = meshes[i].tris.get(j).getAWTPoly();
-				if (triPoly.contains(x, y)){
+				if (triPoly.contains(x, y)) {
 					Triangle tri = meshes[i].tris.get(j);
 					float top1 = (tri.getX(1) - tri.getX(0)) * (tri.getY(2) - tri.getY(0)) - (tri.getX(2) - tri.getX(0)) * (tri.getY(1) - tri.getY(0));
 					float bot1 = (tri.getX(1) - tri.getX(0)) * (tri.getZ(2) - tri.getZ(0)) - (tri.getX(2) - tri.getX(0)) * (tri.getZ(1) - tri.getZ(0));
 					float top2 = (tri.getZ(1) - tri.getZ(0)) * (tri.getY(2) - tri.getY(0)) - (tri.getZ(2) - tri.getZ(0)) * (tri.getY(1) - tri.getY(0));
-					
-					float result = tri.getY(0) + (top1 / bot1) * (y - tri.getZ(0))  - (top2 / bot1) * (x - tri.getX(0));
+
+					float result = tri.getY(0) + (top1 / bot1) * (y - tri.getZ(0)) - (top2 / bot1) * (x - tri.getX(0));
 					return result;
 				}
 			}
 		}
 		return 0f;
 	}
-	
-	public void dedupe(){
+
+	public void dedupe() {
 		ArrayList<Triangle> usedTris = new ArrayList<>();
 		for (int i = 0; i < 16; i++) {
-			for (int j = 0; j < meshes[i].tris.size(); j++){
+			for (int j = 0; j < meshes[i].tris.size(); j++) {
 				Triangle testTri = meshes[i].tris.get(j);
-				if (usedTris.isEmpty()){
+				if (usedTris.isEmpty()) {
 					usedTris.add(testTri);
 					continue;
 				}
 				boolean broken = false;
-				for (int k = 0; k < usedTris.size(); k++){
+				for (int k = 0; k < usedTris.size(); k++) {
 					Triangle testAgainst = usedTris.get(k);
-					if (Arrays.equals(testTri.x, testAgainst.x) && Arrays.equals(testTri.y, testAgainst.y) && Arrays.equals(testTri.z, testAgainst.z)){
+					if (Arrays.equals(testTri.x, testAgainst.x) && Arrays.equals(testTri.y, testAgainst.y) && Arrays.equals(testTri.z, testAgainst.z)) {
 						meshes[i].tris.remove(j);
-						j --;
+						j--;
 						broken = true;
 						break;
 					}
 				}
-				if (!broken){
+				if (!broken) {
 					usedTris.add(testTri);
 				}
 			}
 		}
 	}
-	
+
 	public void write() {
 		bounds.updateBounds(this);
 		GRCollisionMesh[] newMeshes = computeMeshOrder();
-		
+
 		offsets[0] = 0;
 		lengths[0] = newMeshes[0].tris.size() * 3;
 		for (int i = 1; i < 16; i++) {

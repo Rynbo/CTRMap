@@ -1,4 +1,5 @@
 package ctrmap.formats.tilemap;
+
 import ctrmap.formats.containers.GR;
 import ctrmap.CtrmapMainframe;
 import java.awt.Graphics;
@@ -12,6 +13,7 @@ import ctrmap.LittleEndianDataOutputStream;
 import ctrmap.Utils;
 
 public class Tilemap {
+
 	public GR mapFile;
 	public byte[][][] rawTileData;
 	public boolean modified;
@@ -19,7 +21,7 @@ public class Tilemap {
 	private Graphics g;
 	private short width;
 	private short height;
-	
+
 	public Tilemap(GR mapFile) {
 		this.mapFile = mapFile;
 		rawTileData = getTileData();
@@ -27,11 +29,27 @@ public class Tilemap {
 		g = tilemapImage.getGraphics();
 		updateImage();
 	}
-	private byte[][][] getTileData(){
+
+	public Tilemap(GR mapFile, int width, int height) {
+		this.mapFile = mapFile;
+		this.width = (short) width;
+		this.height = (short) height;
+		rawTileData = new byte[width][height][4];
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				rawTileData[x][y] = new byte[]{0x21, 0, 0, 1}; //fill with unwalkables
+			}
+		}
+		tilemapImage = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
+		g = tilemapImage.getGraphics();
+		updateImage();
+	}
+
+	private byte[][][] getTileData() {
 		try {
 			InputStream in = new ByteArrayInputStream(mapFile.getFile(0));
-			width = Short.reverseBytes((short)((in.read() << 8) | in.read()));
-			height = Short.reverseBytes((short)((in.read() << 8) | in.read()));
+			width = Short.reverseBytes((short) ((in.read() << 8) | in.read()));
+			height = Short.reverseBytes((short) ((in.read() << 8) | in.read()));
 			byte[][][] b = new byte[width][height][4];
 			for (int y = 0; y < height; y++) {
 				for (int x = 0; x < width; x++) {
@@ -45,6 +63,7 @@ public class Tilemap {
 		}
 		return null;
 	}
+
 	public byte[] assembleTilemap() {
 		//GF likes their files to start at offsets ending with either 00 or 80
 		//even though we can disrespect that and the games run just fine, it's prettier and easier for debugging
@@ -68,21 +87,25 @@ public class Tilemap {
 			return null;
 		}
 	}
+
 	public void updateImage() {
 		for (int x = 0; x < 40; x++) {
 			for (int y = 0; y < 40; y++) {
 				g.setColor(CtrmapMainframe.mTileEditForm.tileset.getSimpleColor(Utils.ba2int(rawTileData[x][y])));
-				g.fillRect(x*10, y*10, 10, 10);
+				g.fillRect(x * 10, y * 10, 10, 10);
 			}
 		}
 	}
-	public BufferedImage getImage(){
+
+	public BufferedImage getImage() {
 		return tilemapImage;
 	}
+
 	public void setTileData(int x, int y, byte[] tiledata) {
 		modified = true;
 		rawTileData[x][y] = tiledata.clone();
 	}
+
 	public byte[] getTileData(int x, int y) {
 		return rawTileData[x][y];
 	}
